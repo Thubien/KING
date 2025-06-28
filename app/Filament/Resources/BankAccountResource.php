@@ -29,35 +29,35 @@ class BankAccountResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('🏦 Bank Information')
+                Forms\Components\Section::make('Bank Information')
                     ->description('Add any bank from anywhere in the world')
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('country_code')
-                                    ->label('🌍 Country')
+                                    ->label('Country')
                                     ->options([
-                                        'US' => '🇺🇸 United States',
-                                        'UK' => '🇬🇧 United Kingdom', 
-                                        'CA' => '🇨🇦 Canada',
-                                        'AU' => '🇦🇺 Australia',
-                                        'DE' => '🇩🇪 Germany',
-                                        'FR' => '🇫🇷 France',
-                                        'TR' => '🇹🇷 Turkey',
-                                        'UA' => '🇺🇦 Ukraine',
-                                        'ES' => '🇪🇸 Spain',
-                                        'IT' => '🇮🇹 Italy',
-                                        'NL' => '🇳🇱 Netherlands',
-                                        'BE' => '🇧🇪 Belgium',
-                                        'CH' => '🇨🇭 Switzerland',
-                                        'AT' => '🇦🇹 Austria',
-                                        'SE' => '🇸🇪 Sweden',
-                                        'NO' => '🇳🇴 Norway',
-                                        'DK' => '🇩🇰 Denmark',
-                                        'FI' => '🇫🇮 Finland',
-                                        'IE' => '🇮🇪 Ireland',
-                                        'PT' => '🇵🇹 Portugal',
-                                        'OTHER' => '🌐 Other Country'
+                                        'US' => 'United States',
+                                        'UK' => 'United Kingdom', 
+                                        'CA' => 'Canada',
+                                        'AU' => 'Australia',
+                                        'DE' => 'Germany',
+                                        'FR' => 'France',
+                                        'TR' => 'Turkey',
+                                        'UA' => 'Ukraine',
+                                        'ES' => 'Spain',
+                                        'IT' => 'Italy',
+                                        'NL' => 'Netherlands',
+                                        'BE' => 'Belgium',
+                                        'CH' => 'Switzerland',
+                                        'AT' => 'Austria',
+                                        'SE' => 'Sweden',
+                                        'NO' => 'Norway',
+                                        'DK' => 'Denmark',
+                                        'FI' => 'Finland',
+                                        'IE' => 'Ireland',
+                                        'PT' => 'Portugal',
+                                        'OTHER' => 'Other Country'
                                     ])
                                     ->searchable()
                                     ->default('US')
@@ -68,14 +68,14 @@ class BankAccountResource extends Resource
                                     }),
 
                                 Forms\Components\Select::make('bank_type')
-                                    ->label('🏛️ Institution Type')
+                                    ->label('Institution Type')
                                     ->options(BankAccount::getSuggestedTypes())
                                     ->default('commercial')
                                     ->required(),
                             ]),
 
                         Forms\Components\TextInput::make('bank_name')
-                            ->label('🏦 Bank Name')
+                            ->label('Bank Name')
                             ->placeholder('Enter your bank name...')
                             ->datalist(fn (Get $get) => BankAccount::getPopularBanksForCountry($get('country_code') ?? 'US'))
                             ->required()
@@ -83,15 +83,15 @@ class BankAccountResource extends Resource
                             ->helperText('Start typing and we\'ll suggest popular banks in your country'),
 
                         Forms\Components\TextInput::make('bank_branch')
-                            ->label('🏢 Branch Name/Location')
+                            ->label('Branch Name/Location')
                             ->placeholder('Main Branch, Downtown, etc.')
                             ->helperText('Optional: Specify which branch or location'),
                     ]),
 
-                Forms\Components\Section::make('💳 Account Details')
+                Forms\Components\Section::make('Account Details')
                     ->schema([
                         Forms\Components\TextInput::make('account_name')
-                            ->label('📝 Account Name/Description')
+                            ->label('Account Name/Description')
                             ->placeholder('Primary Checking Account')
                             ->required()
                             ->helperText('How you want to identify this account'),
@@ -99,26 +99,26 @@ class BankAccountResource extends Resource
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('currency')
-                                    ->label('💰 Currency')
+                                    ->label('Currency')
                                     ->options([
-                                        'USD' => '🇺🇸 USD - US Dollar',
-                                        'EUR' => '🇪🇺 EUR - Euro',
-                                        'GBP' => '🇬🇧 GBP - British Pound',
-                                        'CAD' => '🇨🇦 CAD - Canadian Dollar',
-                                        'AUD' => '🇦🇺 AUD - Australian Dollar',
-                                        'TRY' => '🇹🇷 TRY - Turkish Lira',
-                                        'UAH' => '🇺🇦 UAH - Ukrainian Hryvnia',
-                                        'CHF' => '🇨🇭 CHF - Swiss Franc',
-                                        'SEK' => '🇸🇪 SEK - Swedish Krona',
-                                        'NOK' => '🇳🇴 NOK - Norwegian Krone',
-                                        'DKK' => '🇩🇰 DKK - Danish Krone',
+                                        'USD' => 'USD - US Dollar',
+                                        'EUR' => 'EUR - Euro',
+                                        'GBP' => 'GBP - British Pound',
+                                        'CAD' => 'CAD - Canadian Dollar',
+                                        'AUD' => 'AUD - Australian Dollar',
+                                        'TRY' => 'TRY - Turkish Lira',
+                                        'UAH' => 'UAH - Ukrainian Hryvnia',
+                                        'CHF' => 'CHF - Swiss Franc',
+                                        'SEK' => 'SEK - Swedish Krona',
+                                        'NOK' => 'NOK - Norwegian Krone',
+                                        'DKK' => 'DKK - Danish Krone',
                                     ])
                                     ->searchable()
                                     ->default('USD')
                                     ->required(),
 
                                 Forms\Components\TextInput::make('current_balance')
-                                    ->label('💵 Current Balance')
+                                    ->label('Current Balance')
                                     ->numeric()
                                     ->step(0.01)
                                     ->default(0)
@@ -129,17 +129,17 @@ class BankAccountResource extends Resource
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Toggle::make('is_primary')
-                                    ->label('⭐ Primary Account')
+                                    ->label(' Primary Account')
                                     ->helperText('Make this your main account'),
 
                                 Forms\Components\Toggle::make('is_active')
-                                    ->label('✅ Active')
+                                    ->label('Active')
                                     ->default(true)
                                     ->helperText('Account is currently in use'),
                             ]),
                     ]),
 
-                Forms\Components\Section::make('🔢 Banking Details')
+                Forms\Components\Section::make('Banking Details')
                     ->description('Enter the banking details specific to your country')
                     ->schema([
                         Forms\Components\Placeholder::make('banking_info')
@@ -150,7 +150,7 @@ class BankAccountResource extends Resource
 
                         // Universal fields
                         Forms\Components\TextInput::make('account_number')
-                            ->label('🔢 Account Number')
+                            ->label('Account Number')
                             ->password()
                             ->revealable()
                             ->placeholder('Your account number (encrypted)')
@@ -158,7 +158,7 @@ class BankAccountResource extends Resource
 
                         // US specific
                         Forms\Components\TextInput::make('routing_number')
-                            ->label('🏦 Routing Number')
+                            ->label(' Routing Number')
                             ->placeholder('9-digit routing number')
                             ->maxLength(9)
                             ->visible(fn (Get $get) => $get('country_code') === 'US')
@@ -166,7 +166,7 @@ class BankAccountResource extends Resource
 
                         // UK specific  
                         Forms\Components\TextInput::make('sort_code')
-                            ->label('🔢 Sort Code')
+                            ->label('Sort Code')
                             ->placeholder('XX-XX-XX')
                             ->maxLength(8)
                             ->visible(fn (Get $get) => $get('country_code') === 'UK')
@@ -174,7 +174,7 @@ class BankAccountResource extends Resource
 
                         // Australia specific
                         Forms\Components\TextInput::make('bsb_number')
-                            ->label('🏦 BSB Number')
+                            ->label(' BSB Number')
                             ->placeholder('XXX-XXX')
                             ->maxLength(7)
                             ->visible(fn (Get $get) => $get('country_code') === 'AU')
@@ -182,7 +182,7 @@ class BankAccountResource extends Resource
 
                         // Canada specific
                         Forms\Components\TextInput::make('institution_number')
-                            ->label('🏛️ Institution Number')
+                            ->label(' Institution Number')
                             ->placeholder('3-digit institution number')
                             ->maxLength(3)
                             ->visible(fn (Get $get) => $get('country_code') === 'CA')
@@ -190,7 +190,7 @@ class BankAccountResource extends Resource
 
                         // European countries (IBAN)
                         Forms\Components\TextInput::make('iban')
-                            ->label('🌍 IBAN')
+                            ->label(' IBAN')
                             ->placeholder('Country-specific IBAN format')
                             ->visible(fn (Get $get) => in_array($get('country_code'), ['DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CH', 'TR', 'UA']))
                             ->rules(fn (Get $get) => $get('country_code') === 'UA' ? [new UkrainianIbanRule()] : [])
@@ -204,7 +204,7 @@ class BankAccountResource extends Resource
 
                         // Ukraine specific - MFO Code
                         Forms\Components\TextInput::make('bank_code')
-                            ->label('🏦 MFO Code')
+                            ->label(' MFO Code')
                             ->placeholder('305299')
                             ->maxLength(6)
                             ->visible(fn (Get $get) => $get('country_code') === 'UA')
@@ -220,13 +220,13 @@ class BankAccountResource extends Resource
 
                         // International
                         Forms\Components\TextInput::make('swift_code')
-                            ->label('🌐 SWIFT/BIC Code')
+                            ->label(' SWIFT/BIC Code')
                             ->placeholder('8 or 11 character SWIFT code')
                             ->maxLength(11)
                             ->helperText('International bank identifier (8 or 11 characters)'),
 
                         Forms\Components\TextInput::make('bic_code')
-                            ->label('🏦 BIC Code')
+                            ->label(' BIC Code')
                             ->placeholder('Bank Identifier Code')
                             ->visible(fn (Get $get) => in_array($get('country_code'), ['DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT']))
                             ->helperText('Bank Identifier Code (if different from SWIFT)'),
@@ -248,7 +248,7 @@ class BankAccountResource extends Resource
                                     ->tel(),
 
                                 Forms\Components\TextInput::make('bank_website')
-                                    ->label('🌐 Bank Website')
+                                    ->label(' Bank Website')
                                     ->placeholder('https://bankname.com')
                                     ->url(),
                             ]),
@@ -263,10 +263,10 @@ class BankAccountResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('bank_info')
-                    ->label('🏦 Bank')
+                    ->label(' Bank')
                     ->getStateUsing(fn (BankAccount $record): string => $record->getFullBankInfo())
                     ->description(fn (BankAccount $record) => $record->country_code 
-                        ? '🌍 ' . strtoupper($record->country_code) 
+                        ? ' ' . strtoupper($record->country_code) 
                         : null)
                     ->searchable(['bank_name', 'bank_type'])
                     ->weight(FontWeight::SemiBold),
@@ -277,20 +277,20 @@ class BankAccountResource extends Resource
                     ->description(fn (BankAccount $record) => $record->getMaskedAccountNumber()),
                     
                 Tables\Columns\TextColumn::make('current_balance')
-                    ->label('💰 Balance')
+                    ->label(' Balance')
                     ->formatStateUsing(fn (BankAccount $record) => $record->getFormattedBalance())
                     ->badge()
                     ->color(fn ($state) => $state > 0 ? 'success' : ($state < 0 ? 'danger' : 'gray'))
                     ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_primary')
-                    ->label('⭐ Primary')
+                    ->label(' Primary')
                     ->boolean()
                     ->trueIcon('heroicon-o-star')
                     ->falseIcon('heroicon-o-minus'),
 
                 Tables\Columns\BadgeColumn::make('is_active')
-                    ->label('🚦 Status')
+                    ->label('Status')
                     ->formatStateUsing(fn (bool $state): string => $state ? 'Active' : 'Inactive')
                     ->colors([
                         'success' => true,
@@ -298,51 +298,51 @@ class BankAccountResource extends Resource
                     ]),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('📅 Created')
+                    ->label(' Created')
                     ->dateTime('M j, Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('country_code')
-                    ->label('🌍 Country')
+                    ->label(' Country')
                     ->options([
-                        'US' => '🇺🇸 United States',
-                        'UK' => '🇬🇧 United Kingdom',
-                        'CA' => '🇨🇦 Canada',
-                        'AU' => '🇦🇺 Australia',
-                        'DE' => '🇩🇪 Germany',
-                        'FR' => '🇫🇷 France',
-                        'TR' => '🇹🇷 Turkey',
-                        'UA' => '🇺🇦 Ukraine',
-                        'ES' => '🇪🇸 Spain',
-                        'IT' => '🇮🇹 Italy',
+                        'US' => 'United States',
+                        'UK' => 'United Kingdom',
+                        'CA' => 'Canada',
+                        'AU' => 'Australia',
+                        'DE' => 'Germany',
+                        'FR' => 'France',
+                        'TR' => 'Turkey',
+                        'UA' => 'Ukraine',
+                        'ES' => 'Spain',
+                        'IT' => 'Italy',
                     ])
                     ->searchable(),
 
                 Tables\Filters\SelectFilter::make('bank_type')
-                    ->label('🏛️ Institution Type')
+                    ->label(' Institution Type')
                     ->options(BankAccount::getSuggestedTypes()),
                     
                 Tables\Filters\SelectFilter::make('currency')
-                    ->label('💰 Currency')
+                    ->label(' Currency')
                     ->options([
-                        'USD' => '🇺🇸 USD',
-                        'EUR' => '🇪🇺 EUR',
-                        'GBP' => '🇬🇧 GBP',
-                        'CAD' => '🇨🇦 CAD',
-                        'AUD' => '🇦🇺 AUD',
-                        'TRY' => '🇹🇷 TRY',
-                        'UAH' => '🇺🇦 UAH',
-                        'CHF' => '🇨🇭 CHF',
+                        'USD' => 'USD',
+                        'EUR' => 'EUR',
+                        'GBP' => 'GBP',
+                        'CAD' => 'CAD',
+                        'AUD' => 'AUD',
+                        'TRY' => 'TRY',
+                        'UAH' => 'UAH',
+                        'CHF' => 'CHF',
                     ])
                     ->searchable(),
                     
                 Tables\Filters\TernaryFilter::make('is_primary')
-                    ->label('⭐ Primary Account'),
+                    ->label(' Primary Account'),
                     
                 Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('🚦 Active Status'),
+                    ->label('Active Status'),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make()
@@ -354,7 +354,7 @@ class BankAccountResource extends Resource
                     ->icon('heroicon-o-pencil'),
 
                 Tables\Actions\Action::make('adjustBalance')
-                    ->label('💰 Adjust Balance')
+                    ->label(' Adjust Balance')
                     ->icon('heroicon-m-calculator')
                     ->color('warning')
                     ->form([
@@ -363,7 +363,7 @@ class BankAccountResource extends Resource
                             ->options([
                                 'add' => '➕ Add to Balance',
                                 'subtract' => '➖ Subtract from Balance',
-                                'set' => '⚖️ Set Balance',
+                                'set' => ' Set Balance',
                             ])
                             ->default('add')
                             ->required(),

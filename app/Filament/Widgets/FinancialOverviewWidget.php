@@ -53,11 +53,11 @@ class FinancialOverviewWidget extends BaseWidget
         extract($stats);
         
         return [
-            Stat::make('💰 Monthly Revenue', '$' . number_format($thisMonthRevenue, 0))
+            Stat::make(' Monthly Revenue', '$' . number_format($thisMonthRevenue, 0))
                 ->description(
                     $growth > 0 
-                        ? "↗️ +{$growth}% from last month" 
-                        : ($growth < 0 ? "↘️ {$growth}% from last month" : "📊 Same as last month")
+                        ? "↗ +{$growth}% from last month" 
+                        : ($growth < 0 ? "↘ {$growth}% from last month" : " Same as last month")
                 )
                 ->descriptionIcon($growth > 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($growth > 0 ? 'success' : ($growth < 0 ? 'danger' : 'gray')),
@@ -67,7 +67,7 @@ class FinancialOverviewWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-arrow-down-circle')
                 ->color('warning'),
 
-            Stat::make('📈 Net Profit', '$' . number_format($netProfit, 0))
+            Stat::make(' Net Profit', '$' . number_format($netProfit, 0))
                 ->description($netProfit > 0 ? 'Profitable month' : 'Operating at loss')
                 ->descriptionIcon($netProfit > 0 ? 'heroicon-m-check-circle' : 'heroicon-m-exclamation-circle')
                 ->color($netProfit > 0 ? 'success' : 'danger'),

@@ -34,32 +34,32 @@ class BalanceOverviewWidget extends BaseWidget
         $pendingTotal = $this->getPendingBalanceTotal($company);
         
         return [
-            Stat::make('💰 Bank Accounts', $this->formatMoney($bankTotal))
+            Stat::make('Bank Accounts', $this->formatMoney($bankTotal))
                 ->description('Available in bank accounts')
                 ->descriptionIcon('heroicon-m-building-library')
                 ->color('success'),
                 
-            Stat::make('📱 Payment Processors', $this->formatMoney($processorTotal))
+            Stat::make('Payment Processors', $this->formatMoney($processorTotal))
                 ->description('Current + Pending balances')
                 ->descriptionIcon('heroicon-m-credit-card')
                 ->color('info'),
                 
-            Stat::make('⏳ Pending Payouts', $this->formatMoney($pendingTotal))
+            Stat::make('Pending Payouts', $this->formatMoney($pendingTotal))
                 ->description('Waiting for payout')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning'),
                 
-            Stat::make('🎯 Total Real Money', $this->formatMoney($balanceResult['real_money_total']))
+            Stat::make('Total Real Money', $this->formatMoney($balanceResult['real_money_total']))
                 ->description('Bank + Processors')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('primary'),
                 
-            Stat::make('📊 Calculated Balance', $this->formatMoney($balanceResult['calculated_balance']))
+            Stat::make('Calculated Balance', $this->formatMoney($balanceResult['calculated_balance']))
                 ->description('From store transactions')
                 ->descriptionIcon('heroicon-m-calculator')
                 ->color('gray'),
                 
-            Stat::make('⚖️ Balance Status', $balanceResult['is_valid'] ? '✅ VALID' : '❌ ERROR')
+            Stat::make('Balance Status', $balanceResult['is_valid'] ? 'VALID' : 'ERROR')
                 ->description($balanceResult['is_valid'] 
                     ? 'All balances match' 
                     : 'Difference: ' . $this->formatMoney($balanceResult['difference'])

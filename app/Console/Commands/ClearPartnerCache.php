@@ -51,7 +51,7 @@ class ClearPartnerCache extends Command
         // Clear store-related caches
         $this->clearStoreCaches();
 
-        $this->info('✅ All partner cache cleared successfully!');
+        $this->info('All partner cache cleared successfully!');
     }
 
     protected function clearUserCache(int $userId): void
@@ -64,7 +64,7 @@ class ClearPartnerCache extends Command
         }
 
         $user->clearPartnershipCache();
-        $this->info("✅ Cache cleared for user: {$user->name} (ID: {$userId})");
+        $this->info("Cache cleared for user: {$user->name} (ID: {$userId})");
     }
 
     protected function clearWidgetCaches(): void

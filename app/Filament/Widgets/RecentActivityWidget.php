@@ -25,12 +25,12 @@ class RecentActivityWidget extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('transaction_date')
-                    ->label('📅 Date')
+                    ->label(' Date')
                     ->date('M j')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('store.name')
-                    ->label('🏪 Store')
+                    ->label('Store')
                     ->limit(20),
 
                 Tables\Columns\TextColumn::make('description')
@@ -39,7 +39,7 @@ class RecentActivityWidget extends BaseWidget
                     ->searchable(),
 
                 Tables\Columns\TextColumn::make('amount')
-                    ->label('💰 Amount')
+                    ->label(' Amount')
                     ->formatStateUsing(fn ($state, $record) => 
                         ($record->type === 'income' ? '+' : '-') . '$' . number_format(abs($state), 2)
                     )
@@ -47,7 +47,7 @@ class RecentActivityWidget extends BaseWidget
                     ->weight('medium'),
 
                 Tables\Columns\BadgeColumn::make('category')
-                    ->label('🏷️ Category')
+                    ->label('🏷 Category')
                     ->formatStateUsing(fn (string $state): string => ucfirst(str_replace('_', ' ', $state)))
                     ->colors([
                         'success' => 'revenue',

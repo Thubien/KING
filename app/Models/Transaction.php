@@ -73,17 +73,17 @@ class Transaction extends Model
 
     // Updated 11-category system aligned with business requirements
     public const CATEGORIES = [
-        'SALES' => 'Sales Revenue', // 📈 Revenue from sales
-        'RETURNS' => 'Returns & Refunds', // 🔄 Real money refunds
-        'PAY-PRODUCT' => 'Product Costs', // 🟡 Product purchase costs
-        'PAY-DELIVERY' => 'Delivery Costs', // 📦 Shipping costs
-        'INVENTORY' => 'Inventory Value', // 📦 Current stock value
-        'WITHDRAW' => 'Partner Withdrawals', // 💜 Partner withdrawals
-        'END' => 'Transfer Commissions', // 📊 Personal transfer commissions
-        'BANK_COM' => 'Banking Fees', // 🏦 Banking fees
-        'FEE' => 'Payment Fees', // 💰 Payment processor fees
-        'ADS' => 'Advertising', // 📱 Advertising spend
-        'OTHER_PAY' => 'Other Expenses', // 🔧 All other expenses
+        'SALES' => 'Sales Revenue', //  Revenue from sales
+        'RETURNS' => 'Returns & Refunds', //  Real money refunds
+        'PAY-PRODUCT' => 'Product Costs', //  Product purchase costs
+        'PAY-DELIVERY' => 'Delivery Costs', //  Shipping costs
+        'INVENTORY' => 'Inventory Value', //  Current stock value
+        'WITHDRAW' => 'Partner Withdrawals', //  Partner withdrawals
+        'END' => 'Transfer Commissions', //  Personal transfer commissions
+        'BANK_COM' => 'Banking Fees', //  Banking fees
+        'FEE' => 'Payment Fees', //  Payment processor fees
+        'ADS' => 'Advertising', //  Advertising spend
+        'OTHER_PAY' => 'Other Expenses', //  All other expenses
     ];
 
     // Transaction types
@@ -105,37 +105,37 @@ class Transaction extends Model
 
     // Sales channels (WHERE sale happened)
     public const SALES_CHANNELS = [
-        'shopify' => '🛒 Shopify',
-        'instagram' => '📸 Instagram',
-        'telegram' => '✈️ Telegram',
-        'whatsapp' => '💬 WhatsApp',
-        'facebook' => '👥 Facebook',
-        'physical' => '🏪 Physical Store',
-        'referral' => '🤝 Referral',
-        'other' => '🔧 Other'
+        'shopify' => 'Shopify',
+        'instagram' => 'Instagram',
+        'telegram' => 'Telegram',
+        'whatsapp' => 'WhatsApp',
+        'facebook' => 'Facebook',
+        'physical' => 'Physical Store',
+        'referral' => 'Referral',
+        'other' => 'Other'
     ];
 
     // Payment methods (HOW customer paid)
     public const PAYMENT_METHODS = [
-        'cash' => '💵 Cash',
-        'credit_card' => '💳 Credit Card',
-        'bank_transfer' => '🏦 Bank Transfer',
-        'cash_on_delivery' => '📦 Cash on Delivery',
-        'cargo_collect' => '🚚 Cargo Collect',
-        'crypto' => '₿ Cryptocurrency',
-        'installment' => '📅 Installment',
-        'store_credit' => '🎫 Store Credit',
-        'other' => '🔧 Other'
+        'cash' => 'Cash',
+        'credit_card' => 'Credit Card',
+        'bank_transfer' => 'Bank Transfer',
+        'cash_on_delivery' => 'Cash on Delivery',
+        'cargo_collect' => 'Cargo Collect',
+        'crypto' => 'Cryptocurrency',
+        'installment' => 'Installment',
+        'store_credit' => 'Store Credit',
+        'other' => 'Other'
     ];
 
     // Data sources (FROM WHERE to system)
     public const DATA_SOURCES = [
-        'shopify_api' => '🛒 Shopify API',
-        'stripe_api' => '💳 Stripe API',
-        'paypal_api' => '🅿️ PayPal API',
-        'manual_entry' => '✍️ Manual Entry',
-        'csv_import' => '📊 CSV Import',
-        'webhook' => '🔗 Webhook'
+        'shopify_api' => 'Shopify API',
+        'stripe_api' => 'Stripe API',
+        'paypal_api' => 'PayPal API',
+        'manual_entry' => 'Manual Entry',
+        'csv_import' => 'CSV Import',
+        'webhook' => 'Webhook'
     ];
 
     // Boot method

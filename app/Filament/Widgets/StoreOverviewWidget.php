@@ -20,17 +20,17 @@ class StoreOverviewWidget extends BaseWidget
         })->where('status', 'ACTIVE')->count();
 
         return [
-            Stat::make('🏪 Total Stores', $totalStores)
+            Stat::make('Total Stores', $totalStores)
                 ->description('Connected store locations')
                 ->descriptionIcon('heroicon-m-building-storefront')
                 ->color('info'),
 
-            Stat::make('✅ Active Stores', $activeStores)
+            Stat::make('Active Stores', $activeStores)
                 ->description("$activeStores of $totalStores stores active")
                 ->descriptionIcon('heroicon-m-check-circle')
                 ->color($activeStores === $totalStores ? 'success' : 'warning'),
 
-            Stat::make('🤝 Active Partnerships', $totalPartnerships)
+            Stat::make('Active Partnerships', $totalPartnerships)
                 ->description('Total active partnerships')
                 ->descriptionIcon('heroicon-m-user-group')
                 ->color('primary'),

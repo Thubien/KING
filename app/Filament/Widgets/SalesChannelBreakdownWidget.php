@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class SalesChannelBreakdownWidget extends ChartWidget
 {
-    protected static ?string $heading = '🛒 Sales Channel Performance';
+    protected static ?string $heading = 'Sales Channel Performance';
     
     protected static ?int $sort = 2;
     
@@ -47,14 +47,14 @@ class SalesChannelBreakdownWidget extends ChartWidget
         // Map channel names to emojis
         $channelLabels = array_map(function($channel) {
             return match($channel) {
-                'shopify' => '🛒 Shopify',
-                'instagram' => '📸 Instagram',
-                'telegram' => '✈️ Telegram',
-                'whatsapp' => '💬 WhatsApp',
-                'facebook' => '📘 Facebook',
-                'physical' => '🏪 Physical Store',
-                'referral' => '🤝 Referral',
-                default => '📦 Other'
+                'shopify' => 'Shopify',
+                'instagram' => 'Instagram',
+                'telegram' => 'Telegram',
+                'whatsapp' => 'WhatsApp',
+                'facebook' => 'Facebook',
+                'physical' => 'Physical Store',
+                'referral' => 'Referral',
+                default => 'Other'
             };
         }, $channels);
         

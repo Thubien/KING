@@ -11,7 +11,7 @@ use Carbon\Carbon;
 
 class CompanyPerformanceWidget extends ChartWidget
 {
-    protected static ?string $heading = '📊 Revenue Trends (Last 6 Months)';
+    protected static ?string $heading = ' Revenue Trends (Last 6 Months)';
     
     protected static ?int $sort = 1;
     

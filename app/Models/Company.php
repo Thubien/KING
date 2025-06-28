@@ -189,7 +189,7 @@ class Company extends Model
         return 'slug';
     }
 
-    // 💎 Premium Plan Management Methods
+    //  Premium Plan Management Methods
     public function getSubscriptionPlan(): string
     {
         // Map existing plan enum to subscription plan naming

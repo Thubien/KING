@@ -29,17 +29,17 @@ class PartnerOverviewWidget extends BaseWidget
         ->count();
 
         return [
-            Stat::make('👥 Active Partners', $activePartners)
+            Stat::make('Active Partners', $activePartners)
                 ->description('Currently active partnerships')
                 ->descriptionIcon('heroicon-m-user-group')
                 ->color('success'),
 
-            Stat::make('⏳ Pending Invitations', $pendingInvitations)
+            Stat::make('Pending Invitations', $pendingInvitations)
                 ->description('Awaiting partner response')
                 ->descriptionIcon('heroicon-m-envelope')
                 ->color($pendingInvitations > 0 ? 'warning' : 'gray'),
 
-            Stat::make('⚠️ Expired Invitations', $expiredInvitations)
+            Stat::make('Expired Invitations', $expiredInvitations)
                 ->description('Invitations older than 7 days')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color($expiredInvitations > 0 ? 'danger' : 'gray'),

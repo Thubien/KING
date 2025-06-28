@@ -16,17 +16,17 @@ class StripeApiStrategy implements ApiImportStrategyInterface
     
     public function import(array $credentials, Store $store): ImportResult
     {
-        // 🚨 PREMIUM FEATURE CHECK
+        // PREMIUM FEATURE CHECK
         if (!$store->company->canUseApiIntegrations()) {
             return ImportResult::failure(
-                '💎 API integrations are only available in Premium plans. Upgrade to unlock Stripe API sync!'
+                'API integrations are only available in Premium plans. Upgrade to unlock Stripe API sync!'
             );
         }
 
         // Check API rate limits
         if ($store->company->getRemainingApiCalls() < 100) {
             return ImportResult::failure(
-                '⚠️ API rate limit exceeded. Upgrade your plan for higher limits or wait until next month.'
+                'API rate limit exceeded. Upgrade your plan for higher limits or wait until next month.'
             );
         }
 
@@ -87,7 +87,7 @@ class StripeApiStrategy implements ApiImportStrategyInterface
         } catch (\Stripe\Exception\AuthenticationException $e) {
             Log::error('Stripe authentication failed', ['error' => $e->getMessage()]);
             return ImportResult::failure(
-                '🔑 Invalid Stripe API key. Please check your credentials.'
+                'Invalid Stripe API key. Please check your credentials.'
             );
         } catch (\Exception $e) {
             Log::error('Stripe import failed', ['error' => $e->getMessage()]);
@@ -105,7 +105,7 @@ class StripeApiStrategy implements ApiImportStrategyInterface
         }
         
         try {
-            // 🎯 Smart Auto-categorization based on Stripe transaction type
+            //  Smart Auto-categorization based on Stripe transaction type
             $category = $this->categorizeStripeTransaction($stripeTransaction);
             $type = $stripeTransaction->net >= 0 ? 'income' : 'expense';
             $amount = abs($stripeTransaction->net) / 100; // Convert cents to dollars
@@ -154,7 +154,7 @@ class StripeApiStrategy implements ApiImportStrategyInterface
     
     private function categorizeStripeTransaction($stripeTransaction): string
     {
-        // 🎯 Map Stripe transaction types to our 11-category system
+        //  Map Stripe transaction types to our 11-category system
         return match($stripeTransaction->type) {
             'charge' => 'revenue',           // Customer payment
             'payment' => 'revenue',          // Payment received
@@ -179,17 +179,17 @@ class StripeApiStrategy implements ApiImportStrategyInterface
     private function generateDescription($stripeTransaction): string
     {
         $baseDescription = match($stripeTransaction->type) {
-            'charge', 'payment' => '💳 Stripe Payment',
-            'invoice_payment' => '📄 Invoice Payment',
-            'refund' => '🔄 Stripe Refund', 
-            'chargeback' => '⚠️ Chargeback',
-            'stripe_fee' => '💰 Stripe Processing Fee',
-            'application_fee' => '🏛️ Platform Fee',
-            'payout' => '🏦 Stripe Payout',
-            'transfer' => '↔️ Transfer',
-            'adjustment' => '⚖️ Adjustment',
-            'contribution' => '💼 Contribution',
-            default => '📊 Stripe Transaction'
+            'charge', 'payment' => ' Stripe Payment',
+            'invoice_payment' => ' Invoice Payment',
+            'refund' => ' Stripe Refund', 
+            'chargeback' => ' Chargeback',
+            'stripe_fee' => ' Stripe Processing Fee',
+            'application_fee' => ' Platform Fee',
+            'payout' => ' Stripe Payout',
+            'transfer' => ' Transfer',
+            'adjustment' => ' Adjustment',
+            'contribution' => ' Contribution',
+            default => ' Stripe Transaction'
         };
         
         // Add amount info for clarity
@@ -216,7 +216,7 @@ class StripeApiStrategy implements ApiImportStrategyInterface
     
     public function getName(): string
     {
-        return 'Stripe API Integration 💎';
+        return 'Stripe API Integration ';
     }
     
     public function getDescription(): string

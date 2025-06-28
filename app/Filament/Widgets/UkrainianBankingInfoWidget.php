@@ -60,12 +60,12 @@ class UkrainianBankingInfoWidget extends Widget
                 ]
             ],
             'important_notes' => [
-                '🇺🇦 Ukrainian banks use MFO codes instead of SWIFT for domestic transfers',
-                '💱 UAH (Ukrainian Hryvnia) is the official currency',
-                '🏦 IBAN format: UA + 2 check digits + 6-digit MFO + 19-digit account number',
-                '⚠️ Due to ongoing conflict, some banking services may be limited',
-                '🌐 International transfers may require additional verification',
-                '📱 Most Ukrainian banks offer strong mobile banking solutions'
+                'Ukrainian banks use MFO codes instead of SWIFT for domestic transfers',
+                'UAH (Ukrainian Hryvnia) is the official currency',
+                'IBAN format: UA + 2 check digits + 6-digit MFO + 19-digit account number',
+                'Due to ongoing conflict, some banking services may be limited',
+                'International transfers may require additional verification',
+                'Most Ukrainian banks offer strong mobile banking solutions'
             ]
         ];
     }

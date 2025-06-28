@@ -11,7 +11,7 @@
                     </div>
                     <div>
                         <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                            📊 Business Analytics & Performance
+                             Business Analytics & Performance
                         </h2>
                         <p class="text-gray-600 dark:text-gray-400 mt-1">
                             Comprehensive insights into your multi-store e-commerce empire. Track revenue, partnerships, and sales rep performance across all channels.
@@ -97,7 +97,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
                 <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                    🎯 Revenue Targets
+                     Revenue Targets
                 </h3>
                 <div class="space-y-3">
                     <div class="flex justify-between items-center">

@@ -15,7 +15,7 @@ class ShopifyDashboard extends Page
     
     protected static string $view = 'filament.pages.shopify-dashboard';
     
-    protected static ?string $navigationLabel = '🛒 Shopify Stores';
+    protected static ?string $navigationLabel = 'Shopify Stores';
     
     protected static ?string $title = 'Shopify Store Management';
     

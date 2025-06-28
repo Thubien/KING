@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PartnershipRevenueWidget extends BaseWidget
 {
-    protected static ?string $heading = '🤝 Partnership Performance';
+    protected static ?string $heading = ' Partnership Performance';
     
     protected static ?int $sort = 5;
     

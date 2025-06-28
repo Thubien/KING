@@ -100,17 +100,17 @@ ImportOrchestrator → Strategy Selection → Format Detection → Processing �
 - Applies 11-category standardized system
 
 **11-Category Financial System:**
-1. **SALES** - Revenue from sales (📈)
-2. **RETURNS** - Real money refunds (🔄)
-3. **PAY-PRODUCT** - Product purchase costs (🟡)
-4. **PAY-DELIVERY** - Shipping costs (📦)
-5. **INVENTORY** - Current stock value (📦)
-6. **WITHDRAW** - Partner withdrawals (💜)
-7. **END** - Personal transfer commissions (📊)
-8. **BANK_COM** - Banking fees (🏦)
-9. **FEE** - Payment processor fees (💰)
-10. **ADS** - Advertising spend (📱)
-11. **OTHER_PAY** - All other expenses (🔧)
+1. **SALES** - Revenue from sales
+2. **RETURNS** - Real money refunds
+3. **PAY-PRODUCT** - Product purchase costs
+4. **PAY-DELIVERY** - Shipping costs
+5. **INVENTORY** - Current stock value
+6. **WITHDRAW** - Partner withdrawals
+7. **END** - Personal transfer commissions
+8. **BANK_COM** - Banking fees
+9. **FEE** - Payment processor fees
+10. **ADS** - Advertising spend
+11. **OTHER_PAY** - All other expenses
 
 **Smart Categorization Patterns:**
 ```php
@@ -257,7 +257,7 @@ E-commerce entrepreneurs with multiple stores and business partners struggle wit
 5. **Scalability**: Handle growth from 2 stores to 20+ stores
 
 ### Integration Roadmap
-- **Phase 1**: Foundation with CSV imports ✅ COMPLETE
+- **Phase 1**: Foundation with CSV imports - COMPLETE
 - **Phase 2**: Advanced transaction processing (current)
 - **Phase 3**: Shopify OAuth integration
 - **Phase 4**: Smart categorization with ML
@@ -288,17 +288,17 @@ E-commerce entrepreneurs with multiple stores and business partners struggle wit
 
 ### Financial Report Engine Structure
 The system uses a **standard 11-category financial table format**:
-1. **SALES** - Revenue from sales (📈)
-2. **RETURNS** - Real money refunds (🔄)  
-3. **PAY-PRODUCT** - Product purchase costs (🟡)
-4. **PAY-DELIVERY** - Shipping costs (📦)
-5. **INVENTORY** - Current stock value (📦)
-6. **WITHDRAW** - Partner withdrawals (💜)
-7. **END** - Personal transfer commissions (📊)
-8. **BANK_COM** - Banking fees (🏦)
-9. **FEE** - Payment processor fees (💰)
-10. **ADS** - Advertising spend (📱)
-11. **OTHER_PAY** - All other expenses (🔧)
+1. **SALES** - Revenue from sales
+2. **RETURNS** - Real money refunds  
+3. **PAY-PRODUCT** - Product purchase costs
+4. **PAY-DELIVERY** - Shipping costs
+5. **INVENTORY** - Current stock value
+6. **WITHDRAW** - Partner withdrawals
+7. **END** - Personal transfer commissions
+8. **BANK_COM** - Banking fees
+9. **FEE** - Payment processor fees
+10. **ADS** - Advertising spend
+11. **OTHER_PAY** - All other expenses
 
 ### Real-Time Balance Dashboard
 - `BalanceOverviewWidget` - Shows Bank + Processor + Pending balances

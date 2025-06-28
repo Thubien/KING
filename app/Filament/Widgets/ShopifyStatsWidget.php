@@ -57,22 +57,22 @@ class ShopifyStatsWidget extends BaseWidget
         })->count();
         
         return [
-            Stat::make('🏪 Connected Stores', $shopifyStores->count())
+            Stat::make('Connected Stores', $shopifyStores->count())
                 ->description($company->plan === 'starter' ? '3 max on Starter' : 'Upgrade for more stores')
                 ->descriptionIcon($shopifyStores->count() >= 3 && $company->plan === 'starter' ? 'heroicon-m-exclamation-triangle' : 'heroicon-m-arrow-trending-up')
                 ->color($shopifyStores->count() >= 3 && $company->plan === 'starter' ? 'warning' : 'success'),
                 
-            Stat::make('💰 This Month Revenue', Number::currency($thisMonthRevenue, 'USD'))
+            Stat::make(' This Month Revenue', Number::currency($thisMonthRevenue, 'USD'))
                 ->description($revenueGrowth >= 0 ? "+{$revenueGrowth}% from last month" : "{$revenueGrowth}% from last month")
                 ->descriptionIcon($revenueGrowth >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($revenueGrowth >= 0 ? 'success' : 'danger'),
                 
-            Stat::make('📦 Orders This Month', number_format($thisMonthOrders))
+            Stat::make(' Orders This Month', number_format($thisMonthOrders))
                 ->description($ordersGrowth >= 0 ? "+{$ordersGrowth}% from last month" : "{$ordersGrowth}% from last month")
                 ->descriptionIcon($ordersGrowth >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($ordersGrowth >= 0 ? 'success' : 'danger'),
                 
-            Stat::make('🔄 Sync Status', $storesNeedingSync === 0 ? 'All Up to Date' : "{$storesNeedingSync} Need Sync")
+            Stat::make(' Sync Status', $storesNeedingSync === 0 ? 'All Up to Date' : "{$storesNeedingSync} Need Sync")
                 ->description($storesNeedingSync === 0 ? 'Data synchronized' : 'Some stores need syncing')
                 ->descriptionIcon($storesNeedingSync === 0 ? 'heroicon-m-check-circle' : 'heroicon-m-clock')
                 ->color($storesNeedingSync === 0 ? 'success' : 'warning'),

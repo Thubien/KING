@@ -70,13 +70,13 @@ class PartnershipResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('🤝 Partnership Information')
+                Forms\Components\Section::make(' Partnership Information')
                     ->description('Create a new partnership by selecting a store and partner details.')
                     ->schema([
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('store_id')
-                                    ->label('🏪 Select Store')
+                                    ->label('Select Store')
                                     ->relationship('store', 'name')
                                     ->required()
                                     ->searchable()
@@ -93,7 +93,7 @@ class PartnershipResource extends Resource
                                         : 'Choose a store to see available ownership'),
 
                                 Forms\Components\TextInput::make('ownership_percentage')
-                                    ->label('📊 Ownership Percentage')
+                                    ->label(' Ownership Percentage')
                                     ->required()
                                     ->numeric()
                                     ->suffix('%')
@@ -136,7 +136,7 @@ class PartnershipResource extends Resource
                             ]),
                     ]),
 
-                Forms\Components\Section::make('💰 Profit Sharing')
+                Forms\Components\Section::make(' Profit Sharing')
                     ->schema([
                         Forms\Components\TextInput::make('profit_share_percentage')
                             ->label('Profit Share Percentage')
@@ -151,14 +151,14 @@ class PartnershipResource extends Resource
                     ->collapsible()
                     ->collapsed(),
 
-                Forms\Components\Section::make('📋 Additional Details')
+                Forms\Components\Section::make('Additional Details')
                     ->schema([
                         Forms\Components\Select::make('status')
                             ->label('Partnership Status')
                             ->options([
-                                'PENDING_INVITATION' => '⏳ Pending Invitation',
-                                'ACTIVE' => '✅ Active',
-                                'INACTIVE' => '❌ Inactive',
+                                'PENDING_INVITATION' => 'Pending Invitation',
+                                'ACTIVE' => 'Active',
+                                'INACTIVE' => 'Inactive',
                             ])
                             ->default(fn (Get $get) => $get('partner_email') ? 'PENDING_INVITATION' : 'ACTIVE')
                             ->required(),
@@ -178,7 +178,7 @@ class PartnershipResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('store.name')
-                    ->label('🏪 Store')
+                    ->label('Store')
                     ->sortable()
                     ->searchable()
                     ->weight('medium'),
@@ -193,7 +193,7 @@ class PartnershipResource extends Resource
                         : ($record && $record->partner_email ? 'Invitation sent' : null)),
                     
                 Tables\Columns\TextColumn::make('ownership_percentage')
-                    ->label('📊 Ownership')
+                    ->label(' Ownership')
                     ->sortable()
                     ->formatStateUsing(fn ($state) => number_format($state, 1) . '%')
                     ->badge()
@@ -205,11 +205,11 @@ class PartnershipResource extends Resource
                     }),
                     
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('🚦 Status')
+                    ->label('Status')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'ACTIVE' => '✅ Active',
-                        'PENDING_INVITATION' => '⏳ Pending',
-                        'INACTIVE' => '❌ Inactive',
+                        'ACTIVE' => 'Active',
+                        'PENDING_INVITATION' => 'Pending',
+                        'INACTIVE' => 'Inactive',
                         default => $state,
                     })
                     ->colors([
@@ -219,24 +219,24 @@ class PartnershipResource extends Resource
                     ]),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('📅 Created')
+                    ->label(' Created')
                     ->dateTime('M j, Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('store')
-                    ->label('🏪 Filter by Store')
+                    ->label('Filter by Store')
                     ->relationship('store', 'name')
                     ->searchable()
                     ->preload(),
                     
                 Tables\Filters\SelectFilter::make('status')
-                    ->label('🚦 Filter by Status')
+                    ->label('Filter by Status')
                     ->options([
-                        'ACTIVE' => '✅ Active',
-                        'PENDING_INVITATION' => '⏳ Pending Invitation',
-                        'INACTIVE' => '❌ Inactive',
+                        'ACTIVE' => 'Active',
+                        'PENDING_INVITATION' => 'Pending Invitation',
+                        'INACTIVE' => 'Inactive',
                     ]),
             ])
             ->actions([

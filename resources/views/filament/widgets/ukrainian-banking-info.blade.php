@@ -1,7 +1,7 @@
 <x-filament-widgets::widget>
     <x-filament::section>
         <x-slot name="heading">
-            🇺🇦 Ukrainian Banking Information
+            Ukrainian Banking Information
         </x-slot>
         
         <x-slot name="description">
@@ -30,7 +30,7 @@
 
             {{-- Popular Banks --}}
             <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-3">🏦 Popular Ukrainian Banks</h4>
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Popular Ukrainian Banks</h4>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     @foreach($popular_banks as $bank)
                         <div class="bg-gray-50 rounded-lg p-3 border">
@@ -51,7 +51,7 @@
 
             {{-- Important Information --}}
             <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-3">ℹ️ Important Banking Information</h4>
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Important Banking Information</h4>
                 <div class="bg-blue-50 rounded-lg p-4">
                     <ul class="space-y-2">
                         @foreach($important_notes as $note)
@@ -66,7 +66,7 @@
 
             {{-- IBAN Example --}}
             <div>
-                <h4 class="text-sm font-medium text-gray-900 mb-3">📋 Ukrainian IBAN Format Example</h4>
+                <h4 class="text-sm font-medium text-gray-900 mb-3">Ukrainian IBAN Format Example</h4>
                 <div class="bg-gray-100 rounded-lg p-4 font-mono text-sm">
                     <div class="grid grid-cols-4 gap-2 text-center">
                         <div class="bg-red-100 p-2 rounded">
@@ -94,7 +94,7 @@
 
             {{-- Support Resources --}}
             <div class="bg-gray-50 rounded-lg p-4">
-                <h4 class="text-sm font-medium text-gray-900 mb-2">🆘 Support Resources</h4>
+                <h4 class="text-sm font-medium text-gray-900 mb-2">Support Resources</h4>
                 <div class="text-sm text-gray-600 space-y-1">
                     <p>• National Bank of Ukraine: <a href="https://bank.gov.ua" class="text-blue-600 hover:underline" target="_blank">bank.gov.ua</a></p>
                     <p>• Ukrainian Banking Association: <a href="https://uba.ua" class="text-blue-600 hover:underline" target="_blank">uba.ua</a></p>

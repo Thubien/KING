@@ -63,7 +63,7 @@ class StoreResource extends Resource
             ->schema([
                 Forms\Components\Tabs::make('Store Configuration')
                     ->tabs([
-                        Forms\Components\Tabs\Tab::make('🏪 Basic Information')
+                        Forms\Components\Tabs\Tab::make('Basic Information')
                             ->schema([
                                 Forms\Components\Select::make('company_id')
                                     ->relationship('company', 'name')
@@ -90,16 +90,16 @@ class StoreResource extends Resource
                                     ->maxLength(255),
                             ]),
                         
-                        Forms\Components\Tabs\Tab::make('💎 API Integrations')
+                        Forms\Components\Tabs\Tab::make('API Integrations')
                             ->schema([
                                 Forms\Components\Placeholder::make('api_integrations_notice')
                                     ->label('')
                                     ->content(function () {
                                         $user = auth()->user();
                                         if (!$user->company->canUseApiIntegrations()) {
-                                            return '🔒 **API Integrations are Premium Features**
+                                            return '**API Integrations are Premium Features**
 
-💎 Upgrade to Premium or Enterprise to unlock:
+ Upgrade to Premium or Enterprise to unlock:
 • Real-time Stripe transaction sync
 • Automatic categorization
 • Live webhooks
@@ -109,7 +109,7 @@ class StoreResource extends Resource
 Currently on: **' . ucfirst($user->company->subscription_plan) . ' Plan**';
                                         }
                                         
-                                        return '✅ **API Integrations Enabled**
+                                        return '**API Integrations Enabled**
 
 Your ' . ucfirst($user->company->subscription_plan) . ' plan includes:
 • Real-time transaction sync
@@ -119,7 +119,7 @@ Your ' . ucfirst($user->company->subscription_plan) . ' plan includes:
                                     })
                                     ->columnSpanFull(),
                                     
-                                Forms\Components\Section::make('🔵 Stripe Integration')
+                                Forms\Components\Section::make('Stripe Integration')
                                     ->description('Connect your Stripe account for real-time transaction sync')
                                     ->schema([
                                         Forms\Components\TextInput::make('stripe_secret_key')
@@ -152,12 +152,12 @@ Your ' . ucfirst($user->company->subscription_plan) . ' plan includes:
                                     ->collapsible()
                                     ->collapsed(fn () => !auth()->user()?->company?->canUseApiIntegrations()),
                                     
-                                Forms\Components\Section::make('🟡 PayPal Integration')
+                                Forms\Components\Section::make('PayPal Integration')
                                     ->description('Connect PayPal for transaction sync (Coming Soon)')
                                     ->schema([
                                         Forms\Components\Placeholder::make('paypal_coming_soon')
                                             ->label('')
-                                            ->content('🚧 **PayPal API Integration - Coming Soon**
+                                            ->content('**PayPal API Integration - Coming Soon**
 
 We\'re working on PayPal API integration. For now, you can:
 • Upload PayPal CSV exports manually
@@ -168,9 +168,9 @@ We\'re working on PayPal API integration. For now, you can:
                                     ->collapsible()
                                     ->collapsed(true),
                             ])
-                            ->badge(fn () => auth()->user()?->company?->canUseApiIntegrations() ? '✅ Enabled' : '🔒 Premium'),
+                            ->badge(fn () => auth()->user()?->company?->canUseApiIntegrations() ? 'Enabled' : 'Premium'),
                             
-                        Forms\Components\Tabs\Tab::make('⚙️ Configuration')
+                        Forms\Components\Tabs\Tab::make('Configuration')
                             ->schema([
                                 Forms\Components\TextInput::make('shopify_webhook_endpoints'),
                                 Forms\Components\TextInput::make('status')

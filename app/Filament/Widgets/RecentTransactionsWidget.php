@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class RecentTransactionsWidget extends BaseWidget
 {
-    protected static ?string $heading = '💰 Recent Transactions';
+    protected static ?string $heading = 'Recent Transactions';
     
     protected static ?int $sort = 4;
     
@@ -55,29 +55,29 @@ class RecentTransactionsWidget extends BaseWidget
                                     default => 'gray',
                                 })
                                 ->formatStateUsing(fn (string $state): string => match ($state) {
-                                    'shopify' => '🛒 Shopify',
-                                    'instagram' => '📸 Instagram',
-                                    'telegram' => '✈️ Telegram',
-                                    'whatsapp' => '💬 WhatsApp',
-                                    'facebook' => '📘 Facebook',
-                                    'physical' => '🏪 Physical',
-                                    'referral' => '🤝 Referral',
-                                    default => '📦 Other',
+                                    'shopify' => 'Shopify',
+                                    'instagram' => 'Instagram',
+                                    'telegram' => 'Telegram',
+                                    'whatsapp' => 'WhatsApp',
+                                    'facebook' => 'Facebook',
+                                    'physical' => 'Physical',
+                                    'referral' => 'Referral',
+                                    default => 'Other',
                                 }),
                                 
                             Tables\Columns\TextColumn::make('payment_method')
                                 ->badge()
                                 ->color('gray')
                                 ->formatStateUsing(fn (string $state): string => match ($state) {
-                                    'cash' => '💵 Cash',
-                                    'credit_card' => '💳 Credit Card',
-                                    'bank_transfer' => '🏦 Bank Transfer',
-                                    'cash_on_delivery' => '📦 COD',
-                                    'cargo_collect' => '🚚 Cargo Collect',
-                                    'crypto' => '₿ Crypto',
-                                    'installment' => '📅 Installment',
-                                    'store_credit' => '🎫 Store Credit',
-                                    default => '💰 Other',
+                                    'cash' => 'Cash',
+                                    'credit_card' => 'Credit Card',
+                                    'bank_transfer' => 'Bank Transfer',
+                                    'cash_on_delivery' => 'COD',
+                                    'cargo_collect' => 'Cargo Collect',
+                                    'crypto' => 'Crypto',
+                                    'installment' => 'Installment',
+                                    'store_credit' => 'Store Credit',
+                                    default => 'Other',
                                 }),
                         ]),
                         

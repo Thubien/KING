@@ -19,7 +19,7 @@ class TransactionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
     
-    protected static ?string $navigationLabel = '💰 Transactions';
+    protected static ?string $navigationLabel = 'Transactions';
     
     protected static ?int $navigationSort = 4;
 
@@ -145,29 +145,29 @@ class TransactionResource extends Resource
                         default => 'gray',
                     })
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'shopify' => '🛒 Shopify',
-                        'instagram' => '📸 Instagram',
-                        'telegram' => '✈️ Telegram',
-                        'whatsapp' => '💬 WhatsApp',
-                        'facebook' => '📘 Facebook',
-                        'physical' => '🏪 Physical',
-                        'referral' => '🤝 Referral',
-                        default => '📦 Other',
+                        'shopify' => 'Shopify',
+                        'instagram' => 'Instagram',
+                        'telegram' => 'Telegram',
+                        'whatsapp' => 'WhatsApp',
+                        'facebook' => 'Facebook',
+                        'physical' => 'Physical',
+                        'referral' => 'Referral',
+                        default => 'Other',
                     }),
                     
                 Tables\Columns\TextColumn::make('payment_method')
                     ->badge()
                     ->color('gray')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'cash' => '💵 Cash',
-                        'credit_card' => '💳 Credit Card',
-                        'bank_transfer' => '🏦 Bank Transfer',
-                        'cash_on_delivery' => '📦 COD',
-                        'cargo_collect' => '🚚 Cargo',
-                        'crypto' => '₿ Crypto',
-                        'installment' => '📅 Installment',
-                        'store_credit' => '🎫 Credit',
-                        default => '💰 Other',
+                        'cash' => 'Cash',
+                        'credit_card' => 'Credit Card',
+                        'bank_transfer' => 'Bank Transfer',
+                        'cash_on_delivery' => 'COD',
+                        'cargo_collect' => 'Cargo',
+                        'crypto' => 'Crypto',
+                        'installment' => 'Installment',
+                        'store_credit' => 'Credit',
+                        default => 'Other',
                     }),
                     
                 Tables\Columns\TextColumn::make('store.name')
@@ -210,27 +210,27 @@ class TransactionResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('sales_channel')
                     ->options([
-                        'shopify' => '🛒 Shopify',
-                        'instagram' => '📸 Instagram',
-                        'telegram' => '✈️ Telegram',
-                        'whatsapp' => '💬 WhatsApp',
-                        'facebook' => '📘 Facebook',
-                        'physical' => '🏪 Physical',
-                        'referral' => '🤝 Referral',
-                        'other' => '📦 Other',
+                        'shopify' => 'Shopify',
+                        'instagram' => 'Instagram',
+                        'telegram' => 'Telegram',
+                        'whatsapp' => 'WhatsApp',
+                        'facebook' => 'Facebook',
+                        'physical' => 'Physical',
+                        'referral' => 'Referral',
+                        'other' => 'Other',
                     ]),
                     
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->options([
-                        'cash' => '💵 Cash',
-                        'credit_card' => '💳 Credit Card',
-                        'bank_transfer' => '🏦 Bank Transfer',
-                        'cash_on_delivery' => '📦 COD',
-                        'cargo_collect' => '🚚 Cargo Collect',
-                        'crypto' => '₿ Crypto',
-                        'installment' => '📅 Installment',
-                        'store_credit' => '🎫 Store Credit',
-                        'other' => '💰 Other',
+                        'cash' => 'Cash',
+                        'credit_card' => 'Credit Card',
+                        'bank_transfer' => 'Bank Transfer',
+                        'cash_on_delivery' => 'COD',
+                        'cargo_collect' => 'Cargo Collect',
+                        'crypto' => 'Crypto',
+                        'installment' => 'Installment',
+                        'store_credit' => 'Store Credit',
+                        'other' => 'Other',
                     ]),
                     
                 Tables\Filters\SelectFilter::make('status')

@@ -28,7 +28,7 @@ class ShopifyConnectionWidget extends Widget implements HasForms
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('🛒 Connect Shopify Store')
+                Forms\Components\Section::make('Connect Shopify Store')
                     ->description('Connect your Shopify store to sync transactions and manage partnerships')
                     ->schema([
                         Forms\Components\Grid::make(2)

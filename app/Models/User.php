@@ -223,7 +223,7 @@ class User extends Authenticatable
         );
     }
 
-    // 💰 Sales Rep Commission Methods
+    //  Sales Rep Commission Methods
 
     /**
      * Get sales rep transactions relationship
@@ -244,7 +244,8 @@ class User extends Authenticatable
             ->where('type', 'INCOME')
             ->where('status', 'APPROVED')
             ->where('data_source', 'manual_entry')
-            ->whereRaw("strftime('%Y-%m', transaction_date) = ?", [$month])
+            ->whereYear('transaction_date', '=', substr($month, 0, 4))
+            ->whereMonth('transaction_date', '=', substr($month, 5, 2))
             ->sum('amount_usd');
     }
 
@@ -308,12 +309,14 @@ class User extends Authenticatable
             'total_orders' => $this->salesTransactions()
                 ->where('type', 'INCOME')
                 ->where('data_source', 'manual_entry')
-                ->whereRaw("strftime('%Y-%m', transaction_date) = ?", [$currentMonth])
+                ->whereYear('transaction_date', '=', substr($currentMonth, 0, 4))
+                ->whereMonth('transaction_date', '=', substr($currentMonth, 5, 2))
                 ->count(),
             'avg_order_value' => $this->salesTransactions()
                 ->where('type', 'INCOME')
                 ->where('data_source', 'manual_entry')
-                ->whereRaw("strftime('%Y-%m', transaction_date) = ?", [$currentMonth])
+                ->whereYear('transaction_date', '=', substr($currentMonth, 0, 4))
+                ->whereMonth('transaction_date', '=', substr($currentMonth, 5, 2))
                 ->avg('amount_usd') ?? 0,
             'commission_earned' => $this->getMonthlyCommission($currentMonth)
         ];

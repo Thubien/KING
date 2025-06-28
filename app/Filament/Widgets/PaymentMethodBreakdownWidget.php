@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Auth;
 
 class PaymentMethodBreakdownWidget extends ChartWidget
 {
-    protected static ?string $heading = '💳 Payment Method Distribution';
+    protected static ?string $heading = 'Payment Method Distribution';
     
     protected static ?int $sort = 6;
     
@@ -47,15 +47,15 @@ class PaymentMethodBreakdownWidget extends ChartWidget
         // Map payment method names to emojis
         $methodLabels = array_map(function($method) {
             return match($method) {
-                'cash' => '💵 Cash',
-                'credit_card' => '💳 Credit Card',
-                'bank_transfer' => '🏦 Bank Transfer',
-                'cash_on_delivery' => '📦 Cash on Delivery',
-                'cargo_collect' => '🚚 Cargo Collect',
-                'crypto' => '₿ Cryptocurrency',
-                'installment' => '📅 Installment',
-                'store_credit' => '🎫 Store Credit',
-                default => '💰 Other'
+                'cash' => 'Cash',
+                'credit_card' => 'Credit Card',
+                'bank_transfer' => 'Bank Transfer',
+                'cash_on_delivery' => 'Cash on Delivery',
+                'cargo_collect' => 'Cargo Collect',
+                'crypto' => 'Cryptocurrency',
+                'installment' => 'Installment',
+                'store_credit' => 'Store Credit',
+                default => 'Other'
             };
         }, $methods);
         

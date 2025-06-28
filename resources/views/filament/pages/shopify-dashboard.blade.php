@@ -10,7 +10,7 @@
                 </div>
                 <div>
                     <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                        🛒 Shopify Store Management
+                        Shopify Store Management
                     </h2>
                     <p class="text-gray-600 dark:text-gray-400 mt-1">
                         Connect your Shopify stores to automatically sync transactions, manage partnerships, and track performance across all your e-commerce channels.
@@ -58,7 +58,7 @@
         {{-- Integration Guide --}}
         <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-6">
             <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                🚀 Getting Started with Shopify
+                Getting Started with Shopify
             </h3>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

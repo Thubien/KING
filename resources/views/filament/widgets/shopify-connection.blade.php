@@ -10,7 +10,7 @@
             @if($this->hasConnectedStores())
                 <div class="mt-8">
                     <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-4">
-                        🏪 Connected Shopify Stores
+                        Connected Shopify Stores
                     </h3>
                     
                     <div class="grid gap-4">
@@ -32,14 +32,14 @@
                                             </p>
                                             <div class="flex items-center space-x-4 mt-1">
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                    💰 {{ $store->currency }}
+                                                    {{ $store->currency }}
                                                 </span>
                                                 <span class="text-xs text-gray-500 dark:text-gray-400">
-                                                    📅 Connected {{ $store->created_at->diffForHumans() }}
+                                                    Connected {{ $store->created_at->diffForHumans() }}
                                                 </span>
                                                 @if($store->last_sync_at)
                                                     <span class="text-xs text-green-600 dark:text-green-400">
-                                                        🔄 Last sync {{ $store->last_sync_at->diffForHumans() }}
+                                                        Last sync {{ $store->last_sync_at->diffForHumans() }}
                                                     </span>
                                                 @endif
                                             </div>
@@ -71,8 +71,8 @@
                                 @if($store->partnerships->count() > 0)
                                     <div class="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
                                         <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
-                                            <span>🤝 {{ $store->partnerships->count() }} Partnership(s)</span>
-                                            <span>📊 {{ number_format($store->getRevenue(), 2) }} {{ $store->currency }} this month</span>
+                                            <span>{{ $store->partnerships->count() }} Partnership(s)</span>
+                                            <span> {{ number_format($store->getRevenue(), 2) }} {{ $store->currency }} this month</span>
                                         </div>
                                     </div>
                                 @endif
@@ -87,7 +87,7 @@
                 <div class="flex items-start">
                     <x-heroicon-o-information-circle class="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
                     <div class="text-sm text-blue-800 dark:text-blue-200">
-                        <p class="font-medium mb-1">💡 Quick Setup Tips:</p>
+                        <p class="font-medium mb-1">Quick Setup Tips:</p>
                         <ul class="space-y-1 list-disc list-inside ml-2">
                             <li>You need admin access to connect a Shopify store</li>
                             <li>After connecting, set up partnerships to define profit sharing</li>

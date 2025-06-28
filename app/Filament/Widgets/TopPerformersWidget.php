@@ -13,7 +13,7 @@ use Illuminate\Support\Number;
 
 class TopPerformersWidget extends BaseWidget
 {
-    protected static ?string $heading = '🏆 Top Performers This Month';
+    protected static ?string $heading = ' Top Performers This Month';
     
     protected static ?int $sort = 3;
     
@@ -103,9 +103,9 @@ class TopPerformersWidget extends BaseWidget
                                 $totalOrders = $record->salesTransactions()->count();
                                 $avgOrderValue = $totalOrders > 0 ? $totalSales / $totalOrders : 0;
                                 
-                                return "🎯 Total Sales: $" . number_format($totalSales, 2) . 
-                                       " | 📊 Avg Order: $" . number_format($avgOrderValue, 2) . 
-                                       " | 📅 Active Since: " . $record->created_at->format('M Y');
+                                return " Total Sales: $" . number_format($totalSales, 2) . 
+                                       " |  Avg Order: $" . number_format($avgOrderValue, 2) . 
+                                       " |  Active Since: " . $record->created_at->format('M Y');
                             })
                             ->color('gray'),
                     ])->collapsed(false),
