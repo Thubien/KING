@@ -1,0 +1,189 @@
+graph TB
+    %% SaaS Onboarding & Setup
+    subgraph "SAAS_ONBOARDING"
+        SIGNUP[User Signup<br/>📝 Email + Basic Info]
+        SHOPIFY_CONNECT[Shopify OAuth<br/>🔗 Connect Multiple Stores]
+        COMPANY_SETUP[Company Setup<br/>🏢 UK/US Entity Selection]
+        BANK_CONFIG[Banking Configuration<br/>🏦 Payoneer/Mercury Setup]
+        PARTNER_INVITE[Partner Invitation<br/>👥 Invite Business Partners]
+        STORE_ASSIGNMENT[Store Assignment<br/>🏪 Assign Stores to Companies]
+        PARTNERSHIP_CONFIG[Partnership Configuration<br/>💼 Set Ownership Percentages]
+    end
+
+    %% Core Financial Data Flow
+    subgraph "FINANCIAL_DATA_FLOW"
+        subgraph "Data_Sources"
+            SHOPIFY_SALES[Shopify Sales Data<br/>📊 Auto-sync via API]
+            STRIPE_DATA[Stripe Transactions<br/>💳 Payment Processing Data]
+            SHOPIFY_PAYMENTS[Shopify Payments<br/>💰 Payment Processing Data]
+            BANK_STATEMENTS[Bank Statements<br/>📄 CSV Upload Interface]
+            MANUAL_ENTRIES[Manual Transactions<br/>✍️ Partner Expense Forms]
+        end
+        
+        subgraph "Import_Engine"
+            IMPORT_ORCHESTRATOR[Import Orchestrator<br/>🎯 Unified Processing]
+            SHOPIFY_SYNC[Shopify Auto-Sync<br/>🔄 Real-time Sales Data]
+            PAYMENT_PROCESSOR[Payment Data Processor<br/>💳 Stripe/Shopify Fees]
+            CSV_PROCESSOR[CSV Import Processor<br/>📥 Bank Statement Parser]
+            MANUAL_PROCESSOR[Manual Entry Processor<br/>✍️ Partner Input Handler]
+            DUPLICATE_DETECTOR[Duplicate Detection<br/>🔍 Smart Matching Engine]
+        end
+    end
+
+    %% Transaction Processing Engine
+    subgraph "TRANSACTION_PROCESSING"
+        SMART_EDITOR[Smart Transaction Editor<br/>🧠 AI-Powered Categorization]
+        CATEGORY_ENGINE[Category Engine<br/>🏷️ 10 Standard Categories]
+        STORE_ALLOCATOR[Multi-Store Allocator<br/>🔄 Expense Distribution]
+        PERSONAL_TRACKER[Personal Expense Tracker<br/>👤 Partner-Specific Tracking]
+        CURRENCY_CONVERTER[Currency Conversion<br/>💱 Real-time Exchange Rates]
+        APPROVAL_WORKFLOW[Approval Workflow<br/>✅ Review & Confirm System]
+    end
+
+    %% Core Financial Engine
+    subgraph "FINANCIAL_CORE"
+        PARTNERSHIP_CALCULATOR[Partnership Calculator<br/>📊 Profit Share Computation]
+        BALANCE_MANAGER[Real-time Balance Manager<br/>⚖️ Store Balance Tracking]
+        RECONCILIATION_ENGINE[Reconciliation Engine<br/>🔍 Cross-platform Matching]
+        PROFIT_DISTRIBUTOR[Profit Distribution Engine<br/>💰 Partner Payout Calculator]
+        DEBT_TRACKER[Partner Debt Tracker<br/>📝 Personal Expense Management]
+    end
+
+    %% Shopify App Integration
+    subgraph "SHOPIFY_APP_FEATURES"
+        EMBEDDED_DASHBOARD[Embedded Dashboard<br/>📱 Shopify Admin Integration]
+        STORE_PERFORMANCE[Store Performance Widget<br/>📊 Real-time P&L Display]
+        PARTNER_SUMMARY[Partnership Summary<br/>👥 Quick Partner Overview]
+        FINANCIAL_ALERTS[Financial Alerts<br/>🚨 Low Balance Notifications]
+        QUICK_ACTIONS[Quick Actions Panel<br/>⚡ Add Expense/View Reports]
+    end
+
+    %% Reporting & Analytics
+    subgraph "REPORTING_ANALYTICS"
+        FINANCIAL_REPORTS[Financial Report Engine<br/>📊 Standard 10-Category Table]
+        STORE_DASHBOARDS[Store Performance Dashboards<br/>🏪 Individual Store Analytics]
+        PARTNER_TRANSPARENCY[Partner Transparency System<br/>🔍 Profit Share Visibility]
+        CONSOLIDATED_VIEW[Consolidated USD View<br/>💵 Multi-Currency Summary]
+        DRILL_DOWN_SYSTEM[Drill-down Transaction System<br/>🔎 Category Detail Explorer]
+        EXPORT_ENGINE[Export Engine<br/>📤 Excel/PDF Report Generation]
+    end
+
+    %% User Access & Security
+    subgraph "USER_ACCESS_CONTROL"
+        ADMIN_PANEL[Admin Panel<br/>👑 Full System Control]
+        PARTNER_PORTAL[Partner Portal<br/>👤 Limited Store Access]
+        SHOPIFY_MERCHANT[Shopify Merchant View<br/>🛍️ Store Owner Interface]
+        PERMISSION_ENGINE[Permission Engine<br/>🔒 Role-based Access Control]
+        AUDIT_TRAIL[Audit Trail System<br/>📋 Change Tracking & Compliance]
+    end
+
+    %% SaaS Business Logic
+    subgraph "SAAS_OPERATIONS"
+        SUBSCRIPTION_MANAGER[Subscription Management<br/>💳 Billing & Plans]
+        USAGE_TRACKER[Usage Tracking<br/>📈 Store Count & Transaction Volume]
+        TENANT_ISOLATION[Multi-tenant Isolation<br/>🏢 Company Data Separation]
+        BACKUP_SYSTEM[Backup & Recovery<br/>💾 Data Protection]
+        SUPPORT_SYSTEM[Customer Support<br/>🎧 Help Desk Integration]
+    end
+
+    %% Data Flow Connections
+    SIGNUP --> SHOPIFY_CONNECT
+    SHOPIFY_CONNECT --> COMPANY_SETUP
+    COMPANY_SETUP --> BANK_CONFIG
+    BANK_CONFIG --> PARTNER_INVITE
+    PARTNER_INVITE --> STORE_ASSIGNMENT
+    STORE_ASSIGNMENT --> PARTNERSHIP_CONFIG
+
+    %% Auto Data Collection
+    SHOPIFY_CONNECT --> SHOPIFY_SALES
+    SHOPIFY_CONNECT --> STRIPE_DATA
+    SHOPIFY_CONNECT --> SHOPIFY_PAYMENTS
+
+    %% Import Processing
+    SHOPIFY_SALES --> SHOPIFY_SYNC
+    STRIPE_DATA --> PAYMENT_PROCESSOR
+    SHOPIFY_PAYMENTS --> PAYMENT_PROCESSOR
+    BANK_STATEMENTS --> CSV_PROCESSOR
+    MANUAL_ENTRIES --> MANUAL_PROCESSOR
+
+    SHOPIFY_SYNC --> IMPORT_ORCHESTRATOR
+    PAYMENT_PROCESSOR --> IMPORT_ORCHESTRATOR
+    CSV_PROCESSOR --> IMPORT_ORCHESTRATOR
+    MANUAL_PROCESSOR --> IMPORT_ORCHESTRATOR
+
+    IMPORT_ORCHESTRATOR --> DUPLICATE_DETECTOR
+    DUPLICATE_DETECTOR --> SMART_EDITOR
+
+    %% Transaction Processing Flow
+    SMART_EDITOR --> CATEGORY_ENGINE
+    SMART_EDITOR --> STORE_ALLOCATOR
+    SMART_EDITOR --> PERSONAL_TRACKER
+    SMART_EDITOR --> CURRENCY_CONVERTER
+
+    CATEGORY_ENGINE --> APPROVAL_WORKFLOW
+    STORE_ALLOCATOR --> APPROVAL_WORKFLOW
+    PERSONAL_TRACKER --> APPROVAL_WORKFLOW
+    CURRENCY_CONVERTER --> APPROVAL_WORKFLOW
+
+    %% Core Financial Processing
+    APPROVAL_WORKFLOW --> PARTNERSHIP_CALCULATOR
+    APPROVAL_WORKFLOW --> BALANCE_MANAGER
+    APPROVAL_WORKFLOW --> RECONCILIATION_ENGINE
+
+    PARTNERSHIP_CALCULATOR --> PROFIT_DISTRIBUTOR
+    BALANCE_MANAGER --> DEBT_TRACKER
+    RECONCILIATION_ENGINE --> FINANCIAL_REPORTS
+
+    %% Shopify App Features
+    SHOPIFY_CONNECT --> EMBEDDED_DASHBOARD
+    BALANCE_MANAGER --> STORE_PERFORMANCE
+    PARTNERSHIP_CALCULATOR --> PARTNER_SUMMARY
+    BALANCE_MANAGER --> FINANCIAL_ALERTS
+    SMART_EDITOR --> QUICK_ACTIONS
+
+    %% Reporting Flow
+    PROFIT_DISTRIBUTOR --> FINANCIAL_REPORTS
+    BALANCE_MANAGER --> STORE_DASHBOARDS
+    PARTNERSHIP_CALCULATOR --> PARTNER_TRANSPARENCY
+    CURRENCY_CONVERTER --> CONSOLIDATED_VIEW
+    FINANCIAL_REPORTS --> DRILL_DOWN_SYSTEM
+    FINANCIAL_REPORTS --> EXPORT_ENGINE
+
+    %% Access Control
+    ADMIN_PANEL --> SMART_EDITOR
+    ADMIN_PANEL --> FINANCIAL_REPORTS
+    ADMIN_PANEL --> AUDIT_TRAIL
+    
+    PARTNER_PORTAL --> MANUAL_ENTRIES
+    PARTNER_PORTAL --> PARTNER_TRANSPARENCY
+    PARTNER_PORTAL --> CONSOLIDATED_VIEW
+    
+    SHOPIFY_MERCHANT --> EMBEDDED_DASHBOARD
+    SHOPIFY_MERCHANT --> STORE_PERFORMANCE
+    SHOPIFY_MERCHANT --> QUICK_ACTIONS
+
+    %% SaaS Operations
+    SIGNUP --> SUBSCRIPTION_MANAGER
+    IMPORT_ORCHESTRATOR --> USAGE_TRACKER
+    BALANCE_MANAGER --> TENANT_ISOLATION
+    AUDIT_TRAIL --> BACKUP_SYSTEM
+    ADMIN_PANEL --> SUPPORT_SYSTEM
+
+    %% Styling
+    classDef onboarding fill:#3B82F6,stroke:#1D4ED8,stroke-width:2px,color:#fff
+    classDef dataflow fill:#10B981,stroke:#059669,stroke-width:2px,color:#fff
+    classDef processing fill:#8B5CF6,stroke:#7C3AED,stroke-width:2px,color:#fff
+    classDef financial fill:#F59E0B,stroke:#D97706,stroke-width:2px,color:#fff
+    classDef shopify fill:#96CEB4,stroke:#74B9FF,stroke-width:2px,color:#fff
+    classDef reporting fill:#EF4444,stroke:#DC2626,stroke-width:2px,color:#fff
+    classDef access fill:#6B7280,stroke:#4B5563,stroke-width:2px,color:#fff
+    classDef saas fill:#EC4899,stroke:#DB2777,stroke-width:2px,color:#fff
+
+    class SIGNUP,SHOPIFY_CONNECT,COMPANY_SETUP,BANK_CONFIG,PARTNER_INVITE,STORE_ASSIGNMENT,PARTNERSHIP_CONFIG onboarding
+    class SHOPIFY_SALES,STRIPE_DATA,SHOPIFY_PAYMENTS,BANK_STATEMENTS,MANUAL_ENTRIES,IMPORT_ORCHESTRATOR,SHOPIFY_SYNC,PAYMENT_PROCESSOR,CSV_PROCESSOR,MANUAL_PROCESSOR,DUPLICATE_DETECTOR dataflow
+    class SMART_EDITOR,CATEGORY_ENGINE,STORE_ALLOCATOR,PERSONAL_TRACKER,CURRENCY_CONVERTER,APPROVAL_WORKFLOW processing
+    class PARTNERSHIP_CALCULATOR,BALANCE_MANAGER,RECONCILIATION_ENGINE,PROFIT_DISTRIBUTOR,DEBT_TRACKER financial
+    class EMBEDDED_DASHBOARD,STORE_PERFORMANCE,PARTNER_SUMMARY,FINANCIAL_ALERTS,QUICK_ACTIONS shopify
+    class FINANCIAL_REPORTS,STORE_DASHBOARDS,PARTNER_TRANSPARENCY,CONSOLIDATED_VIEW,DRILL_DOWN_SYSTEM,EXPORT_ENGINE reporting
+    class ADMIN_PANEL,PARTNER_PORTAL,SHOPIFY_MERCHANT,PERMISSION_ENGINE,AUDIT_TRAIL access
+    class SUBSCRIPTION_MANAGER,USAGE_TRACKER,TENANT_ISOLATION,BACKUP_SYSTEM,SUPPORT_SYSTEM saas

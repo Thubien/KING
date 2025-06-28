@@ -37,6 +37,14 @@ class Transaction extends Model
         'is_reconciled',
         'reconciled_at',
         'reconciled_by',
+        'payment_processor_type',
+        'payment_processor_id',
+        'is_pending_payout',
+        'payout_date',
+        'is_personal_expense',
+        'partner_id',
+        'is_adjustment',
+        'adjustment_type',
     ];
 
     protected $casts = [
@@ -44,26 +52,47 @@ class Transaction extends Model
         'transaction_date' => 'datetime',
         'processed_at' => 'datetime',
         'reconciled_at' => 'datetime',
+        'payout_date' => 'datetime',
         'amount' => 'decimal:2',
         'exchange_rate' => 'decimal:6',
         'amount_usd' => 'decimal:2',
         'is_reconciled' => 'boolean',
+        'is_pending_payout' => 'boolean',
+        'is_personal_expense' => 'boolean',
+        'is_adjustment' => 'boolean',
     ];
 
-    // Categories for the 11-category system
+    // Updated 11-category system aligned with business requirements
     public const CATEGORIES = [
-        'revenue' => 'Revenue',
-        'cost_of_goods' => 'Cost of Goods',
-        'marketing' => 'Marketing',
-        'shipping' => 'Shipping',
-        'fees_commissions' => 'Fees & Commissions',
-        'taxes' => 'Taxes',
-        'refunds_returns' => 'Refunds & Returns',
-        'operational' => 'Operational',
-        'partnerships' => 'Partnerships',
-        'investments' => 'Investments',
-        'other' => 'Other',
+        'SALES' => 'Sales Revenue', // 📈 Revenue from sales
+        'RETURNS' => 'Returns & Refunds', // 🔄 Real money refunds
+        'PAY-PRODUCT' => 'Product Costs', // 🟡 Product purchase costs
+        'PAY-DELIVERY' => 'Delivery Costs', // 📦 Shipping costs
+        'INVENTORY' => 'Inventory Value', // 📦 Current stock value
+        'WITHDRAW' => 'Partner Withdrawals', // 💜 Partner withdrawals
+        'END' => 'Transfer Commissions', // 📊 Personal transfer commissions
+        'BANK_COM' => 'Banking Fees', // 🏦 Banking fees
+        'FEE' => 'Payment Fees', // 💰 Payment processor fees
+        'ADS' => 'Advertising', // 📱 Advertising spend
+        'OTHER_PAY' => 'Other Expenses', // 🔧 All other expenses
     ];
+
+    // Transaction types
+    public const TYPE_INCOME = 'INCOME';
+    public const TYPE_EXPENSE = 'EXPENSE';
+    public const TYPE_PERSONAL = 'PERSONAL';
+    public const TYPE_BUSINESS = 'BUSINESS';
+
+    // Transaction statuses
+    public const STATUS_PENDING = 'PENDING';
+    public const STATUS_APPROVED = 'APPROVED';
+    public const STATUS_REJECTED = 'REJECTED';
+
+    // Payment processor types
+    public const PROCESSOR_STRIPE = 'STRIPE';
+    public const PROCESSOR_PAYPAL = 'PAYPAL';
+    public const PROCESSOR_SHOPIFY = 'SHOPIFY_PAYMENTS';
+    public const PROCESSOR_MANUAL = 'MANUAL';
 
     // Boot method
     protected static function boot()
@@ -96,6 +125,13 @@ class Transaction extends Model
                 $transaction->exchange_rate = 1.0;
             }
         });
+
+        // Payment processor logic when transaction is approved
+        static::updated(function ($transaction) {
+            if ($transaction->wasChanged('status') && $transaction->status === 'APPROVED') {
+                $transaction->handlePaymentProcessorLogic();
+            }
+        });
     }
 
     // Relationships
@@ -117,6 +153,16 @@ class Transaction extends Model
     public function importBatch(): BelongsTo
     {
         return $this->belongsTo(ImportBatch::class);
+    }
+
+    public function paymentProcessor(): BelongsTo
+    {
+        return $this->belongsTo(PaymentProcessorAccount::class, 'payment_processor_id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'partner_id');
     }
 
     // Scopes
@@ -183,9 +229,142 @@ class Transaction extends Model
         return self::CATEGORIES;
     }
 
+    /**
+     * KRITIK: Payment processor logic - Manuel CSV için
+     */
+    public function handlePaymentProcessorLogic(): void
+    {
+        // SALES kategori → Payment processor'a pending balance ekle
+        if ($this->category === 'SALES' && $this->type === self::TYPE_INCOME) {
+            $this->addToPendingBalance();
+        }
+        
+        // Personal expense tracking
+        if ($this->is_personal_expense && $this->partner_id) {
+            $this->updatePartnerDebt();
+        }
+    }
+
+    private function addToPendingBalance(): void
+    {
+        // Varsayılan olarak MANUAL processor kullan (CSV imports için)
+        $processorType = $this->payment_processor_type ?? self::PROCESSOR_MANUAL;
+        
+        $processor = PaymentProcessorAccount::firstOrCreate([
+            'company_id' => $this->store->company_id,
+            'processor_type' => $processorType,
+            'currency' => $this->currency
+        ], [
+            'current_balance' => 0,
+            'pending_balance' => 0,
+            'is_active' => true
+        ]);
+
+        $processor->addPendingBalance(
+            $this->amount, 
+            "Sales transaction: {$this->transaction_id}"
+        );
+
+        // Update transaction reference
+        $this->update(['payment_processor_id' => $processor->id]);
+    }
+
+    private function updatePartnerDebt(): void
+    {
+        if (!$this->partner_id) return;
+
+        // Partner debt tracking logic
+        \Log::info('Partner debt updated', [
+            'transaction_id' => $this->transaction_id,
+            'partner_id' => $this->partner_id,
+            'amount' => $this->amount,
+            'store_id' => $this->store_id
+        ]);
+    }
+
+    /**
+     * Payout process - Manuel olarak çağrılacak
+     */
+    public function processPayoutToBank(int $bankAccountId): void
+    {
+        if (!$this->paymentProcessor) {
+            throw new \Exception('No payment processor associated with this transaction');
+        }
+
+        $bankAccount = BankAccount::findOrFail($bankAccountId);
+        $processor = $this->paymentProcessor;
+
+        // Pending'den current'a çevir
+        $processor->movePendingToCurrent(
+            $this->amount,
+            "Payout to bank: {$this->transaction_id}"
+        );
+
+        // Bank account'a ekle
+        $bankAccount->increment('current_balance', $this->amount);
+
+        // Transaction'ı güncelle
+        $this->update([
+            'is_pending_payout' => false,
+            'payout_date' => now()
+        ]);
+    }
+
+    // Scopes for new fields
+    public function scopePendingPayout($query)
+    {
+        return $query->where('is_pending_payout', true);
+    }
+
+    public function scopePersonalExpenses($query)
+    {
+        return $query->where('is_personal_expense', true);
+    }
+
+    public function scopeByProcessor($query, string $processorType)
+    {
+        return $query->where('payment_processor_type', $processorType);
+    }
+
+    public function scopeByPartner($query, int $partnerId)
+    {
+        return $query->where('partner_id', $partnerId);
+    }
+
+    // Business logic helpers
+    public function isPendingPayout(): bool
+    {
+        return $this->is_pending_payout === true;
+    }
+
+    public function isPersonalExpense(): bool
+    {
+        return $this->is_personal_expense === true;
+    }
+
+    public function isAdjustment(): bool
+    {
+        return $this->is_adjustment === true;
+    }
+
+    public function getProcessorName(): string
+    {
+        $names = [
+            self::PROCESSOR_STRIPE => 'Stripe',
+            self::PROCESSOR_PAYPAL => 'PayPal',
+            self::PROCESSOR_SHOPIFY => 'Shopify Payments',
+            self::PROCESSOR_MANUAL => 'Manual Entry'
+        ];
+
+        return $names[$this->payment_processor_type] ?? 'Unknown';
+    }
+
+    /**
+     * Updated profit calculation with new categories
+     */
     public static function calculateProfit(int $storeId, string $period = 'month'): float
     {
-        $query = static::where('store_id', $storeId)->where('status', 'completed');
+        $query = static::where('store_id', $storeId)->where('status', self::STATUS_APPROVED);
 
         // Apply period filter
         switch ($period) {
@@ -203,9 +382,41 @@ class Transaction extends Model
                 break;
         }
 
-        $income = $query->clone()->where('type', 'income')->sum('amount_usd');
-        $expenses = $query->clone()->where('type', 'expense')->sum('amount_usd');
+        // Revenue
+        $revenue = $query->clone()->where('category', 'SALES')->sum('amount_usd');
+        
+        // Expenses (all non-revenue categories)
+        $expenses = $query->clone()
+            ->whereNotIn('category', ['SALES'])
+            ->sum('amount_usd');
 
-        return $income - $expenses;
+        return $revenue - $expenses;
+    }
+
+    /**
+     * Category-based reporting
+     */
+    public static function getCategoryTotals(int $storeId, string $period = 'month'): array
+    {
+        $query = static::where('store_id', $storeId)->where('status', self::STATUS_APPROVED);
+
+        // Apply period filter (same as above)
+        switch ($period) {
+            case 'month':
+                $query->whereMonth('transaction_date', now()->month);
+                break;
+            // Add other periods as needed
+        }
+
+        $totals = [];
+        foreach (self::CATEGORIES as $code => $label) {
+            $totals[$code] = [
+                'amount' => $query->clone()->where('category', $code)->sum('amount_usd'),
+                'count' => $query->clone()->where('category', $code)->count(),
+                'label' => $label
+            ];
+        }
+
+        return $totals;
     }
 }

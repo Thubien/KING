@@ -88,6 +88,16 @@ class Company extends Model
         return $this->hasManyThrough(Partnership::class, Store::class);
     }
 
+    public function bankAccounts(): HasMany
+    {
+        return $this->hasMany(BankAccount::class);
+    }
+
+    public function paymentProcessorAccounts(): HasMany
+    {
+        return $this->hasMany(PaymentProcessorAccount::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {
