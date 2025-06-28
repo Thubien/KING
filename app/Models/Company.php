@@ -28,6 +28,16 @@ class Company extends Model
         'plan_expires_at',
         'is_trial',
         'trial_ends_at',
+        // Premium Feature Fields
+        'api_integrations_enabled',
+        'webhooks_enabled',
+        'real_time_sync_enabled',
+        'api_calls_this_month',
+        'max_api_calls_per_month',
+        'stripe_customer_id',
+        'stripe_subscription_id',
+        'last_payment_at',
+        'next_billing_date',
     ];
 
     protected $casts = [
@@ -35,11 +45,18 @@ class Company extends Model
         'plan_expires_at' => 'datetime',
         'trial_ends_at' => 'datetime',
         'is_trial' => 'boolean',
+        'api_integrations_enabled' => 'boolean',
+        'webhooks_enabled' => 'boolean',
+        'real_time_sync_enabled' => 'boolean',
+        'last_payment_at' => 'datetime',
+        'next_billing_date' => 'datetime',
     ];
 
     protected $dates = [
         'plan_expires_at',
         'trial_ends_at',
+        'last_payment_at',
+        'next_billing_date',
     ];
 
     // Boot method to auto-generate slug
@@ -172,6 +189,73 @@ class Company extends Model
         return 'slug';
     }
 
+    // 💎 Premium Plan Management Methods
+    public function getSubscriptionPlan(): string
+    {
+        // Map existing plan enum to subscription plan naming
+        return match($this->plan) {
+            'starter' => 'free',
+            'professional' => 'premium',
+            'enterprise' => 'enterprise',
+            default => 'free',
+        };
+    }
+
+    public function canUseApiIntegrations(): bool
+    {
+        return $this->api_integrations_enabled || 
+               $this->getSubscriptionPlan() !== 'free' || 
+               $this->isOnTrial();
+    }
+
+    public function canUseWebhooks(): bool
+    {
+        return $this->webhooks_enabled || 
+               in_array($this->getSubscriptionPlan(), ['premium', 'enterprise']) || 
+               $this->isOnTrial();
+    }
+
+    public function canUseRealTimeSync(): bool
+    {
+        return $this->real_time_sync_enabled || 
+               $this->getSubscriptionPlan() === 'enterprise' || 
+               $this->isOnTrial();
+    }
+
+    public function getMaxApiCallsPerMonth(): int
+    {
+        if ($this->max_api_calls_per_month > 0) {
+            return $this->max_api_calls_per_month;
+        }
+
+        return match($this->getSubscriptionPlan()) {
+            'free' => 0,
+            'premium' => 10000,
+            'enterprise' => 100000,
+            default => 0,
+        };
+    }
+
+    public function getRemainingApiCalls(): int
+    {
+        return max(0, $this->getMaxApiCallsPerMonth() - $this->api_calls_this_month);
+    }
+
+    public function incrementApiUsage(int $calls = 1): void
+    {
+        $this->increment('api_calls_this_month', $calls);
+    }
+
+    public function resetMonthlyApiUsage(): void
+    {
+        $this->update(['api_calls_this_month' => 0]);
+    }
+
+    public function isApiLimitExceeded(): bool
+    {
+        return $this->api_calls_this_month >= $this->getMaxApiCallsPerMonth();
+    }
+
     public function toArray(): array
     {
         $array = parent::toArray();
@@ -179,6 +263,9 @@ class Company extends Model
         $array['trial_days_remaining'] = $this->getTrialDaysRemaining();
         $array['max_stores'] = $this->getMaxStores();
         $array['can_add_store'] = $this->canAddStore();
+        $array['subscription_plan'] = $this->getSubscriptionPlan();
+        $array['can_use_api_integrations'] = $this->canUseApiIntegrations();
+        $array['remaining_api_calls'] = $this->getRemainingApiCalls();
         
         return $array;
     }

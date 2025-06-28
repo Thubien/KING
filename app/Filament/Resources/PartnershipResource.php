@@ -23,120 +23,153 @@ class PartnershipResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     
-    protected static ?string $navigationLabel = 'Partnerships';
+    protected static ?string $navigationLabel = 'Partner Management';
+    
+    protected static ?string $navigationGroup = 'Partnership';
     
     protected static ?string $modelLabel = 'Partnership';
     
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()?->can('viewAny', Partnership::class) ?? false;
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->can('create', Partnership::class) ?? false;
+    }
+
+    public static function shouldRegisterNavigation(): bool
+    {
+        return auth()->user()?->isCompanyOwner() || auth()->user()?->isAdmin() || auth()->user()?->isPartner();
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        // Company owners and admins see all partnerships in their company
+        if ($user->isCompanyOwner() || $user->isAdmin()) {
+            return $query->whereHas('store', function ($storeQuery) use ($user) {
+                $storeQuery->where('company_id', $user->company_id);
+            });
+        }
+
+        // Partners only see their own partnerships
+        if ($user->isPartner()) {
+            return $query->where('user_id', $user->id);
+        }
+
+        return $query->whereNull('id'); // Return empty for other user types
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Section::make('Partnership Details')
+                Forms\Components\Section::make('🤝 Partnership Information')
+                    ->description('Create a new partnership by selecting a store and partner details.')
                     ->schema([
-                        Forms\Components\Select::make('store_id')
-                            ->label('Store')
-                            ->relationship('store', 'name')
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(function (Set $set, Get $get, $state) {
-                                if ($state) {
-                                    $availableOwnership = Partnership::getAvailableOwnershipForStore($state);
-                                    $set('available_ownership', $availableOwnership);
-                                }
-                            })
-                            ->helperText('Select the store for this partnership'),
-                            
-                        Forms\Components\Select::make('user_id')
-                            ->label('Partner')
-                            ->relationship('user', 'name')
-                            ->required()
-                            ->helperText('Select the partner user'),
-                            
-                        Forms\Components\TextInput::make('ownership_percentage')
-                            ->label('Ownership Percentage (%)')
-                            ->required()
-                            ->numeric()
-                            ->step(0.01)
-                            ->minValue(0.01)
-                            ->maxValue(100)
-                            ->live()
-                            ->rules([
-                                function (Get $get) {
-                                    return function (string $attribute, $value, \Closure $fail) use ($get) {
-                                        $storeId = $get('store_id');
-                                        if (!$storeId) return;
-                                        
-                                        $available = Partnership::getAvailableOwnershipForStore($storeId);
-                                        if ($value > $available) {
-                                            $fail("Maximum available ownership for this store is {$available}%");
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                Forms\Components\Select::make('store_id')
+                                    ->label('🏪 Select Store')
+                                    ->relationship('store', 'name')
+                                    ->required()
+                                    ->searchable()
+                                    ->preload()
+                                    ->live()
+                                    ->afterStateUpdated(function (Set $set, $state) {
+                                        if ($state) {
+                                            $available = Partnership::getAvailableOwnershipForStore($state);
+                                            $set('_available_ownership', $available);
                                         }
-                                    };
-                                },
-                            ])
-                            ->helperText(function (Get $get) {
-                                $storeId = $get('store_id');
-                                if (!$storeId) return 'Select a store first';
-                                
-                                $available = Partnership::getAvailableOwnershipForStore($storeId);
-                                $total = Partnership::getTotalOwnershipForStore($storeId);
-                                
-                                return "Available: {$available}% | Current Total: {$total}%";
-                            }),
-                    ])
-                    ->columns(3),
-                    
-                Forms\Components\Section::make('Role & Permissions')
+                                    })
+                                    ->helperText(fn (Get $get) => $get('_available_ownership') 
+                                        ? "Available ownership: {$get('_available_ownership')}%" 
+                                        : 'Choose a store to see available ownership'),
+
+                                Forms\Components\TextInput::make('ownership_percentage')
+                                    ->label('📊 Ownership Percentage')
+                                    ->required()
+                                    ->numeric()
+                                    ->suffix('%')
+                                    ->minValue(0.01)
+                                    ->maxValue(fn (Get $get) => $get('_available_ownership') ?: 100)
+                                    ->step(0.01)
+                                    ->placeholder('25.00')
+                                    ->helperText('Enter the ownership percentage for this partner'),
+                            ]),
+
+                        Forms\Components\Hidden::make('_available_ownership'),
+                    ]),
+
+                Forms\Components\Section::make('👤 Partner Details')
+                    ->description('Choose how to add the partner - select existing user or invite via email.')
                     ->schema([
-                        Forms\Components\Select::make('role')
-                            ->required()
-                            ->options([
-                                'owner' => 'Owner',
-                                'partner' => 'Partner', 
-                                'investor' => 'Investor',
-                                'manager' => 'Manager',
-                            ])
-                            ->default('partner'),
-                            
+                        Forms\Components\Tabs::make('Partner Selection')
+                            ->tabs([
+                                Forms\Components\Tabs\Tab::make('Existing Partner')
+                                    ->schema([
+                                        Forms\Components\Select::make('user_id')
+                                            ->label('Choose Existing Partner')
+                                            ->relationship('user', 'name', function ($query) {
+                                                return $query->where('user_type', 'partner')
+                                                           ->where('company_id', auth()->user()->company_id);
+                                            })
+                                            ->searchable()
+                                            ->preload()
+                                            ->helperText('Select a partner who already has an account'),
+                                    ]),
+
+                                Forms\Components\Tabs\Tab::make('Invite New Partner')
+                                    ->schema([
+                                        Forms\Components\TextInput::make('partner_email')
+                                            ->label('Partner Email Address')
+                                            ->email()
+                                            ->placeholder('partner@company.com')
+                                            ->helperText('We will send an invitation email to this address'),
+                                    ]),
+                            ]),
+                    ]),
+
+                Forms\Components\Section::make('💰 Profit Sharing')
+                    ->schema([
+                        Forms\Components\TextInput::make('profit_share_percentage')
+                            ->label('Profit Share Percentage')
+                            ->numeric()
+                            ->suffix('%')
+                            ->default(fn (Get $get) => $get('ownership_percentage'))
+                            ->minValue(0)
+                            ->maxValue(100)
+                            ->step(0.01)
+                            ->helperText('Usually matches ownership percentage, but can be different'),
+                    ])
+                    ->collapsible()
+                    ->collapsed(),
+
+                Forms\Components\Section::make('📋 Additional Details')
+                    ->schema([
                         Forms\Components\Select::make('status')
-                            ->required()
+                            ->label('Partnership Status')
                             ->options([
-                                'pending' => 'Pending',
-                                'active' => 'Active',
-                                'inactive' => 'Inactive',
-                                'terminated' => 'Terminated',
+                                'PENDING_INVITATION' => '⏳ Pending Invitation',
+                                'ACTIVE' => '✅ Active',
+                                'INACTIVE' => '❌ Inactive',
                             ])
-                            ->default('pending'),
-                            
-                        Forms\Components\Textarea::make('role_description')
-                            ->label('Role Description')
-                            ->columnSpanFull()
-                            ->helperText('Describe the partner\'s specific role and responsibilities'),
-                    ])
-                    ->columns(2),
-                    
-                Forms\Components\Section::make('Partnership Timeline')
-                    ->schema([
-                        Forms\Components\DatePicker::make('partnership_start_date')
-                            ->label('Start Date')
-                            ->required()
-                            ->default(today()),
-                            
-                        Forms\Components\DatePicker::make('partnership_end_date')
-                            ->label('End Date')
-                            ->helperText('Leave empty for indefinite partnership'),
-                    ])
-                    ->columns(2),
-                    
-                Forms\Components\Section::make('Additional Information')
-                    ->schema([
+                            ->default(fn (Get $get) => $get('partner_email') ? 'PENDING_INVITATION' : 'ACTIVE')
+                            ->required(),
+
                         Forms\Components\Textarea::make('notes')
-                            ->label('Notes')
-                            ->columnSpanFull()
-                            ->helperText('Any additional notes about this partnership'),
+                            ->label('Partnership Notes')
+                            ->placeholder('Any special agreements or notes about this partnership...')
+                            ->columnSpanFull(),
                     ])
-                    ->collapsible(),
+                    ->collapsible()
+                    ->collapsed(),
             ]);
     }
 
@@ -145,77 +178,113 @@ class PartnershipResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('store.name')
-                    ->label('Store')
+                    ->label('🏪 Store')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->weight('medium'),
                     
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('Partner')
+                    ->label('👤 Partner')
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->placeholder(fn ($record) => $record && $record->partner_email ? '📧 ' . $record->partner_email : '❓ No Partner')
+                    ->description(fn ($record) => $record && $record->user 
+                        ? $record->user->email 
+                        : ($record && $record->partner_email ? 'Invitation sent' : null)),
                     
                 Tables\Columns\TextColumn::make('ownership_percentage')
-                    ->label('Ownership %')
+                    ->label('📊 Ownership')
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => number_format($state, 2) . '%')
-                    ->color(fn ($state) => $state > 50 ? 'success' : ($state > 25 ? 'warning' : 'gray')),
-                    
-                Tables\Columns\BadgeColumn::make('role')
-                    ->label('Role')
-                    ->colors([
-                        'success' => 'owner',
-                        'warning' => 'partner',
-                        'info' => 'investor',
-                        'gray' => 'manager',
-                    ]),
+                    ->formatStateUsing(fn ($state) => number_format($state, 1) . '%')
+                    ->badge()
+                    ->color(fn ($state) => match(true) {
+                        $state >= 50 => 'success',
+                        $state >= 25 => 'warning', 
+                        $state >= 10 => 'info',
+                        default => 'gray'
+                    }),
                     
                 Tables\Columns\BadgeColumn::make('status')
-                    ->label('Status')
+                    ->label('🚦 Status')
+                    ->formatStateUsing(fn (string $state): string => match ($state) {
+                        'ACTIVE' => '✅ Active',
+                        'PENDING_INVITATION' => '⏳ Pending',
+                        'INACTIVE' => '❌ Inactive',
+                        default => $state,
+                    })
                     ->colors([
-                        'success' => 'active',
-                        'warning' => 'pending',
-                        'danger' => 'terminated',
-                        'gray' => 'inactive',
+                        'success' => 'ACTIVE',
+                        'warning' => 'PENDING_INVITATION',
+                        'danger' => 'INACTIVE',
                     ]),
-                    
-                Tables\Columns\TextColumn::make('partnership_start_date')
-                    ->label('Start Date')
-                    ->date()
-                    ->sortable(),
-                    
-                Tables\Columns\TextColumn::make('partnership_end_date')
-                    ->label('End Date')
-                    ->date()
-                    ->placeholder('Indefinite')
-                    ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label('Created')
-                    ->dateTime()
+                    ->label('📅 Created')
+                    ->dateTime('M j, Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('store')
-                    ->relationship('store', 'name'),
+                    ->label('🏪 Filter by Store')
+                    ->relationship('store', 'name')
+                    ->searchable()
+                    ->preload(),
                     
                 Tables\Filters\SelectFilter::make('status')
+                    ->label('🚦 Filter by Status')
                     ->options([
-                        'active' => 'Active',
-                        'pending' => 'Pending',
-                        'inactive' => 'Inactive',
-                        'terminated' => 'Terminated',
-                    ]),
-                    
-                Tables\Filters\SelectFilter::make('role')
-                    ->options([
-                        'owner' => 'Owner',
-                        'partner' => 'Partner',
-                        'investor' => 'Investor',
-                        'manager' => 'Manager',
+                        'ACTIVE' => '✅ Active',
+                        'PENDING_INVITATION' => '⏳ Pending Invitation',
+                        'INACTIVE' => '❌ Inactive',
                     ]),
             ])
             ->actions([
+                Tables\Actions\Action::make('send_invitation')
+                    ->label('Send Invitation')
+                    ->icon('heroicon-o-envelope')
+                    ->color('warning')
+                    ->visible(fn ($record) => $record && $record->status === 'PENDING_INVITATION' && $record->partner_email)
+                    ->action(function ($record) {
+                        try {
+                            $record->sendInvitationEmail();
+                            \Filament\Notifications\Notification::make()
+                                ->title('Invitation sent successfully!')
+                                ->body("Invitation email sent to {$record->partner_email}")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Failed to send invitation')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
+                Tables\Actions\Action::make('resend_invitation')
+                    ->label('Resend')
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('info')
+                    ->visible(fn ($record) => $record && $record->status === 'PENDING_INVITATION' && $record->partner_email && $record->invited_at)
+                    ->action(function ($record) {
+                        try {
+                            $record->generateInvitationToken();
+                            $record->sendInvitationEmail();
+                            \Filament\Notifications\Notification::make()
+                                ->title('Invitation resent successfully!')
+                                ->body("New invitation email sent to {$record->partner_email}")
+                                ->success()
+                                ->send();
+                        } catch (\Exception $e) {
+                            \Filament\Notifications\Notification::make()
+                                ->title('Failed to resend invitation')
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
+                        }
+                    }),
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),

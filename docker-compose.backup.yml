@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  app:
+    image: php:8.2-apache
+    container_name: ecomboard_app
+    ports:
+      - "9000:80"
+    volumes:
+      - .:/var/www/html
+    working_dir: /var/www/html
+    command: >
+      bash -c "
+      a2enmod rewrite &&
+      echo 'ServerName localhost' >> /etc/apache2/apache2.conf &&
+      echo '<Directory /var/www/html/public>
+          AllowOverride All
+          Require all granted
+      </Directory>' > /etc/apache2/sites-available/000-default.conf &&
+      echo '<VirtualHost *:80>
+          DocumentRoot /var/www/html/public
+          DirectoryIndex index.php
+      </VirtualHost>' >> /etc/apache2/sites-available/000-default.conf &&
+      docker-php-ext-install pdo pdo_sqlite &&
+      apache2-foreground
+      "
+    environment:
+      - APACHE_DOCUMENT_ROOT=/var/www/html/public

@@ -45,6 +45,14 @@ class Transaction extends Model
         'partner_id',
         'is_adjustment',
         'adjustment_type',
+        // Multi-channel sales fields
+        'sales_channel',
+        'payment_method',
+        'data_source',
+        'customer_info',
+        'sales_rep_id',
+        'order_notes',
+        'order_reference',
     ];
 
     protected $casts = [
@@ -60,6 +68,7 @@ class Transaction extends Model
         'is_pending_payout' => 'boolean',
         'is_personal_expense' => 'boolean',
         'is_adjustment' => 'boolean',
+        'customer_info' => 'array',
     ];
 
     // Updated 11-category system aligned with business requirements
@@ -93,6 +102,41 @@ class Transaction extends Model
     public const PROCESSOR_PAYPAL = 'PAYPAL';
     public const PROCESSOR_SHOPIFY = 'SHOPIFY_PAYMENTS';
     public const PROCESSOR_MANUAL = 'MANUAL';
+
+    // Sales channels (WHERE sale happened)
+    public const SALES_CHANNELS = [
+        'shopify' => '🛒 Shopify',
+        'instagram' => '📸 Instagram',
+        'telegram' => '✈️ Telegram',
+        'whatsapp' => '💬 WhatsApp',
+        'facebook' => '👥 Facebook',
+        'physical' => '🏪 Physical Store',
+        'referral' => '🤝 Referral',
+        'other' => '🔧 Other'
+    ];
+
+    // Payment methods (HOW customer paid)
+    public const PAYMENT_METHODS = [
+        'cash' => '💵 Cash',
+        'credit_card' => '💳 Credit Card',
+        'bank_transfer' => '🏦 Bank Transfer',
+        'cash_on_delivery' => '📦 Cash on Delivery',
+        'cargo_collect' => '🚚 Cargo Collect',
+        'crypto' => '₿ Cryptocurrency',
+        'installment' => '📅 Installment',
+        'store_credit' => '🎫 Store Credit',
+        'other' => '🔧 Other'
+    ];
+
+    // Data sources (FROM WHERE to system)
+    public const DATA_SOURCES = [
+        'shopify_api' => '🛒 Shopify API',
+        'stripe_api' => '💳 Stripe API',
+        'paypal_api' => '🅿️ PayPal API',
+        'manual_entry' => '✍️ Manual Entry',
+        'csv_import' => '📊 CSV Import',
+        'webhook' => '🔗 Webhook'
+    ];
 
     // Boot method
     protected static function boot()
@@ -163,6 +207,11 @@ class Transaction extends Model
     public function partner(): BelongsTo
     {
         return $this->belongsTo(User::class, 'partner_id');
+    }
+
+    public function salesRep(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'sales_rep_id');
     }
 
     // Scopes

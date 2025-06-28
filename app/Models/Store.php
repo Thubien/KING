@@ -30,6 +30,11 @@ class Store extends Model
         'last_sync_at',
         'sync_errors',
         'settings',
+        // Stripe API Integration (Premium Feature)
+        'stripe_secret_key',
+        'stripe_publishable_key',
+        'stripe_sync_enabled',
+        'last_stripe_sync',
     ];
 
     protected $casts = [
@@ -37,10 +42,13 @@ class Store extends Model
         'sync_errors' => 'array',
         'settings' => 'array',
         'last_sync_at' => 'datetime',
+        'stripe_sync_enabled' => 'boolean',
+        'last_stripe_sync' => 'datetime',
     ];
 
     protected $hidden = [
         'shopify_access_token',
+        'stripe_secret_key',
     ];
 
     // Boot method for global scoping
@@ -108,6 +116,16 @@ class Store extends Model
     public function setShopifyAccessTokenAttribute($value)
     {
         $this->attributes['shopify_access_token'] = $value ? Crypt::encryptString($value) : null;
+    }
+
+    public function getStripeSecretKeyAttribute($value)
+    {
+        return $value ? Crypt::decryptString($value) : null;
+    }
+
+    public function setStripeSecretKeyAttribute($value)
+    {
+        $this->attributes['stripe_secret_key'] = $value ? Crypt::encryptString($value) : null;
     }
 
     public function getShopifyUrlAttribute(): string

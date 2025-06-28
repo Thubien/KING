@@ -178,7 +178,7 @@ class ImportBatchResource extends Resource
                 Tables\Columns\TextColumn::make('original_filename')
                     ->label('File')
                     ->limit(30)
-                    ->tooltip(fn ($record) => $record->original_filename),
+                    ->tooltip(fn ($record) => $record ? $record->original_filename : ''),
                     
                 Tables\Columns\TextColumn::make('total_records')
                     ->label('Records')
@@ -188,7 +188,7 @@ class ImportBatchResource extends Resource
                 Tables\Columns\TextColumn::make('progress_percentage')
                     ->label('Progress')
                     ->alignRight()
-                    ->formatStateUsing(fn ($record) => $record->getProgressPercentage() . '%')
+                    ->formatStateUsing(fn ($record) => $record ? $record->getProgressPercentage() . '%' : '0%')
                     ->color(fn ($record) => match(true) {
                         $record->getProgressPercentage() == 100 => 'success',
                         $record->getProgressPercentage() > 50 => 'warning',
@@ -198,7 +198,7 @@ class ImportBatchResource extends Resource
                 Tables\Columns\TextColumn::make('success_rate')
                     ->label('Success Rate')
                     ->alignRight()
-                    ->formatStateUsing(fn ($record) => $record->getSuccessRate() . '%')
+                    ->formatStateUsing(fn ($record) => $record ? $record->getSuccessRate() . '%' : '0%')
                     ->color(fn ($record) => match(true) {
                         $record->getSuccessRate() >= 90 => 'success',
                         $record->getSuccessRate() >= 70 => 'warning',
@@ -208,7 +208,7 @@ class ImportBatchResource extends Resource
                 Tables\Columns\TextColumn::make('duration_formatted')
                     ->label('Duration')
                     ->alignRight()
-                    ->formatStateUsing(fn ($record) => $record->getDurationFormatted()),
+                    ->formatStateUsing(fn ($record) => $record ? $record->getDurationFormatted() : 'N/A'),
                     
                 Tables\Columns\TextColumn::make('initiator.name')
                     ->label('Initiated By')
@@ -270,13 +270,13 @@ class ImportBatchResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
-                    ->visible(fn ($record) => $record->status === 'failed'),
+                    ->visible(fn ($record) => $record && $record->status === 'failed'),
                     
                 Tables\Actions\Action::make('reprocess')
                     ->label('Reprocess')
                     ->icon('heroicon-o-arrow-path')
                     ->color('warning')
-                    ->visible(fn ($record) => $record->canBeReprocessed())
+                    ->visible(fn ($record) => $record && $record->canBeReprocessed())
                     ->requiresConfirmation()
                     ->action(function ($record) {
                         $orchestrator = app(\App\Services\Import\ImportOrchestrator::class);
