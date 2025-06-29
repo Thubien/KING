@@ -22,11 +22,16 @@ class ImportBatchResource extends Resource
     protected static ?string $modelLabel = 'Import Batch';
     
     protected static ?int $navigationSort = 4;
+    
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Hide from navigation
+    }
 
-    // Disable create action - imports are created through dedicated import interface
+    // Enable create action that redirects to import page
     public static function canCreate(): bool
     {
-        return false;
+        return true;
     }
 
     public static function form(Form $form): Form

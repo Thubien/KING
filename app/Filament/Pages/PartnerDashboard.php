@@ -31,6 +31,7 @@ class PartnerDashboard extends Page
     protected function getHeaderWidgets(): array
     {
         return [
+            \App\Filament\Widgets\PartnerDebtWidget::class,
             \App\Filament\Widgets\PartnerStatsWidget::class,
             \App\Filament\Widgets\PartnerProfitShareWidget::class,
             \App\Filament\Widgets\PartnerStoresWidget::class,

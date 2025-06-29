@@ -39,6 +39,11 @@ class TransactionEditor extends Page implements HasForms, HasTable
     protected static ?string $title = 'Transaction Editor';
     protected static ?int $navigationSort = 2;
     
+    public static function shouldRegisterNavigation(): bool
+    {
+        return false; // Hide from navigation
+    }
+    
     protected static string $view = 'filament.pages.transaction-editor';
 
     public function table(Table $table): Table
@@ -517,96 +522,4 @@ class TransactionEditor extends Page implements HasForms, HasTable
         ];
     }
 
-    public function assignAllFacebookAds(): void
-    {
-        $transactions = Transaction::query()
-            ->whereNull('store_id') // Only pending transactions without store
-            ->where('assignment_status', 'pending')
-            ->where('amount', '<', 0)
-            ->where(function ($query) {
-                $query->where('description', 'like', '%facebook%')
-                    ->orWhere('description', 'like', '%fb%')
-                    ->orWhere('description', 'like', '%meta%');
-            })
-            ->get();
-
-        $stores = Store::where('company_id', Auth::user()->company_id)->get();
-        
-        if ($stores->isEmpty()) {
-            Notification::make()
-                ->title('No stores found')
-                ->danger()
-                ->send();
-            return;
-        }
-
-        // Use first store as default for facebook ads
-        $defaultStore = $stores->first();
-        
-        $count = 0;
-        foreach ($transactions as $transaction) {
-            $transaction->update([
-                'store_id' => $defaultStore->id,
-                'category' => 'ADS',
-                'subcategory' => 'FACEBOOK',
-                'assignment_status' => 'assigned',
-            ]);
-            $count++;
-        }
-
-        Notification::make()
-            ->title("Assigned {$count} Facebook ads transactions")
-            ->success()
-            ->send();
-
-        $this->resetTable();
-    }
-
-    public function matchTransfers(): void
-    {
-        $transfers = Transaction::query()
-            ->whereNull('store_id') // Only pending transactions without store
-            ->where('assignment_status', 'pending')
-            ->whereNull('matched_transaction_id')
-            ->get();
-
-        $matched = 0;
-        
-        foreach ($transfers as $transaction) {
-            // Look for opposite transaction within 3 days
-            $oppositeAmount = -$transaction->amount;
-            $startDate = $transaction->transaction_date->copy()->subDays(3);
-            $endDate = $transaction->transaction_date->copy()->addDays(3);
-            
-            $match = Transaction::query()
-                ->where('id', '!=', $transaction->id)
-                ->whereNull('matched_transaction_id')
-                ->whereBetween('amount', [$oppositeAmount * 0.98, $oppositeAmount * 1.02]) // 2% tolerance
-                ->whereBetween('transaction_date', [$startDate, $endDate])
-                ->first();
-                
-            if ($match) {
-                $transaction->update([
-                    'matched_transaction_id' => $match->id,
-                    'assignment_status' => 'matched',
-                    'is_transfer' => true,
-                ]);
-                
-                $match->update([
-                    'matched_transaction_id' => $transaction->id,
-                    'assignment_status' => 'matched',
-                    'is_transfer' => true,
-                ]);
-                
-                $matched++;
-            }
-        }
-
-        Notification::make()
-            ->title("Matched {$matched} transfer pairs")
-            ->success()
-            ->send();
-
-        $this->resetTable();
-    }
 }

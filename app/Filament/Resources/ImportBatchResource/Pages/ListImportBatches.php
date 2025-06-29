@@ -13,7 +13,11 @@ class ListImportBatches extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\Action::make('import')
+                ->label('Import Transactions')
+                ->icon('heroicon-o-arrow-up-tray')
+                ->color('primary')
+                ->url('/admin/import-transactions'),
         ];
     }
 }

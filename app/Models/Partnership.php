@@ -56,6 +56,11 @@ class Partnership extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function settlements()
+    {
+        return $this->hasMany(Settlement::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {

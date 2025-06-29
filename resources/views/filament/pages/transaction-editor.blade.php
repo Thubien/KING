@@ -51,18 +51,6 @@
         <div class="bg-gray-50 dark:bg-gray-900 rounded-xl p-4">
             <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Quick Actions</h3>
             <div class="flex flex-wrap gap-2">
-                <button wire:click="assignAllFacebookAds" 
-                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                    <x-heroicon-m-bolt class="w-4 h-4 mr-1" />
-                    Assign Facebook Ads
-                </button>
-                
-                <button wire:click="matchTransfers" 
-                        class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600">
-                    <x-heroicon-m-link class="w-4 h-4 mr-1" />
-                    Auto-Match Transfers
-                </button>
-                
                 <button wire:click="$refresh" 
                         class="inline-flex items-center px-3 py-1.5 text-xs font-medium rounded-lg bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 border border-gray-300 dark:border-gray-600">
                     <x-heroicon-m-arrow-path class="w-4 h-4 mr-1" />
