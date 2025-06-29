@@ -16,19 +16,25 @@ class BalanceValidationService
 
     /**
      * KRITIK: Gerçek dünya balance validation
-     * Bank Accounts + Payment Processor Accounts = Store Balances
+     * Total Assets = Cash (Bank + Processors) + Inventory
      */
     public function validateCompanyBalance(Company $company): array
     {
-        $realMoney = $this->calculateTotalRealMoney($company);
+        $cashTotal = $this->calculateTotalRealMoney($company);
+        $inventoryTotal = $this->calculateTotalInventoryValue($company);
+        $totalAssets = $cashTotal + $inventoryTotal;
+        
         $calculatedBalance = $this->calculateStoreBalances($company);
         
-        $difference = abs($realMoney - $calculatedBalance);
+        $difference = abs($totalAssets - $calculatedBalance);
         $isValid = $difference <= $this->tolerance;
         
         $result = [
             'is_valid' => $isValid,
-            'real_money_total' => $realMoney,
+            'cash_total' => $cashTotal,
+            'inventory_total' => $inventoryTotal,
+            'total_assets' => $totalAssets,
+            'real_money_total' => $cashTotal, // backward compatibility
             'calculated_balance' => $calculatedBalance,
             'difference' => $difference,
             'tolerance' => $this->tolerance,
@@ -68,6 +74,16 @@ class BalanceValidationService
     {
         return $company->stores->sum(function($store) {
             return $this->calculateStoreBalance($store);
+        });
+    }
+
+    /**
+     * Total inventory value across all stores
+     */
+    private function calculateTotalInventoryValue(Company $company): float
+    {
+        return $company->stores->sum(function($store) {
+            return $store->inventory_value;
         });
     }
 
@@ -132,6 +148,10 @@ class BalanceValidationService
                     'currency' => $store->currency,
                     'calculated_balance' => $balance,
                     'formatted_balance' => number_format($balance, 2) . ' ' . $store->currency,
+                    'inventory_value' => $store->inventory_value,
+                    'formatted_inventory_value' => $store->formatted_inventory_value,
+                    'inventory_items_count' => $store->total_inventory_items,
+                    'low_stock_count' => $store->low_stock_items_count,
                     'transaction_counts' => [
                         'income' => Transaction::where('store_id', $store->id)
                             ->where('status', 'APPROVED')

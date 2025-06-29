@@ -132,6 +132,65 @@
             </div>
         </div>
 
+        {{-- Quick Links --}}
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <a href="{{ route('filament.admin.resources.inventory-items.index') }}" class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 hover:shadow-md transition-all">
+                <div class="flex items-center gap-x-2">
+                    <span class="fi-wi-stats-overview-stat-icon text-primary-500">
+                        <x-heroicon-o-cube class="h-5 w-5" />
+                    </span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Inventory Management
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Manage stock items
+                </p>
+            </a>
+            
+            <a href="{{ route('filament.admin.pages.balance-validation') }}" class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 hover:shadow-md transition-all">
+                <div class="flex items-center gap-x-2">
+                    <span class="fi-wi-stats-overview-stat-icon text-success-500">
+                        <x-heroicon-o-calculator class="h-5 w-5" />
+                    </span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Balance Validation
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Check financial health
+                </p>
+            </a>
+            
+            <a href="{{ route('filament.admin.resources.settlements.index') }}" class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 hover:shadow-md transition-all">
+                <div class="flex items-center gap-x-2">
+                    <span class="fi-wi-stats-overview-stat-icon text-warning-500">
+                        <x-heroicon-o-banknotes class="h-5 w-5" />
+                    </span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Debt Settlements
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Partner debt management
+                </p>
+            </a>
+            
+            <a href="{{ route('filament.admin.resources.partnerships.index') }}" class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 hover:shadow-md transition-all">
+                <div class="flex items-center gap-x-2">
+                    <span class="fi-wi-stats-overview-stat-icon text-info-500">
+                        <x-heroicon-o-user-group class="h-5 w-5" />
+                    </span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Partnerships
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Manage store partners
+                </p>
+            </a>
+        </div>
+
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {{-- Store Overview --}}
             <div class="bg-white dark:bg-gray-800 rounded-xl shadow-sm">

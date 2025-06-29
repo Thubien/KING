@@ -49,21 +49,29 @@
                 </div>
                 
                 {{-- Summary Cards --}}
-                <div class="p-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Real Money Total</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Cash Total</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                            ${{ number_format($validationResult['real_money_total'], 2) }}
+                            ${{ number_format($validationResult['cash_total'] ?? $validationResult['real_money_total'], 2) }}
                         </p>
                         <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Bank + Processors</p>
                     </div>
                     
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Calculated Balance</p>
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Inventory Value</p>
                         <p class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-1">
-                            ${{ number_format($validationResult['calculated_balance'], 2) }}
+                            ${{ number_format($validationResult['inventory_total'] ?? 0, 2) }}
                         </p>
-                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">From Transactions</p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Stock Value</p>
+                    </div>
+                    
+                    <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                        <p class="text-sm text-gray-500 dark:text-gray-400">Total Assets</p>
+                        <p class="text-2xl font-bold text-primary-600 mt-1">
+                            ${{ number_format($validationResult['total_assets'] ?? $validationResult['real_money_total'], 2) }}
+                        </p>
+                        <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Cash + Inventory</p>
                     </div>
                     
                     <div class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
@@ -146,18 +154,30 @@
                                 <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                                     <div class="flex justify-between items-center mb-2">
                                         <p class="font-medium text-gray-900 dark:text-gray-100">{{ $store['name'] }}</p>
-                                        <p class="font-semibold text-gray-900 dark:text-gray-100">
-                                            {{ $store['formatted_balance'] }}
-                                        </p>
+                                        <div class="text-right">
+                                            <p class="font-semibold text-gray-900 dark:text-gray-100">
+                                                {{ $store['formatted_balance'] }}
+                                            </p>
+                                            @if(isset($store['inventory_value']) && $store['inventory_value'] > 0)
+                                                <p class="text-xs text-primary-600">
+                                                    + {{ $store['formatted_inventory_value'] }} inventory
+                                                </p>
+                                            @endif
+                                        </div>
                                     </div>
                                     <div class="grid grid-cols-2 gap-2 text-xs">
                                         <div>
-                                            <span class="text-gray-500 dark:text-gray-400">Income transactions:</span>
-                                            <span class="text-gray-700 dark:text-gray-300 ml-1">{{ $store['transaction_counts']['income'] }}</span>
+                                            <span class="text-gray-500 dark:text-gray-400">Transactions:</span>
+                                            <span class="text-gray-700 dark:text-gray-300 ml-1">{{ $store['transaction_counts']['income'] }} in / {{ $store['transaction_counts']['expenses'] }} out</span>
                                         </div>
                                         <div>
-                                            <span class="text-gray-500 dark:text-gray-400">Expense transactions:</span>
-                                            <span class="text-gray-700 dark:text-gray-300 ml-1">{{ $store['transaction_counts']['expenses'] }}</span>
+                                            @if(isset($store['inventory_items_count']))
+                                                <span class="text-gray-500 dark:text-gray-400">Inventory:</span>
+                                                <span class="text-gray-700 dark:text-gray-300 ml-1">{{ $store['inventory_items_count'] }} items</span>
+                                                @if(isset($store['low_stock_count']) && $store['low_stock_count'] > 0)
+                                                    <span class="text-warning-600 ml-1">({{ $store['low_stock_count'] }} low)</span>
+                                                @endif
+                                            @endif
                                         </div>
                                     </div>
                                 </div>

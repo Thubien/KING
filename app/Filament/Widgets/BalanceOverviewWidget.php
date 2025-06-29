@@ -32,27 +32,30 @@ class BalanceOverviewWidget extends BaseWidget
         $bankTotal = $this->getBankAccountsTotal($company);
         $processorTotal = $this->getProcessorAccountsTotal($company);
         $pendingTotal = $this->getPendingBalanceTotal($company);
+        $inventoryTotal = $balanceResult['inventory_total'] ?? 0;
         
         return [
-            Stat::make('Bank Accounts', $this->formatMoney($bankTotal))
-                ->description('Available in bank accounts')
-                ->descriptionIcon('heroicon-m-building-library')
+            Stat::make('Cash Total', $this->formatMoney($balanceResult['cash_total'] ?? $balanceResult['real_money_total']))
+                ->description('Bank + Processors')
+                ->descriptionIcon('heroicon-m-banknotes')
                 ->color('success'),
                 
-            Stat::make('Payment Processors', $this->formatMoney($processorTotal))
-                ->description('Current + Pending balances')
-                ->descriptionIcon('heroicon-m-credit-card')
-                ->color('info'),
+            Stat::make('Inventory Value', $this->formatMoney($inventoryTotal))
+                ->description('Stock value')
+                ->descriptionIcon('heroicon-m-cube')
+                ->color('primary'),
+                
+            Stat::make('Total Assets', $this->formatMoney($balanceResult['total_assets'] ?? $balanceResult['real_money_total']))
+                ->description('Cash + Inventory')
+                ->descriptionIcon('heroicon-m-currency-dollar')
+                ->color('info')
+                ->chart([7, 5, 10, 3, 15, 12, 17])
+                ->chartColor('info'),
                 
             Stat::make('Pending Payouts', $this->formatMoney($pendingTotal))
                 ->description('Waiting for payout')
                 ->descriptionIcon('heroicon-m-clock')
                 ->color('warning'),
-                
-            Stat::make('Total Real Money', $this->formatMoney($balanceResult['real_money_total']))
-                ->description('Bank + Processors')
-                ->descriptionIcon('heroicon-m-currency-dollar')
-                ->color('primary'),
                 
             Stat::make('Calculated Balance', $this->formatMoney($balanceResult['calculated_balance']))
                 ->description('From store transactions')

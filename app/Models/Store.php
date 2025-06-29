@@ -86,6 +86,11 @@ class Store extends Model
         return $this->hasMany(Transaction::class);
     }
 
+    public function inventoryItems(): HasMany
+    {
+        return $this->hasMany(InventoryItem::class);
+    }
+
     public function activePartnerships(): HasMany
     {
         return $this->partnerships()->where('status', 'active');
@@ -236,6 +241,34 @@ class Store extends Model
         return 'id';
     }
 
+    // Inventory methods
+    public function getInventoryValueAttribute(): float
+    {
+        return $this->inventoryItems()
+            ->where('is_active', true)
+            ->sum('total_value');
+    }
+
+    public function getFormattedInventoryValueAttribute(): string
+    {
+        return $this->currency . ' ' . number_format($this->inventory_value, 2);
+    }
+
+    public function getTotalInventoryItemsAttribute(): int
+    {
+        return $this->inventoryItems()
+            ->where('is_active', true)
+            ->count();
+    }
+
+    public function getLowStockItemsCountAttribute(): int
+    {
+        return $this->inventoryItems()
+            ->where('is_active', true)
+            ->whereRaw('quantity <= reorder_point')
+            ->count();
+    }
+
     public function toArray(): array
     {
         $array = parent::toArray();
@@ -247,6 +280,8 @@ class Store extends Model
         $array['partnership_gap'] = $this->getPartnershipGap();
         $array['shopify_url'] = $this->shopify_url;
         $array['admin_url'] = $this->admin_url;
+        $array['inventory_value'] = $this->inventory_value;
+        $array['formatted_inventory_value'] = $this->formatted_inventory_value;
         
         return $array;
     }
