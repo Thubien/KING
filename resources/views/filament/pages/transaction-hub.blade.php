@@ -133,7 +133,21 @@
         </div>
 
         {{-- Quick Links --}}
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+            <a href="{{ route('filament.admin.pages.return-kanban') }}" class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 hover:shadow-md transition-all">
+                <div class="flex items-center gap-x-2">
+                    <span class="fi-wi-stats-overview-stat-icon text-purple-500">
+                        <x-heroicon-o-arrow-uturn-left class="h-5 w-5" />
+                    </span>
+                    <span class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        İade Takip
+                    </span>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Kanban board
+                </p>
+            </a>
+            
             <a href="{{ route('filament.admin.resources.inventory-items.index') }}" class="fi-wi-stats-overview-stat relative rounded-xl bg-white p-4 shadow-sm ring-1 ring-gray-950/5 dark:bg-gray-900 dark:ring-white/10 hover:shadow-md transition-all">
                 <div class="flex items-center gap-x-2">
                     <span class="fi-wi-stats-overview-stat-icon text-primary-500">
