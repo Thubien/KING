@@ -24,20 +24,17 @@ class PartnershipRevenueWidget extends BaseWidget
         return $table
             ->query(
                 Partnership::query()
-                    ->where('company_id', $company->id)
-                    ->where('status', 'active')
-                    ->with(['stores', 'partner'])
-                    ->withSum(['stores.transactions as monthly_revenue' => function ($query) {
-                        $query->whereMonth('transaction_date', now()->month)
-                              ->whereYear('transaction_date', now()->year);
-                    }], 'amount_usd')
-                    ->withSum(['stores.transactions as total_revenue'], 'amount_usd')
-                    ->orderBy('monthly_revenue', 'desc')
+                    ->whereHas('store', function ($query) use ($company) {
+                        $query->where('company_id', $company->id);
+                    })
+                    ->where('status', 'ACTIVE')
+                    ->with(['store', 'user'])
+                    ->orderBy('ownership_percentage', 'desc')
             )
             ->columns([
                 Tables\Columns\Layout\Stack::make([
                     Tables\Columns\Layout\Split::make([
-                        Tables\Columns\TextColumn::make('partner.name')
+                        Tables\Columns\TextColumn::make('user.name')
                             ->label('Partner')
                             ->weight('bold')
                             ->icon('heroicon-o-user')
@@ -45,6 +42,13 @@ class PartnershipRevenueWidget extends BaseWidget
                             
                         Tables\Columns\TextColumn::make('monthly_revenue')
                             ->label('This Month')
+                            ->getStateUsing(function (Partnership $record) {
+                                return $record->store->transactions()
+                                    ->whereMonth('transaction_date', now()->month)
+                                    ->whereYear('transaction_date', now()->year)
+                                    ->where('category', 'SALES')
+                                    ->sum('amount');
+                            })
                             ->money('USD')
                             ->sortable()
                             ->alignEnd()
@@ -52,29 +56,24 @@ class PartnershipRevenueWidget extends BaseWidget
                     ]),
                     
                     Tables\Columns\Layout\Split::make([
-                        Tables\Columns\TextColumn::make('stores_count')
-                            ->counts('stores')
-                            ->label('Stores')
+                        Tables\Columns\TextColumn::make('store.name')
+                            ->label('Store')
                             ->icon('heroicon-o-building-storefront')
                             ->color('info'),
                             
                         Tables\Columns\TextColumn::make('partner_share')
                             ->label('Partner Share')
                             ->getStateUsing(function (Partnership $record) {
-                                $revenue = $record->monthly_revenue ?? 0;
-                                return $revenue * ($record->partner_percentage / 100);
+                                $revenue = $record->store->transactions()
+                                    ->whereMonth('transaction_date', now()->month)
+                                    ->whereYear('transaction_date', now()->year)
+                                    ->where('category', 'SALES')
+                                    ->sum('amount');
+                                return $revenue * ($record->ownership_percentage / 100);
                             })
                             ->money('USD')
                             ->color('warning'),
                             
-                        Tables\Columns\TextColumn::make('sales_rep_share')
-                            ->label('Sales Rep Share')
-                            ->getStateUsing(function (Partnership $record) {
-                                $revenue = $record->monthly_revenue ?? 0;
-                                return $revenue * ($record->sales_rep_percentage / 100);
-                            })
-                            ->money('USD')
-                            ->color('purple'),
                     ]),
                     
                     Tables\Columns\Layout\Panel::make([
@@ -82,12 +81,17 @@ class PartnershipRevenueWidget extends BaseWidget
                             Tables\Columns\TextColumn::make('partnership_details')
                                 ->label('')
                                 ->getStateUsing(function (Partnership $record) {
-                                    return "Partner: {$record->partner_percentage}% | Sales Rep: {$record->sales_rep_percentage}% | Company: {$record->company_percentage}%";
+                                    return "Ownership: {$record->ownership_percentage}% | Role: {$record->role}";
                                 })
                                 ->color('gray'),
                                 
                             Tables\Columns\TextColumn::make('total_revenue')
                                 ->label('All Time Revenue')
+                                ->getStateUsing(function (Partnership $record) {
+                                    return $record->store->transactions()
+                                        ->where('category', 'SALES')
+                                        ->sum('amount');
+                                })
                                 ->money('USD')
                                 ->color('success')
                                 ->alignEnd(),
@@ -100,21 +104,17 @@ class PartnershipRevenueWidget extends BaseWidget
                     Tables\Actions\Action::make('view')
                         ->label('View Partnership')
                         ->icon('heroicon-o-eye')
-                        ->url(fn (Partnership $record) => route('filament.admin.resources.partnerships.view', $record)),
+                        ->url(fn (Partnership $record) => "/admin/partnerships/{$record->id}"),
                         
-                    Tables\Actions\Action::make('view_stores')
-                        ->label('View Stores')
+                    Tables\Actions\Action::make('view_store')
+                        ->label('View Store')
                         ->icon('heroicon-o-building-storefront')
-                        ->url(fn (Partnership $record) => route('filament.admin.resources.stores.index', [
-                            'tableFilters' => ['partnership_id' => ['value' => $record->id]]
-                        ])),
+                        ->url(fn (Partnership $record) => "/admin/stores/{$record->store_id}"),
                         
                     Tables\Actions\Action::make('view_transactions')
                         ->label('View Transactions')
                         ->icon('heroicon-o-banknotes')
-                        ->url(fn (Partnership $record) => route('filament.admin.resources.transactions.index', [
-                            'tableFilters' => ['store_id' => ['values' => $record->stores->pluck('id')->toArray()]]
-                        ])),
+                        ->url(fn (Partnership $record) => "/admin/transactions?tableFilters[store_id][value]={$record->store_id}"),
                         
                     Tables\Actions\Action::make('send_report')
                         ->label('Send Monthly Report')
@@ -124,7 +124,7 @@ class PartnershipRevenueWidget extends BaseWidget
                             // TODO: Implement email report functionality
                             \Filament\Notifications\Notification::make()
                                 ->title('Report Sent')
-                                ->body("Monthly report sent to {$record->partner->name}")
+                                ->body("Monthly report sent to {$record->user->name}")
                                 ->success()
                                 ->send();
                         })
@@ -143,6 +143,6 @@ class PartnershipRevenueWidget extends BaseWidget
     public static function canView(): bool
     {
         $user = Auth::user();
-        return $user?->isCompanyOwner() || $user?->isAdmin();
+        return $user && ($user->user_type === 'admin' || $user->user_type === 'company_owner');
     }
 }

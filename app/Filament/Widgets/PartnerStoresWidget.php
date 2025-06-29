@@ -41,14 +41,16 @@ class PartnerStoresWidget extends BaseWidget
                     ->badge()
                     ->color(fn ($state) => $state > 50 ? 'success' : ($state > 25 ? 'warning' : 'gray')),
                     
-                Tables\Columns\BadgeColumn::make('role')
+                Tables\Columns\TextColumn::make('role')
                     ->label('Role')
-                    ->colors([
-                        'success' => 'owner',
-                        'warning' => 'partner',
-                        'info' => 'investor',
-                        'gray' => 'manager',
-                    ]),
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'owner' => 'success',
+                        'partner' => 'warning',
+                        'investor' => 'info',
+                        'manager' => 'gray',
+                        default => 'gray',
+                    }),
                     
                 Tables\Columns\TextColumn::make('partnership_start_date')
                     ->label('Since')
@@ -91,7 +93,7 @@ class PartnerStoresWidget extends BaseWidget
                 Tables\Actions\Action::make('view_details')
                     ->label('View Details')
                     ->icon('heroicon-m-eye')
-                    ->url(fn ($record) => route('filament.admin.resources.stores.view', $record->store))
+                    ->url(fn ($record) => "/admin/stores/{$record->store->id}")
                     ->openUrlInNewTab(),
             ])
             ->emptyStateHeading('No partnerships yet')

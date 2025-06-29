@@ -47,10 +47,7 @@ class PartnerDashboard extends Page
     protected function getHeaderActions(): array
     {
         return [
-            \Filament\Actions\Action::make('view_profile')
-                ->label('My Profile')
-                ->icon('heroicon-o-user')
-                ->url(route('filament.admin.pages.edit-profile')),
+            // Profile actions can be added here later
         ];
     }
 }

@@ -47,7 +47,7 @@ class SyncShopifyStores extends Command
             try {
                 SyncShopifyStoreData::dispatch($store, $since);
                 $this->newLine();
-                $this->info("Queued sync for: {$store->name} ({$store->shopify_domain})")
+                $this->info("Queued sync for: {$store->name} ({$store->shopify_domain})");
                 $bar->advance();
             } catch (\Exception $e) {
                 $this->newLine();

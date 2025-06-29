@@ -53,6 +53,17 @@ class Transaction extends Model
         'sales_rep_id',
         'order_notes',
         'order_reference',
+        // Transaction editor fields
+        'assignment_status',
+        'user_notes',
+        'is_transfer',
+        'matched_transaction_id',
+        'subcategory',
+        'is_split',
+        'parent_transaction_id',
+        'split_percentage',
+        'suggestion_confidence',
+        'suggested_assignment',
     ];
 
     protected $casts = [
@@ -69,6 +80,11 @@ class Transaction extends Model
         'is_personal_expense' => 'boolean',
         'is_adjustment' => 'boolean',
         'customer_info' => 'array',
+        'is_transfer' => 'boolean',
+        'is_split' => 'boolean',
+        'split_percentage' => 'decimal:2',
+        'suggestion_confidence' => 'integer',
+        'suggested_assignment' => 'array',
     ];
 
     // Updated 11-category system aligned with business requirements
@@ -79,12 +95,44 @@ class Transaction extends Model
         'PAY-DELIVERY' => 'Delivery Costs', //  Shipping costs
         'INVENTORY' => 'Inventory Value', //  Current stock value
         'WITHDRAW' => 'Partner Withdrawals', //  Partner withdrawals
-        'END' => 'Transfer Commissions', //  Personal transfer commissions
-        'BANK_COM' => 'Banking Fees', //  Banking fees
+        'BANK_FEE' => 'Banking Fees', //  Banking fees and transfer commissions
+        'BANK_COM' => 'Banking Fees', //  Banking fees (deprecated - use BANK_FEE)
         'FEE' => 'Payment Fees', //  Payment processor fees
         'ADS' => 'Advertising', //  Advertising spend
         'OTHER_PAY' => 'Other Expenses', //  All other expenses
     ];
+
+    // Subcategories for more detailed tracking
+    public const SUBCATEGORIES = [
+        'BANK_FEE' => [
+            'TRANSFER_FEE' => 'Transfer Fee',
+            'MONTHLY_FEE' => 'Monthly Account Fee',
+            'EXCHANGE_FEE' => 'Currency Exchange Fee',
+            'CARD_FEE' => 'Card Fee',
+            'OTHER_FEE' => 'Other Bank Fee',
+        ],
+        'ADS' => [
+            'FACEBOOK' => 'Facebook Ads',
+            'GOOGLE' => 'Google Ads',
+            'TIKTOK' => 'TikTok Ads',
+            'INSTAGRAM' => 'Instagram Ads',
+            'OTHER_ADS' => 'Other Advertising',
+        ],
+        'OTHER_PAY' => [
+            'RENT' => 'Rent',
+            'UTILITIES' => 'Utilities',
+            'SALARY' => 'Salary',
+            'PACKAGING' => 'Packaging',
+            'SUBSCRIPTIONS' => 'Subscriptions',
+            'MISC' => 'Miscellaneous',
+        ],
+    ];
+
+    // Assignment status options
+    public const ASSIGNMENT_PENDING = 'pending';
+    public const ASSIGNMENT_ASSIGNED = 'assigned';
+    public const ASSIGNMENT_SPLIT = 'split';
+    public const ASSIGNMENT_MATCHED = 'matched';
 
     // Transaction types
     public const TYPE_INCOME = 'INCOME';
@@ -212,6 +260,27 @@ class Transaction extends Model
     public function salesRep(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sales_rep_id');
+    }
+
+    // Transaction editor relationships
+    public function matchedTransaction()
+    {
+        return $this->belongsTo(Transaction::class, 'matched_transaction_id');
+    }
+
+    public function matchingTransaction()
+    {
+        return $this->hasOne(Transaction::class, 'matched_transaction_id');
+    }
+
+    public function parentTransaction()
+    {
+        return $this->belongsTo(Transaction::class, 'parent_transaction_id');
+    }
+
+    public function splitTransactions()
+    {
+        return $this->hasMany(Transaction::class, 'parent_transaction_id');
     }
 
     // Scopes

@@ -38,7 +38,10 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+                \App\Filament\Widgets\BalanceOverviewWidget::class,
+                \App\Filament\Widgets\StoreOverviewWidget::class,
+                \App\Filament\Widgets\RecentTransactionsWidget::class,
+                \App\Filament\Widgets\PartnershipRevenueWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
