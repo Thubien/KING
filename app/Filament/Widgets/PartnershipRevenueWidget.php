@@ -85,11 +85,23 @@ class PartnershipRevenueWidget extends BaseWidget
                                 })
                                 ->color('gray'),
                                 
+                            Tables\Columns\TextColumn::make('debt_balance')
+                                ->label('Debt Balance')
+                                ->getStateUsing(fn (Partnership $record) => $record->getFormattedDebtBalance())
+                                ->color(fn (Partnership $record): string => match ($record->getDebtStatus()) {
+                                    'owes_money' => 'danger',
+                                    'has_credit' => 'success',
+                                    default => 'gray',
+                                })
+                                ->weight('bold')
+                                ->alignEnd(),
+                                
                             Tables\Columns\TextColumn::make('total_revenue')
                                 ->label('All Time Revenue')
                                 ->getStateUsing(function (Partnership $record) {
+                                    $incomeCategories = array_keys(\App\Models\Transaction::getIncomeCategories());
                                     return $record->store->transactions()
-                                        ->where('category', 'SALES')
+                                        ->whereIn('category', $incomeCategories)
                                         ->sum('amount');
                                 })
                                 ->money('USD')

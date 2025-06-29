@@ -70,7 +70,7 @@ class PartnershipResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Section::make(' Partnership Information')
+                Forms\Components\Section::make('Partnership Information')
                     ->description('Create a new partnership by selecting a store and partner details.')
                     ->schema([
                         Forms\Components\Grid::make(2)
@@ -93,7 +93,7 @@ class PartnershipResource extends Resource
                                         : 'Choose a store to see available ownership'),
 
                                 Forms\Components\TextInput::make('ownership_percentage')
-                                    ->label(' Ownership Percentage')
+                                    ->label('Ownership Percentage')
                                     ->required()
                                     ->numeric()
                                     ->suffix('%')
@@ -107,7 +107,7 @@ class PartnershipResource extends Resource
                         Forms\Components\Hidden::make('_available_ownership'),
                     ]),
 
-                Forms\Components\Section::make('👤 Partner Details')
+                Forms\Components\Section::make('Partner Details')
                     ->description('Choose how to add the partner - select existing user or invite via email.')
                     ->schema([
                         Forms\Components\Tabs::make('Partner Selection')
@@ -136,7 +136,7 @@ class PartnershipResource extends Resource
                             ]),
                     ]),
 
-                Forms\Components\Section::make(' Profit Sharing')
+                Forms\Components\Section::make('Profit Sharing')
                     ->schema([
                         Forms\Components\TextInput::make('profit_share_percentage')
                             ->label('Profit Share Percentage')
@@ -184,16 +184,16 @@ class PartnershipResource extends Resource
                     ->weight('medium'),
                     
                 Tables\Columns\TextColumn::make('user.name')
-                    ->label('👤 Partner')
+                    ->label('Partner')
                     ->sortable()
                     ->searchable()
-                    ->placeholder(fn ($record) => $record && $record->partner_email ? '📧 ' . $record->partner_email : '❓ No Partner')
+                    ->placeholder(fn ($record) => $record && $record->partner_email ? $record->partner_email : 'No Partner')
                     ->description(fn ($record) => $record && $record->user 
                         ? $record->user->email 
                         : ($record && $record->partner_email ? 'Invitation sent' : null)),
                     
                 Tables\Columns\TextColumn::make('ownership_percentage')
-                    ->label(' Ownership')
+                    ->label('Ownership')
                     ->sortable()
                     ->formatStateUsing(fn ($state) => number_format($state, 1) . '%')
                     ->badge()
@@ -202,6 +202,21 @@ class PartnershipResource extends Resource
                         $state >= 25 => 'warning', 
                         $state >= 10 => 'info',
                         default => 'gray'
+                    }),
+                    
+                Tables\Columns\TextColumn::make('debt_balance')
+                    ->label('Debt Balance')
+                    ->getStateUsing(fn (Partnership $record) => $record->getFormattedDebtBalance())
+                    ->badge()
+                    ->color(fn (Partnership $record) => match ($record->getDebtStatus()) {
+                        'owes_money' => 'danger',
+                        'has_credit' => 'success',
+                        default => 'gray',
+                    })
+                    ->icon(fn (Partnership $record) => match ($record->getDebtStatus()) {
+                        'owes_money' => 'heroicon-o-exclamation-triangle',
+                        'has_credit' => 'heroicon-o-check-circle',
+                        default => null,
                     }),
                     
                 Tables\Columns\BadgeColumn::make('status')
@@ -219,7 +234,7 @@ class PartnershipResource extends Resource
                     ]),
 
                 Tables\Columns\TextColumn::make('created_at')
-                    ->label(' Created')
+                    ->label('Created')
                     ->dateTime('M j, Y')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

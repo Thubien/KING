@@ -87,23 +87,53 @@ class Transaction extends Model
         'suggested_assignment' => 'array',
     ];
 
-    // Updated 11-category system aligned with business requirements
+    // Updated category system with expanded income categories
     public const CATEGORIES = [
-        'SALES' => 'Sales Revenue', //  Revenue from sales
-        'RETURNS' => 'Returns & Refunds', //  Real money refunds
-        'PAY-PRODUCT' => 'Product Costs', //  Product purchase costs
-        'PAY-DELIVERY' => 'Delivery Costs', //  Shipping costs
-        'INVENTORY' => 'Inventory Value', //  Current stock value
-        'WITHDRAW' => 'Partner Withdrawals', //  Partner withdrawals
-        'BANK_FEE' => 'Banking Fees', //  Banking fees and transfer commissions
-        'BANK_COM' => 'Banking Fees', //  Banking fees (deprecated - use BANK_FEE)
-        'FEE' => 'Payment Fees', //  Payment processor fees
-        'ADS' => 'Advertising', //  Advertising spend
-        'OTHER_PAY' => 'Other Expenses', //  All other expenses
+        // Income Categories
+        'SALES' => 'Sales Revenue', // Revenue from sales
+        'PARTNER_REPAYMENT' => 'Partner Loan Repayment', // Partner paying back personal loans
+        'INVESTMENT_RETURN' => 'Investment Returns', // Returns from company investments
+        'INVESTMENT_INCOME' => 'Investment Income', // External investments into company
+        'OTHER_INCOME' => 'Other Income', // Other income sources
+        
+        // Expense Categories
+        'RETURNS' => 'Returns & Refunds', // Real money refunds
+        'PAY-PRODUCT' => 'Product Costs', // Product purchase costs
+        'PAY-DELIVERY' => 'Delivery Costs', // Shipping costs
+        'INVENTORY' => 'Inventory Value', // Current stock value
+        'WITHDRAW' => 'Partner Withdrawals', // Partner withdrawals
+        'BANK_FEE' => 'Banking Fees', // Banking fees and transfer commissions
+        'BANK_COM' => 'Banking Fees', // Banking fees (deprecated - use BANK_FEE)
+        'FEE' => 'Payment Fees', // Payment processor fees
+        'ADS' => 'Advertising', // Advertising spend
+        'OTHER_PAY' => 'Other Expenses', // All other expenses
     ];
 
     // Subcategories for more detailed tracking
     public const SUBCATEGORIES = [
+        'PARTNER_REPAYMENT' => [
+            'PERSONAL_LOAN' => 'Personal Loan Repayment',
+            'ADVANCE_RETURN' => 'Advance Return',
+            'DEBT_PAYMENT' => 'Debt Payment',
+        ],
+        'INVESTMENT_RETURN' => [
+            'STOCK_DIVIDEND' => 'Stock Dividends',
+            'FUND_RETURN' => 'Fund Returns',
+            'CRYPTO_GAIN' => 'Crypto Gains',
+            'INTEREST' => 'Interest Income',
+        ],
+        'INVESTMENT_INCOME' => [
+            'ANGEL_INVESTMENT' => 'Angel Investment',
+            'VC_FUNDING' => 'VC Funding',
+            'PARTNER_INVESTMENT' => 'Partner Investment',
+            'LOAN_RECEIVED' => 'Loan Received',
+        ],
+        'OTHER_INCOME' => [
+            'REFUND' => 'Refund Received',
+            'INSURANCE_CLAIM' => 'Insurance Claim',
+            'TAX_REFUND' => 'Tax Refund',
+            'MISC_INCOME' => 'Miscellaneous Income',
+        ],
         'BANK_FEE' => [
             'TRANSFER_FEE' => 'Transfer Fee',
             'MONTHLY_FEE' => 'Monthly Account Fee',
@@ -320,6 +350,24 @@ class Transaction extends Model
     {
         return $this->type === 'income';
     }
+    
+    // Helper to get income categories
+    public static function getIncomeCategories(): array
+    {
+        return [
+            'SALES' => 'Sales Revenue',
+            'PARTNER_REPAYMENT' => 'Partner Loan Repayment',
+            'INVESTMENT_RETURN' => 'Investment Returns',
+            'INVESTMENT_INCOME' => 'Investment Income',
+            'OTHER_INCOME' => 'Other Income',
+        ];
+    }
+    
+    // Helper to check if a category is income
+    public static function isIncomeCategory(string $category): bool
+    {
+        return array_key_exists($category, self::getIncomeCategories());
+    }
 
     public function isExpense(): bool
     {
@@ -352,9 +400,17 @@ class Transaction extends Model
      */
     public function handlePaymentProcessorLogic(): void
     {
+        // Income categories that go through payment processors
+        $processorIncomeCategories = ['SALES'];
+        
         // SALES kategori → Payment processor'a pending balance ekle
-        if ($this->category === 'SALES' && $this->type === self::TYPE_INCOME) {
+        if (in_array($this->category, $processorIncomeCategories) && $this->type === self::TYPE_INCOME) {
             $this->addToPendingBalance();
+        }
+        
+        // Partner repayment tracking
+        if ($this->category === 'PARTNER_REPAYMENT' && $this->partner_id) {
+            $this->updatePartnerDebtRepayment();
         }
         
         // Personal expense tracking
@@ -389,15 +445,54 @@ class Transaction extends Model
 
     private function updatePartnerDebt(): void
     {
-        if (!$this->partner_id) return;
+        if (!$this->partner_id || !$this->store_id) return;
 
-        // Partner debt tracking logic
-        \Log::info('Partner debt updated', [
-            'transaction_id' => $this->transaction_id,
-            'partner_id' => $this->partner_id,
-            'amount' => $this->amount,
-            'store_id' => $this->store_id
-        ]);
+        // Find the partnership for this partner and store
+        $partnership = Partnership::where('user_id', $this->partner_id)
+            ->where('store_id', $this->store_id)
+            ->where('status', 'ACTIVE')
+            ->first();
+            
+        if (!$partnership) {
+            \Log::warning('No active partnership found for debt tracking', [
+                'transaction_id' => $this->transaction_id,
+                'partner_id' => $this->partner_id,
+                'store_id' => $this->store_id
+            ]);
+            return;
+        }
+        
+        // Add the expense amount to partner's debt (positive amount increases debt)
+        $partnership->addDebt(
+            abs($this->amount), 
+            "Personal expense: {$this->description}"
+        );
+    }
+    
+    private function updatePartnerDebtRepayment(): void
+    {
+        if (!$this->partner_id || !$this->store_id) return;
+
+        // Find the partnership for this partner and store
+        $partnership = Partnership::where('user_id', $this->partner_id)
+            ->where('store_id', $this->store_id)
+            ->where('status', 'ACTIVE')
+            ->first();
+            
+        if (!$partnership) {
+            \Log::warning('No active partnership found for debt repayment', [
+                'transaction_id' => $this->transaction_id,
+                'partner_id' => $this->partner_id,
+                'store_id' => $this->store_id
+            ]);
+            return;
+        }
+        
+        // Reduce the debt by the repayment amount
+        $partnership->reduceDebt(
+            abs($this->amount), 
+            "Debt repayment: {$this->description}"
+        );
     }
 
     /**
@@ -500,12 +595,13 @@ class Transaction extends Model
                 break;
         }
 
-        // Revenue
-        $revenue = $query->clone()->where('category', 'SALES')->sum('amount_usd');
+        // Revenue (all income categories)
+        $incomeCategories = array_keys(self::getIncomeCategories());
+        $revenue = $query->clone()->whereIn('category', $incomeCategories)->sum('amount_usd');
         
-        // Expenses (all non-revenue categories)
+        // Expenses (all non-income categories)
         $expenses = $query->clone()
-            ->whereNotIn('category', ['SALES'])
+            ->whereNotIn('category', $incomeCategories)
             ->sum('amount_usd');
 
         return $revenue - $expenses;

@@ -23,6 +23,8 @@ class Partnership extends Model
         'invited_at',
         'activated_at',
         'ownership_percentage',
+        'debt_balance',
+        'debt_last_updated_at',
         'role',
         'role_description',
         'partnership_start_date',
@@ -37,6 +39,8 @@ class Partnership extends Model
         'partnership_start_date' => 'date',
         'partnership_end_date' => 'date',
         'ownership_percentage' => 'decimal:2',
+        'debt_balance' => 'decimal:2',
+        'debt_last_updated_at' => 'datetime',
         'invited_at' => 'datetime',
         'activated_at' => 'datetime',
     ];
@@ -93,6 +97,74 @@ class Partnership extends Model
     public function calculateProfitShare(float $totalProfit): float
     {
         return $totalProfit * ($this->ownership_percentage / 100);
+    }
+    
+    // Debt Management Methods
+    public function addDebt(float $amount, string $description = null): void
+    {
+        $this->debt_balance += $amount;
+        $this->debt_last_updated_at = now();
+        $this->save();
+        
+        // Log the debt transaction
+        \Log::info('Partner debt increased', [
+            'partnership_id' => $this->id,
+            'partner_id' => $this->user_id,
+            'store_id' => $this->store_id,
+            'amount' => $amount,
+            'new_balance' => $this->debt_balance,
+            'description' => $description
+        ]);
+    }
+    
+    public function reduceDebt(float $amount, string $description = null): void
+    {
+        $this->debt_balance -= $amount;
+        $this->debt_last_updated_at = now();
+        $this->save();
+        
+        // Log the debt transaction
+        \Log::info('Partner debt reduced', [
+            'partnership_id' => $this->id,
+            'partner_id' => $this->user_id,
+            'store_id' => $this->store_id,
+            'amount' => $amount,
+            'new_balance' => $this->debt_balance,
+            'description' => $description
+        ]);
+    }
+    
+    public function hasDebt(): bool
+    {
+        return $this->debt_balance > 0;
+    }
+    
+    public function hasCredit(): bool
+    {
+        return $this->debt_balance < 0;
+    }
+    
+    public function getDebtStatus(): string
+    {
+        if ($this->debt_balance > 0) {
+            return 'owes_money';
+        } elseif ($this->debt_balance < 0) {
+            return 'has_credit';
+        }
+        return 'no_debt';
+    }
+    
+    public function getFormattedDebtBalance(): string
+    {
+        $amount = abs($this->debt_balance);
+        $currency = $this->store->currency ?? 'USD';
+        
+        if ($this->debt_balance > 0) {
+            return "-{$currency} " . number_format($amount, 2); // Owes money
+        } elseif ($this->debt_balance < 0) {
+            return "+{$currency} " . number_format($amount, 2); // Has credit
+        }
+        return "{$currency} 0.00";
     }
 
     // Invitation Methods

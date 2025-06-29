@@ -5,6 +5,7 @@ namespace App\Filament\Pages;
 use App\Models\Transaction;
 use App\Models\Store;
 use App\Models\User;
+use App\Services\SmartSuggestionService;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -157,42 +158,102 @@ class TransactionEditor extends Page implements HasForms, HasTable
                     ->label('Assign')
                     ->icon('heroicon-o-pencil')
                     ->color('primary')
-                    ->form([
-                        Select::make('store_id')
-                            ->label('Store')
-                            ->options(Store::where('company_id', Auth::user()->company_id)->pluck('name', 'id'))
-                            ->required()
-                            ->searchable(),
-                        Select::make('category')
-                            ->label('Category')
-                            ->options(fn (Transaction $record) => $record->amount >= 0 
-                                ? ['SALES' => 'Sales Revenue'] 
-                                : Transaction::CATEGORIES)
-                            ->required()
-                            ->reactive()
-                            ->afterStateUpdated(fn ($state, callable $set) => $set('subcategory', null)),
-                        Select::make('subcategory')
-                            ->label('Subcategory')
-                            ->options(fn (callable $get) => Transaction::SUBCATEGORIES[$get('category')] ?? [])
-                            ->visible(fn (callable $get): bool => in_array($get('category'), ['BANK_FEE', 'ADS', 'OTHER_PAY'])),
-                        Toggle::make('is_personal_expense')
-                            ->label('Personal Expense')
-                            ->reactive()
-                            ->visible(fn (?Transaction $record): bool => $record && $record->amount < 0),
-                        Select::make('partner_id')
-                            ->label('Partner')
-                            ->options(User::whereHas('partnerships', function ($query) {
-                                $query->whereHas('store', function ($q) {
-                                    $q->where('company_id', Auth::user()->company_id);
-                                });
-                            })->pluck('name', 'id'))
-                            ->searchable()
-                            ->visible(fn (callable $get): bool => $get('is_personal_expense') === true)
-                            ->requiredIf('is_personal_expense', true),
-                        TextInput::make('user_notes')
-                            ->label('Notes')
-                            ->placeholder('Optional notes about this transaction'),
-                    ])
+                    ->form(function (Transaction $record) {
+                        // Get smart suggestion
+                        $suggestionService = new SmartSuggestionService();
+                        $suggestion = $suggestionService->suggestAssignment($record);
+                        
+                        return [
+                            // Transaction info at the top
+                            \Filament\Forms\Components\Section::make('Transaction Details')
+                                ->schema([
+                                    \Filament\Forms\Components\Placeholder::make('transaction_info')
+                                        ->label('')
+                                        ->content(function () use ($record) {
+                                            return new \Illuminate\Support\HtmlString("
+                                                <div class='space-y-2'>
+                                                    <div class='flex justify-between'>
+                                                        <span class='text-sm text-gray-500'>Date:</span>
+                                                        <span class='text-sm font-medium'>{$record->transaction_date->format('M j, Y')}</span>
+                                                    </div>
+                                                    <div class='flex justify-between'>
+                                                        <span class='text-sm text-gray-500'>Description:</span>
+                                                        <span class='text-sm font-medium'>{$record->description}</span>
+                                                    </div>
+                                                    <div class='flex justify-between'>
+                                                        <span class='text-sm text-gray-500'>Amount:</span>
+                                                        <span class='text-sm font-bold " . ($record->amount >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$record->currency} " . number_format(abs($record->amount), 2) . "</span>
+                                                    </div>
+                                                </div>
+                                            ");
+                                        }),
+                                ])
+                                ->collapsible()
+                                ->collapsed(false),
+                            
+                            // Show suggestion if available
+                            \Filament\Forms\Components\Section::make()
+                                ->schema([
+                                    \Filament\Forms\Components\Placeholder::make('suggestion')
+                                        ->label('Smart Suggestion')
+                                        ->content(function () use ($suggestion) {
+                                            if (!$suggestion) {
+                                                return 'No suggestion available';
+                                            }
+                                            
+                                            $store = Store::find($suggestion['store_id']);
+                                            $storeName = $store ? $store->name : 'Select store';
+                                            $category = Transaction::CATEGORIES[$suggestion['category']] ?? $suggestion['category'];
+                                            
+                                            return "Store: {$storeName} | Category: {$category} | Confidence: {$suggestion['confidence']}%";
+                                        }),
+                                    \Filament\Forms\Components\Placeholder::make('reason')
+                                        ->label('')
+                                        ->content(fn () => $suggestion['suggestion_reason'] ?? '')
+                                        ->visible(fn () => $suggestion !== null),
+                                ])
+                                ->visible(fn () => $suggestion !== null)
+                                ->collapsible(),
+                                
+                            Select::make('store_id')
+                                ->label('Store')
+                                ->options(Store::where('company_id', Auth::user()->company_id)->pluck('name', 'id'))
+                                ->required()
+                                ->searchable()
+                                ->default($suggestion['store_id'] ?? null),
+                            Select::make('category')
+                                ->label('Category')
+                                ->options(fn (Transaction $record) => $record->amount >= 0 
+                                    ? Transaction::getIncomeCategories() 
+                                    : array_diff_key(Transaction::CATEGORIES, Transaction::getIncomeCategories()))
+                                ->required()
+                                ->reactive()
+                                ->afterStateUpdated(fn ($state, callable $set) => $set('subcategory', null))
+                                ->default($suggestion['category'] ?? null),
+                            Select::make('subcategory')
+                                ->label('Subcategory')
+                                ->options(fn (callable $get) => Transaction::SUBCATEGORIES[$get('category')] ?? [])
+                                ->visible(fn (callable $get): bool => array_key_exists($get('category'), Transaction::SUBCATEGORIES))
+                                ->default($suggestion['subcategory'] ?? null),
+                            Toggle::make('is_personal_expense')
+                                ->label('Personal Expense')
+                                ->reactive()
+                                ->visible(fn (?Transaction $record): bool => $record && $record->amount < 0),
+                            Select::make('partner_id')
+                                ->label('Partner')
+                                ->options(User::whereHas('partnerships', function ($query) {
+                                    $query->whereHas('store', function ($q) {
+                                        $q->where('company_id', Auth::user()->company_id);
+                                    });
+                                })->pluck('name', 'id'))
+                                ->searchable()
+                                ->visible(fn (callable $get): bool => $get('is_personal_expense') === true)
+                                ->requiredIf('is_personal_expense', true),
+                            TextInput::make('user_notes')
+                                ->label('Notes')
+                                ->placeholder('Optional notes about this transaction'),
+                        ];
+                    })
                     ->action(function (Transaction $record, array $data): void {
                         $record->update([
                             'store_id' => $data['store_id'],
@@ -203,13 +264,113 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             'user_notes' => $data['user_notes'] ?? null,
                             'assignment_status' => 'assigned',
                         ]);
+                        
+                        // Learn from this assignment
+                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService->learnFromAssignment($record);
 
                         Notification::make()
                             ->title('Transaction assigned')
+                            ->body('System learned from your assignment')
                             ->success()
                             ->send();
                     })
                     ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'pending'),
+                    
+                Action::make('edit')
+                    ->label('Edit')
+                    ->icon('heroicon-o-pencil')
+                    ->color('warning')
+                    ->form(function (Transaction $record) {
+                        return [
+                            \Filament\Forms\Components\Section::make('Transaction Details')
+                                ->schema([
+                                    \Filament\Forms\Components\Placeholder::make('transaction_info')
+                                        ->label('')
+                                        ->content(function () use ($record) {
+                                            return new \Illuminate\Support\HtmlString("
+                                                <div class='space-y-2'>
+                                                    <div class='flex justify-between'>
+                                                        <span class='text-sm text-gray-500'>Date:</span>
+                                                        <span class='text-sm font-medium'>{$record->transaction_date->format('M j, Y')}</span>
+                                                    </div>
+                                                    <div class='flex justify-between'>
+                                                        <span class='text-sm text-gray-500'>Description:</span>
+                                                        <span class='text-sm font-medium'>{$record->description}</span>
+                                                    </div>
+                                                    <div class='flex justify-between'>
+                                                        <span class='text-sm text-gray-500'>Amount:</span>
+                                                        <span class='text-sm font-bold " . ($record->amount >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$record->currency} " . number_format(abs($record->amount), 2) . "</span>
+                                                    </div>
+                                                </div>
+                                            ");
+                                        }),
+                                ])
+                                ->collapsible()
+                                ->collapsed(false),
+                                
+                            Select::make('store_id')
+                                ->label('Store')
+                                ->options(Store::where('company_id', Auth::user()->company_id)->pluck('name', 'id'))
+                                ->required()
+                                ->searchable()
+                                ->default($record->store_id),
+                            Select::make('category')
+                                ->label('Category')
+                                ->options(fn (Transaction $record) => $record->amount >= 0 
+                                    ? Transaction::getIncomeCategories() 
+                                    : array_diff_key(Transaction::CATEGORIES, Transaction::getIncomeCategories()))
+                                ->required()
+                                ->reactive()
+                                ->afterStateUpdated(fn ($state, callable $set) => $set('subcategory', null))
+                                ->default($record->category),
+                            Select::make('subcategory')
+                                ->label('Subcategory')
+                                ->options(fn (callable $get) => Transaction::SUBCATEGORIES[$get('category')] ?? [])
+                                ->visible(fn (callable $get): bool => array_key_exists($get('category'), Transaction::SUBCATEGORIES))
+                                ->default($record->subcategory),
+                            Toggle::make('is_personal_expense')
+                                ->label('Personal Expense')
+                                ->reactive()
+                                ->visible(fn (?Transaction $record): bool => $record && $record->amount < 0)
+                                ->default($record->is_personal_expense),
+                            Select::make('partner_id')
+                                ->label('Partner')
+                                ->options(User::whereHas('partnerships', function ($query) {
+                                    $query->whereHas('store', function ($q) {
+                                        $q->where('company_id', Auth::user()->company_id);
+                                    });
+                                })->pluck('name', 'id'))
+                                ->searchable()
+                                ->visible(fn (callable $get): bool => $get('is_personal_expense') === true)
+                                ->requiredIf('is_personal_expense', true)
+                                ->default($record->partner_id),
+                            TextInput::make('user_notes')
+                                ->label('Notes')
+                                ->placeholder('Optional notes about this transaction')
+                                ->default($record->user_notes),
+                        ];
+                    })
+                    ->action(function (Transaction $record, array $data): void {
+                        $record->update([
+                            'store_id' => $data['store_id'],
+                            'category' => $data['category'],
+                            'subcategory' => $data['subcategory'] ?? null,
+                            'is_personal_expense' => $data['is_personal_expense'] ?? false,
+                            'partner_id' => $data['partner_id'] ?? null,
+                            'user_notes' => $data['user_notes'] ?? null,
+                        ]);
+                        
+                        // Learn from edit
+                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService->learnFromAssignment($record);
+
+                        Notification::make()
+                            ->title('Transaction updated')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'assigned'),
                 
                 Action::make('split')
                     ->label('Split')
@@ -233,27 +394,91 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             ->label('Store')
                             ->options(Store::where('company_id', Auth::user()->company_id)->pluck('name', 'id'))
                             ->required()
-                            ->searchable(),
+                            ->searchable()
+                            ->helperText('Select store for all selected transactions'),
                         Select::make('category')
                             ->label('Category')
-                            ->options(Transaction::CATEGORIES)
-                            ->required(),
+                            ->options(function () {
+                                // Show all categories in bulk assign since we'll filter by transaction type
+                                return Transaction::CATEGORIES;
+                            })
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($state, callable $set) => $set('subcategory', null)),
+                        Select::make('subcategory')
+                            ->label('Subcategory')
+                            ->options(fn (callable $get) => Transaction::SUBCATEGORIES[$get('category')] ?? [])
+                            ->visible(fn (callable $get): bool => array_key_exists($get('category'), Transaction::SUBCATEGORIES)),
                     ])
                     ->action(function (Collection $records, array $data): void {
-                        $records->each(function (Transaction $record) use ($data) {
+                        $suggestionService = new SmartSuggestionService();
+                        $assigned = 0;
+                        $skipped = 0;
+                        
+                        $records->each(function (Transaction $record) use ($data, $suggestionService, &$assigned, &$skipped) {
                             // Only update if same type (income/expense)
-                            if (($record->amount >= 0 && $data['category'] === 'SALES') || 
-                                ($record->amount < 0 && $data['category'] !== 'SALES')) {
+                            $isIncomeCategory = Transaction::isIncomeCategory($data['category']);
+                            if (($record->amount >= 0 && $isIncomeCategory) || 
+                                ($record->amount < 0 && !$isIncomeCategory)) {
                                 $record->update([
                                     'store_id' => $data['store_id'],
                                     'category' => $data['category'],
+                                    'subcategory' => $data['subcategory'] ?? null,
                                     'assignment_status' => 'assigned',
                                 ]);
+                                
+                                // Learn from bulk assignment
+                                $suggestionService->learnFromAssignment($record);
+                                $assigned++;
+                            } else {
+                                $skipped++;
                             }
                         });
 
                         Notification::make()
-                            ->title('Transactions assigned')
+                            ->title("Bulk assignment completed")
+                            ->body("Assigned: {$assigned} transactions" . ($skipped > 0 ? ", Skipped: {$skipped} (wrong type)" : ""))
+                            ->success()
+                            ->send();
+                    })
+                    ->deselectRecordsAfterCompletion(),
+                    
+                BulkAction::make('bulk_assign_by_pattern')
+                    ->label('Smart Assign by Pattern')
+                    ->icon('heroicon-o-sparkles')
+                    ->color('info')
+                    ->requiresConfirmation()
+                    ->modalHeading('Smart Pattern Assignment')
+                    ->modalDescription('This will analyze transaction descriptions and assign categories based on patterns.')
+                    ->action(function (Collection $records): void {
+                        $suggestionService = new SmartSuggestionService();
+                        $assigned = 0;
+                        $noSuggestion = 0;
+                        
+                        $records->each(function (Transaction $record) use ($suggestionService, &$assigned, &$noSuggestion) {
+                            if ($record->assignment_status === 'pending') {
+                                $suggestion = $suggestionService->suggestAssignment($record);
+                                
+                                if ($suggestion && $suggestion['confidence'] >= 75) {
+                                    $record->update([
+                                        'store_id' => $suggestion['store_id'],
+                                        'category' => $suggestion['category'],
+                                        'subcategory' => $suggestion['subcategory'] ?? null,
+                                        'assignment_status' => 'assigned',
+                                        'user_notes' => 'Auto-assigned with ' . $suggestion['confidence'] . '% confidence',
+                                    ]);
+                                    
+                                    $suggestionService->learnFromAssignment($record);
+                                    $assigned++;
+                                } else {
+                                    $noSuggestion++;
+                                }
+                            }
+                        });
+                        
+                        Notification::make()
+                            ->title('Smart assignment completed')
+                            ->body("Assigned: {$assigned} transactions" . ($noSuggestion > 0 ? ", No suggestion for: {$noSuggestion}" : ""))
                             ->success()
                             ->send();
                     })
