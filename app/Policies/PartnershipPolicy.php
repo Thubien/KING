@@ -4,9 +4,11 @@ namespace App\Policies;
 
 use App\Models\Partnership;
 use App\Models\User;
+use App\Policies\Traits\HandlesAuthorization;
 
 class PartnershipPolicy
 {
+    use HandlesAuthorization;
     /**
      * Determine whether the user can view any models.
      */
@@ -21,8 +23,8 @@ class PartnershipPolicy
     public function view(User $user, Partnership $partnership): bool
     {
         // Company owners and admins can view all partnerships in their company
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $partnership->store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $partnership->store && $this->belongsToSameCompany($user, $partnership);
         }
 
         // Partners can only view their own partnerships
@@ -38,7 +40,7 @@ class PartnershipPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isCompanyOwner() || $user->isAdmin();
+        return $this->isCompanyManager($user);
     }
 
     /**
@@ -47,8 +49,8 @@ class PartnershipPolicy
     public function update(User $user, Partnership $partnership): bool
     {
         // Only company owners and admins can update partnerships
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $partnership->store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $partnership->store && $this->belongsToSameCompany($user, $partnership);
         }
 
         return false;
@@ -60,8 +62,8 @@ class PartnershipPolicy
     public function delete(User $user, Partnership $partnership): bool
     {
         // Only company owners and admins can delete partnerships
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $partnership->store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $partnership->store && $this->belongsToSameCompany($user, $partnership);
         }
 
         return false;

@@ -28,6 +28,8 @@ class ReturnRequestResource extends Resource
     protected static ?string $pluralLabel = 'İade Talepleri';
 
     protected static ?string $label = 'İade Talebi';
+    
+    protected static ?string $navigationGroup = 'CRM';
 
     protected static ?int $navigationSort = 21;
 

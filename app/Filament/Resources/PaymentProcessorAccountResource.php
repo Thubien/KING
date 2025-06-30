@@ -18,6 +18,8 @@ class PaymentProcessorAccountResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-credit-card';
 
     protected static ?string $navigationLabel = 'Payment Processors';
+    
+    protected static ?string $navigationGroup = 'Financial Management';
 
     protected static ?string $modelLabel = 'Payment Processor';
 

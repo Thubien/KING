@@ -39,6 +39,8 @@ class PermissionsAndRolesSeeder extends Seeder
             'manage_transactions',
             'view_financial_reports',
             'manage_bank_accounts',
+            'view_bank_accounts',
+            'edit_bank_accounts',
             'manage_payment_processors',
 
             // Partnership management
@@ -68,6 +70,8 @@ class PermissionsAndRolesSeeder extends Seeder
             'manage_transactions',
             'view_financial_reports',
             'manage_bank_accounts',
+            'view_bank_accounts',
+            'edit_bank_accounts',
             'manage_payment_processors',
             'create_partnerships',
             'edit_partnerships',

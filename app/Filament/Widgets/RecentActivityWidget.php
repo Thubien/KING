@@ -66,4 +66,10 @@ class RecentActivityWidget extends BaseWidget
             ])
             ->paginated(false);
     }
+
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->isCompanyOwner() || $user->isAdmin() || $user->isPartner());
+    }
 }

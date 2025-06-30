@@ -430,6 +430,7 @@ class BankAccountResource extends Resource
         return [
             'index' => Pages\ListBankAccounts::route('/'),
             'create' => Pages\CreateBankAccount::route('/create'),
+            'view' => Pages\ViewBankAccount::route('/{record}'),
             'edit' => Pages\EditBankAccount::route('/{record}/edit'),
         ];
     }

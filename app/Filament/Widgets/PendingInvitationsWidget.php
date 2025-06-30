@@ -11,14 +11,20 @@ class PendingInvitationsWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $cacheKey = 'widget:pending_invitations:'.auth()->user()->company_id;
+        $user = auth()->user();
+        $cacheKey = 'widget:pending_invitations:'.$user->company_id;
 
-        $stats = Cache::remember($cacheKey, now()->addMinutes(5), function () {
-            $pendingInvitations = Partnership::pendingInvitation()->count();
-            $expiredInvitations = Partnership::pendingInvitation()
+        $stats = Cache::remember($cacheKey, now()->addMinutes(5), function () use ($user) {
+            $query = Partnership::pendingInvitation()
+                ->whereHas('store', function ($q) use ($user) {
+                    $q->where('company_id', $user->company_id);
+                });
+            
+            $pendingInvitations = $query->count();
+            $expiredInvitations = (clone $query)
                 ->where('invited_at', '<=', now()->subDays(7))
                 ->count();
-            $recentInvitations = Partnership::pendingInvitation()
+            $recentInvitations = (clone $query)
                 ->where('invited_at', '>=', now()->subDays(3))
                 ->count();
 
@@ -50,5 +56,11 @@ class PendingInvitationsWidget extends BaseWidget
     public function getColumns(): int
     {
         return 3;
+    }
+
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->isCompanyOwner() || $user->isAdmin());
     }
 }

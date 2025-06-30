@@ -19,9 +19,19 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         $isIncome = $this->faker->boolean(60); // 60% chance of income
-        $amount = $isIncome ?
-            $this->faker->randomFloat(2, 50, 1000) :
-            -$this->faker->randomFloat(2, 10, 500);
+        $amount = $this->faker->randomFloat(2, 50, 1000);
+        $currency = $this->faker->randomElement(['USD', 'EUR', 'GBP', 'TRY']);
+        $exchangeRate = $currency === 'USD' ? 1.0 : $this->faker->randomFloat(6, 0.5, 2.0);
+        $amountUsd = $amount * $exchangeRate;
+
+        // Use the actual categories from the Transaction model
+        $incomeCategories = ['SALES', 'PARTNER_REPAYMENT', 'INVESTMENT_RETURN', 'INVESTMENT_INCOME', 'OTHER_INCOME'];
+        $expenseCategories = ['RETURNS', 'PAY-PRODUCT', 'PAY-DELIVERY', 'INVENTORY', 'WITHDRAW', 'BANK_FEE', 'FEE', 'ADS', 'OTHER_PAY'];
+
+        $type = $isIncome ? 'INCOME' : 'EXPENSE';
+        $category = $isIncome ? 
+            $this->faker->randomElement($incomeCategories) : 
+            $this->faker->randomElement($expenseCategories);
 
         return [
             'store_id' => Store::factory(),
@@ -30,26 +40,14 @@ class TransactionFactory extends Factory
             'external_id' => $this->faker->optional()->numerify('EXT-########'),
             'reference_number' => $this->faker->optional()->numerify('REF-########'),
             'amount' => $amount,
-            'currency' => 'USD',
-            'exchange_rate' => 1.000000,
-            'amount_usd' => $amount,
-            'type' => $isIncome ? 'income' : 'expense',
-            'category' => $this->faker->randomElement([
-                'revenue',
-                'cost_of_goods',
-                'marketing',
-                'shipping',
-                'fees_commissions',
-                'taxes',
-                'refunds_returns',
-                'operational',
-                'partnerships',
-                'investments',
-                'other',
-            ]),
+            'currency' => $currency,
+            'exchange_rate' => $exchangeRate,
+            'amount_usd' => $amountUsd,
+            'type' => $type,
+            'category' => $category,
             'description' => $this->faker->sentence(),
             'transaction_date' => $this->faker->dateTimeBetween('-6 months', 'now'),
-            'status' => $this->faker->randomElement(['pending', 'completed', 'failed']),
+            'status' => 'APPROVED', // Default to approved for testing
             'source' => 'manual',
             'metadata' => [
                 'source_detail' => 'factory',
@@ -57,13 +55,13 @@ class TransactionFactory extends Factory
             ],
             'is_reconciled' => $this->faker->boolean(80),
             'payment_processor_type' => $this->faker->optional()->randomElement(['STRIPE', 'PAYPAL', 'SHOPIFY_PAYMENTS']),
-            'payment_processor_id' => null, // Set to null to avoid foreign key constraint issues
+            'payment_processor_id' => null,
             'is_pending_payout' => $this->faker->boolean(20),
             'payout_date' => $this->faker->optional()->dateTimeBetween('-1 month', '+1 month'),
-            'is_personal_expense' => $this->faker->boolean(10),
+            'is_personal_expense' => false,
             'partner_id' => null,
-            'is_adjustment' => $this->faker->boolean(5),
-            'adjustment_type' => $this->faker->optional()->randomElement(['manual_correction', 'bank_reconciliation', 'import_correction']),
+            'is_adjustment' => false,
+            'adjustment_type' => null,
         ];
     }
 
@@ -73,9 +71,12 @@ class TransactionFactory extends Factory
     public function sale(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'income',
-            'category' => 'revenue',
+            'type' => 'INCOME',
+            'category' => 'SALES',
             'amount' => $this->faker->randomFloat(2, 50, 500),
+            'amount_usd' => $attributes['currency'] === 'USD' ? 
+                $this->faker->randomFloat(2, 50, 500) : 
+                $this->faker->randomFloat(2, 50, 500) * $attributes['exchange_rate'],
         ]);
     }
 
@@ -85,9 +86,12 @@ class TransactionFactory extends Factory
     public function expense(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'expense',
-            'category' => 'operational',
-            'amount' => -abs($this->faker->randomFloat(2, 10, 200)),
+            'type' => 'EXPENSE',
+            'category' => $this->faker->randomElement(['PAY-PRODUCT', 'ADS', 'FEE', 'OTHER_PAY']),
+            'amount' => $this->faker->randomFloat(2, 10, 200),
+            'amount_usd' => $attributes['currency'] === 'USD' ? 
+                $this->faker->randomFloat(2, 10, 200) : 
+                $this->faker->randomFloat(2, 10, 200) * $attributes['exchange_rate'],
         ]);
     }
 
@@ -97,9 +101,12 @@ class TransactionFactory extends Factory
     public function return(): static
     {
         return $this->state(fn (array $attributes) => [
-            'type' => 'expense',
-            'category' => 'refunds_returns',
-            'amount' => -abs($this->faker->randomFloat(2, 20, 300)),
+            'type' => 'EXPENSE',
+            'category' => 'RETURNS',
+            'amount' => $this->faker->randomFloat(2, 20, 300),
+            'amount_usd' => $attributes['currency'] === 'USD' ? 
+                $this->faker->randomFloat(2, 20, 300) : 
+                $this->faker->randomFloat(2, 20, 300) * $attributes['exchange_rate'],
         ]);
     }
 }

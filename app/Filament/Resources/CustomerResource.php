@@ -434,8 +434,7 @@ class CustomerResource extends Resource
                         })
                         ->deselectRecordsAfterCompletion(),
                         
-                    Tables\Actions\ExportBulkAction::make()
-                        ->label('Excel\'e Aktar'),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
             ->defaultSort('last_order_date', 'desc')

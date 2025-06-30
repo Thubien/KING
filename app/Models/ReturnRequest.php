@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Traits\BelongsToCompany;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class ReturnRequest extends Model
@@ -441,6 +442,23 @@ class ReturnRequest extends Model
     protected static function boot()
     {
         parent::boot();
+        
+        // Multi-tenant scoping
+        static::addGlobalScope('company', function (Builder $builder) {
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all return requests
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's return requests
+                if ($user->company_id) {
+                    $builder->where('company_id', $user->company_id);
+                }
+            }
+        });
         
         static::created(function ($returnRequest) {
             // Create or link customer

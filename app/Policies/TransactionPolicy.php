@@ -4,9 +4,11 @@ namespace App\Policies;
 
 use App\Models\Transaction;
 use App\Models\User;
+use App\Policies\Traits\HandlesAuthorization;
 
 class TransactionPolicy
 {
+    use HandlesAuthorization;
     /**
      * Determine whether the user can view any models.
      */
@@ -20,9 +22,14 @@ class TransactionPolicy
      */
     public function view(User $user, Transaction $transaction): bool
     {
+        // Load store relationship if not loaded
+        if (!$transaction->relationLoaded('store')) {
+            $transaction->load('store');
+        }
+
         // Company owners and admins can view all transactions in their company
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $transaction->store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $transaction->store && $this->belongsToSameCompany($user, $transaction);
         }
 
         // Partners can only view transactions from stores they have partnerships in
@@ -38,7 +45,7 @@ class TransactionPolicy
      */
     public function create(User $user): bool
     {
-        return $user->isCompanyOwner() || $user->isAdmin();
+        return $this->isCompanyManager($user);
     }
 
     /**
@@ -46,9 +53,14 @@ class TransactionPolicy
      */
     public function update(User $user, Transaction $transaction): bool
     {
+        // Load store relationship if not loaded
+        if (!$transaction->relationLoaded('store')) {
+            $transaction->load('store');
+        }
+
         // Only company owners and admins can update transactions
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $transaction->store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $transaction->store && $this->belongsToSameCompany($user, $transaction);
         }
 
         return false;
@@ -59,9 +71,14 @@ class TransactionPolicy
      */
     public function delete(User $user, Transaction $transaction): bool
     {
+        // Load store relationship if not loaded
+        if (!$transaction->relationLoaded('store')) {
+            $transaction->load('store');
+        }
+
         // Only company owners and admins can delete transactions
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $transaction->store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $transaction->store && $this->belongsToSameCompany($user, $transaction);
         }
 
         return false;

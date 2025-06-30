@@ -322,6 +322,7 @@ class ImportBatchResource extends Resource
     {
         return [
             'index' => Pages\ListImportBatches::route('/'),
+            'create' => Pages\CreateImportBatch::route('/create'),
             'view' => Pages\ViewImportBatch::route('/{record}'),
             'edit' => Pages\EditImportBatch::route('/{record}/edit'),
         ];

@@ -316,6 +316,7 @@ class ManualOrderResource extends Resource
         return [
             'index' => Pages\ListManualOrders::route('/'),
             'create' => Pages\CreateManualOrder::route('/create'),
+            'view' => Pages\ViewManualOrder::route('/{record}'),
             'edit' => Pages\EditManualOrder::route('/{record}/edit'),
         ];
     }

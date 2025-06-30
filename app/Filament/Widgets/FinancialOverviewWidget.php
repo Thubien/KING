@@ -20,22 +20,20 @@ class FinancialOverviewWidget extends BaseWidget
             // This month's revenue
             $thisMonthRevenue = Transaction::whereIn('store_id', $storeIds)
                 ->thisMonth()
-                ->where('type', 'income')
-                ->where('category', 'revenue')
+                ->where('category', 'SALES')
                 ->sum('amount');
 
             // Last month's revenue for comparison
             $lastMonthRevenue = Transaction::whereIn('store_id', $storeIds)
                 ->whereMonth('transaction_date', now()->subMonth()->month)
                 ->whereYear('transaction_date', now()->subMonth()->year)
-                ->where('type', 'income')
-                ->where('category', 'revenue')
+                ->where('category', 'SALES')
                 ->sum('amount');
 
             // This month's expenses
             $thisMonthExpenses = Transaction::whereIn('store_id', $storeIds)
                 ->thisMonth()
-                ->where('type', 'expense')
+                ->whereNotIn('category', ['SALES', 'RETURNS'])
                 ->sum('amount');
 
             // Net profit
@@ -78,5 +76,11 @@ class FinancialOverviewWidget extends BaseWidget
     public function getColumns(): int
     {
         return 3;
+    }
+
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->isCompanyOwner() || $user->isAdmin() || $user->isPartner());
     }
 }

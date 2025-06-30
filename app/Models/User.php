@@ -160,6 +160,16 @@ class User extends Authenticatable
             ->exists();
     }
 
+    public function getPersonalExpensesForStore(int $storeId): float
+    {
+        return Transaction::where('store_id', $storeId)
+            ->where('partner_id', $this->id)
+            ->where('is_personal_expense', true)
+            ->where('type', 'expense')
+            ->where('status', 'APPROVED')
+            ->sum('amount');
+    }
+
     public function getAccessibleStoreIds(): array
     {
         return Cache::remember(

@@ -153,6 +153,7 @@ class SuperAdminSeeder extends Seeder
             'currency' => 'USD',
             'current_balance' => 1000000,
             'is_active' => true,
+            'is_primary' => true,
         ]);
 
         BankAccount::firstOrCreate([
@@ -164,6 +165,7 @@ class SuperAdminSeeder extends Seeder
             'currency' => 'EUR',
             'current_balance' => 500000,
             'is_active' => true,
+            'is_primary' => false,
         ]);
 
         // Create payment processor accounts

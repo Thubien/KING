@@ -264,6 +264,36 @@ class Customer extends Model
         return 'Normal Müşteri';
     }
     
+    public function getSegmentLabel(): string
+    {
+        $segments = [
+            'VIP' => 'VIP Customer',
+            'Potansiyel' => 'Potential Customer',
+            'Yeni Müşteri' => 'New Customer',
+            'Kayıp Müşteri' => 'Lost Customer',
+            'Risk Altında' => 'At Risk',
+            'Sadık Müşteri' => 'Loyal Customer',
+            'Normal Müşteri' => 'Regular Customer',
+        ];
+
+        return $segments[$this->getSegment()] ?? $this->getSegment();
+    }
+
+    public function getSegmentColor(): string
+    {
+        $colors = [
+            'VIP' => 'purple',
+            'Potansiyel' => 'gray',
+            'Yeni Müşteri' => 'blue',
+            'Kayıp Müşteri' => 'red',
+            'Risk Altında' => 'orange',
+            'Sadık Müşteri' => 'green',
+            'Normal Müşteri' => 'teal',
+        ];
+
+        return $colors[$this->getSegment()] ?? 'gray';
+    }
+    
     public function isLost(): bool
     {
         return $this->getDaysSinceLastOrder() > 180;
@@ -385,6 +415,23 @@ class Customer extends Model
     protected static function boot()
     {
         parent::boot();
+
+        // Multi-tenant scoping
+        static::addGlobalScope('company', function (Builder $builder) {
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all customers
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's customers
+                if ($user->company_id) {
+                    $builder->where('company_id', $user->company_id);
+                }
+            }
+        });
 
         static::created(function ($customer) {
             // Log customer creation

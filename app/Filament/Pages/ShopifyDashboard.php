@@ -20,9 +20,8 @@ class ShopifyDashboard extends Page
     public function getHeaderWidgets(): array
     {
         return [
-            // Temporarily disabled
-            // \App\Filament\Widgets\ShopifyStatsWidget::class,
-            // \App\Filament\Widgets\ShopifyConnectionWidget::class,
+            \App\Filament\Widgets\ShopifyStatsWidget::class,
+            \App\Filament\Widgets\ShopifyConnectionWidget::class,
         ];
     }
 
@@ -41,8 +40,7 @@ class ShopifyDashboard extends Page
     protected function getFooterWidgets(): array
     {
         return [
-            // Temporarily disabled
-            // \App\Filament\Widgets\ShopifyStoreListWidget::class,
+            \App\Filament\Widgets\ShopifyStoreListWidget::class,
         ];
     }
 }

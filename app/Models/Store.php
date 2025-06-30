@@ -59,8 +59,18 @@ class Store extends Model
 
         // Global scope for multi-tenancy (only if user has company)
         static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->company_id) {
-                $builder->where('company_id', auth()->user()->company_id);
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all stores
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's stores
+                if ($user->company_id) {
+                    $builder->where('company_id', $user->company_id);
+                }
             }
         });
 
@@ -208,17 +218,46 @@ class Store extends Model
     public function getProfit(string $period = 'month'): float
     {
         $query = $this->transactions()
-            ->where('status', 'completed');
+            ->where('status', 'APPROVED'); // Use correct status constant
 
-        $income = $query->clone()->where('type', 'income')->sum('amount_usd');
-        $expenses = $query->clone()->where('type', 'expense')->sum('amount_usd');
+        // Apply period filter
+        switch ($period) {
+            case 'day':
+                $query->whereDate('transaction_date', today());
+                break;
+            case 'week':
+                $query->whereBetween('transaction_date', [now()->startOfWeek(), now()->endOfWeek()]);
+                break;
+            case 'month':
+                $query->whereMonth('transaction_date', now()->month)
+                      ->whereYear('transaction_date', now()->year);
+                break;
+            case 'year':
+                $query->whereYear('transaction_date', now()->year);
+                break;
+            case 'all':
+                // No additional filter
+                break;
+        }
 
-        return $income - $expenses;
+        // Get income categories
+        $incomeCategories = array_keys(Transaction::getIncomeCategories());
+        
+        // Calculate income and expenses based on categories
+        $income = $query->clone()
+            ->whereIn('category', $incomeCategories)
+            ->sum('amount_usd');
+            
+        $expenses = $query->clone()
+            ->whereNotIn('category', $incomeCategories)
+            ->sum('amount_usd');
+
+        return round($income - $expenses, 2); // Round to 2 decimal places
     }
 
-    public function calculatePartnerProfits(): array
+    public function calculatePartnerProfits(string $period = 'month'): array
     {
-        $totalProfit = $this->getProfit();
+        $totalProfit = $this->getProfit($period);
         $partnerships = $this->activePartnerships()->with('user')->get();
         $profits = [];
 
@@ -229,7 +268,8 @@ class Store extends Model
                 'user_name' => $partnership->user->name,
                 'ownership_percentage' => $partnership->ownership_percentage,
                 'profit_amount' => round($partnerProfit, 2),
-                'currency' => $this->currency,
+                'currency' => 'USD', // Always in USD after conversion
+                'period' => $period,
             ];
         }
 
@@ -239,6 +279,41 @@ class Store extends Model
     public function validateDomain(): bool
     {
         return preg_match('/^[a-zA-Z0-9][a-zA-Z0-9\-]*\.myshopify\.com$/', $this->shopify_domain);
+    }
+
+    /**
+     * Calculate the store's current balance based on all approved transactions
+     */
+    public function getNetProfit(): float
+    {
+        $income = $this->transactions()
+            ->where('type', 'income')
+            ->where('status', 'APPROVED')
+            ->sum('amount');
+            
+        $expense = $this->transactions()
+            ->where('type', 'expense')
+            ->where('status', 'APPROVED')
+            ->sum('amount');
+            
+        return $income - $expense;
+    }
+
+    public function calculateBalance(): float
+    {
+        $incomeCategories = array_keys(Transaction::getIncomeCategories());
+        
+        $income = $this->transactions()
+            ->where('status', 'APPROVED')
+            ->whereIn('category', $incomeCategories)
+            ->sum('amount_usd');
+            
+        $expenses = $this->transactions()
+            ->where('status', 'APPROVED')
+            ->whereNotIn('category', $incomeCategories)
+            ->sum('amount_usd');
+            
+        return round($income - $expenses, 2);
     }
 
     // Helper methods

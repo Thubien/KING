@@ -321,6 +321,7 @@ class PartnershipResource extends Resource
         return [
             'index' => Pages\ListPartnerships::route('/'),
             'create' => Pages\CreatePartnership::route('/create'),
+            'view' => Pages\ViewPartnership::route('/{record}'),
             'edit' => Pages\EditPartnership::route('/{record}/edit'),
         ];
     }

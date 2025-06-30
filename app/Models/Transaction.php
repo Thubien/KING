@@ -234,10 +234,20 @@ class Transaction extends Model
 
         // Multi-tenant scoping
         static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->company_id) {
-                $builder->whereHas('store', function ($query) {
-                    $query->where('company_id', auth()->user()->company_id);
-                });
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all transactions
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's transactions
+                if ($user->company_id) {
+                    $builder->whereHas('store', function ($query) use ($user) {
+                        $query->where('company_id', $user->company_id);
+                    });
+                }
             }
         });
 
@@ -250,10 +260,16 @@ class Transaction extends Model
                 $transaction->created_by = auth()->id();
             }
 
-            // Convert to USD if different currency
-            if ($transaction->currency !== 'USD' && ! $transaction->amount_usd) {
-                $transaction->amount_usd = $transaction->amount * $transaction->exchange_rate;
-            } elseif ($transaction->currency === 'USD') {
+            // Validate exchange rate for non-USD currencies
+            if ($transaction->currency !== 'USD') {
+                if (!$transaction->exchange_rate || $transaction->exchange_rate <= 0) {
+                    throw new \InvalidArgumentException('Exchange rate must be greater than 0 for non-USD currencies');
+                }
+                
+                // Calculate USD amount
+                $transaction->amount_usd = round($transaction->amount * $transaction->exchange_rate, 2);
+            } else {
+                // USD transactions always have exchange rate of 1.0
                 $transaction->amount_usd = $transaction->amount;
                 $transaction->exchange_rate = 1.0;
             }
@@ -306,6 +322,11 @@ class Transaction extends Model
     public function salesRep(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sales_rep_id');
+    }
+
+    public function createdBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'created_by');
     }
     
     public function customer(): BelongsTo

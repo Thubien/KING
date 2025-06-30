@@ -75,8 +75,18 @@ class BankAccount extends Model
     protected static function booted()
     {
         static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->company_id) {
-                $builder->where('company_id', auth()->user()->company_id);
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all bank accounts
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's bank accounts
+                if ($user->company_id) {
+                    $builder->where('company_id', $user->company_id);
+                }
             }
         });
     }
