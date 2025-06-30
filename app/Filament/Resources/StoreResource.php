@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoreResource\Pages;
 use App\Models\Store;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class StoreResource extends Resource
 {
+    use HasSimpleAuthorization;
+
     protected static ?string $model = Store::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
@@ -21,44 +24,55 @@ class StoreResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    // SIMPLIFIED AUTHORIZATION
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'owner' => true,   // Owners can manage stores
+            'partner' => true, // Partners can view their stores
+            'staff' => false,  // Staff cannot access store management
+        ];
+    }
+
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('viewAny', Store::class) ?? false;
+        return static::canAccessResource();
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('create', Store::class) ?? false;
+        $user = auth()->user();
+        return $user?->isSuperAdmin() || $user?->isOwner();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->hasRole('super_admin') || auth()->user()?->isCompanyOwner() || auth()->user()?->isAdmin() || auth()->user()?->isPartner();
+        return static::canAccessResource();
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
         $user = auth()->user();
+        $query = parent::getEloquentQuery();
 
-        // Super admin sees all stores across all companies
-        if ($user->hasRole('super_admin')) {
+        // Super admin sees everything
+        if ($user?->isSuperAdmin()) {
             return $query;
         }
 
-        // Company owners and admins see all stores in their company
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $query->where('company_id', $user->company_id);
+        // Owner sees all company stores (global scope handles company_id)
+        if ($user?->isOwner()) {
+            return $query;
         }
 
-        // Partners only see stores they have partnerships in
-        if ($user->isPartner()) {
+        // Partner sees only their partnership stores
+        if ($user?->isPartner()) {
             $accessibleStoreIds = $user->getAccessibleStoreIds();
-
             return $query->whereIn('id', $accessibleStoreIds);
         }
 
-        return $query->whereNull('id'); // Return empty for other user types
+        // Staff and others see nothing
+        return $query->whereNull('id');
     }
 
     public static function form(Form $form): Form

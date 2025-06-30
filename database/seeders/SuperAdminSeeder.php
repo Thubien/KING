@@ -20,33 +20,11 @@ class SuperAdminSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create permissions if they don't exist
-        $permissions = [
-            'view_all_companies',
-            'manage_all_companies',
-            'view_all_transactions',
-            'manage_all_transactions',
-            'view_all_users',
-            'manage_all_users',
-            'access_admin_panel',
-            'manage_system_settings',
-            'view_analytics',
-            'manage_imports',
-            'manage_exports',
-            'manage_partnerships',
-            'manage_bank_accounts',
-            'manage_payment_processors',
-            'view_all_reports',
-            'bypass_limits',
-        ];
-
-        foreach ($permissions as $permission) {
-            Permission::firstOrCreate(['name' => $permission]);
-        }
-
-        // Create super admin role
+        // SIMPLIFIED: Super Admin bypasses all permissions
+        // No need to create specific permissions for super admin
+        
+        // Create super admin role (permissions handled by trait)
         $superAdminRole = Role::firstOrCreate(['name' => 'super_admin']);
-        $superAdminRole->syncPermissions(Permission::all());
 
         // Create premium company for super admin
         $company = Company::firstOrCreate(

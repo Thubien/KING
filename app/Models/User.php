@@ -101,30 +101,40 @@ class User extends Authenticatable
         return $query->where('company_id', $companyId);
     }
 
-    // Business Logic Methods
+    // Business Logic Methods - UPDATED FOR SIMPLIFIED ROLE SYSTEM
     public function isCompanyOwner(): bool
     {
-        return $this->user_type === 'company_owner';
+        return $this->hasRole('owner'); // Updated to new role system
+    }
+
+    public function isOwner(): bool  
+    {
+        return $this->hasRole('owner');
     }
 
     public function isPartner(): bool
     {
-        return $this->user_type === 'partner';
+        return $this->hasRole('partner'); // Updated to use role instead of user_type
     }
 
     public function isAdmin(): bool
     {
-        return $this->user_type === 'admin';
+        return $this->hasRole('owner'); // Admin = Owner in simplified system
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->hasRole('staff');
     }
 
     public function isSalesRep(): bool
     {
-        return $this->hasRole('sales_rep');
+        return $this->hasRole('staff'); // Sales rep = Staff in simplified system
     }
 
     public function canCreateOrders(): bool
     {
-        return $this->can('create_manual_orders');
+        return $this->isSuperAdmin() || $this->isOwner() || $this->isStaff();
     }
 
     public function getActivePartnerships()
@@ -217,15 +227,38 @@ class User extends Authenticatable
 
         switch ($this->user_type) {
             case 'company_owner':
-                $this->assignRole('company_owner');
+                $this->assignRole('owner');
                 break;
             case 'partner':
                 $this->assignRole('partner');
                 break;
             case 'staff':
+            case 'sales_rep':
                 $this->assignRole('staff');
                 break;
         }
+    }
+
+    // SIMPLIFIED ROLE HELPERS (updated existing methods)
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    // UNIFIED PERMISSION CHECKS
+    public function canManageCompany(): bool
+    {
+        return $this->isSuperAdmin() || $this->isOwner();
+    }
+
+    public function canViewAllStores(): bool
+    {
+        return $this->isSuperAdmin() || $this->isOwner();
+    }
+
+    public function canViewFinancialData(): bool
+    {
+        return $this->isSuperAdmin() || $this->isOwner() || $this->isPartner();
     }
 
     /**

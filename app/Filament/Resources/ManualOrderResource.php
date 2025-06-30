@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ManualOrderResource\Pages;
 use App\Models\Transaction;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ManualOrderResource extends Resource
 {
+    use HasSimpleAuthorization;
+
     protected static ?string $model = Transaction::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shopping-cart';
@@ -25,21 +28,30 @@ class ManualOrderResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
+    // SIMPLIFIED AUTHORIZATION - Staff can create orders
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'owner' => true,   // Owners can manage all orders
+            'partner' => true, // Partners can view their store orders
+            'staff' => true,   // Staff can create and manage orders
+        ];
+    }
+
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('viewAny', Transaction::class) ?? false;
+        return static::canAccessResource();
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('create', Transaction::class) ?? false;
+        $user = auth()->user();
+        return $user?->isSuperAdmin() || $user?->isOwner() || $user?->isStaff();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        $user = auth()->user();
-
-        return $user?->isCompanyOwner() || $user?->isAdmin() || $user?->isPartner() || $user?->isSalesRep();
+        return static::canAccessResource();
     }
 
     public static function form(Form $form): Form

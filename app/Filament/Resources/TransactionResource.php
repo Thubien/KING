@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
 use App\Models\Transaction;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class TransactionResource extends Resource
 {
+    use HasSimpleAuthorization;
+
     protected static ?string $model = Transaction::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
@@ -23,45 +26,55 @@ class TransactionResource extends Resource
 
     protected static ?int $navigationSort = 4;
 
+    // SIMPLIFIED AUTHORIZATION
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'owner' => true,   // Owners can manage all transactions
+            'partner' => true, // Partners can view their store transactions
+            'staff' => false,  // Staff cannot access transaction management
+        ];
+    }
+
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('viewAny', Transaction::class) ?? false;
+        return static::canAccessResource();
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('create', Transaction::class) ?? false;
+        $user = auth()->user();
+        return $user?->isSuperAdmin() || $user?->isOwner();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->isCompanyOwner() || auth()->user()?->isAdmin() || auth()->user()?->isPartner() || auth()->user()?->isSalesRep();
+        return static::canAccessResource();
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
         $user = auth()->user();
+        $query = parent::getEloquentQuery();
 
-        // Company owners and admins see all transactions in their company
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $query->where('company_id', $user->company_id);
+        // Super admin sees everything
+        if ($user?->isSuperAdmin()) {
+            return $query;
         }
 
-        // Sales reps see only their own transactions
-        if ($user->isSalesRep()) {
-            return $query->where('company_id', $user->company_id)
-                ->where('sales_rep_id', $user->id);
+        // Owner sees all company transactions (global scope handles company_id)
+        if ($user?->isOwner()) {
+            return $query;
         }
 
-        // Partners only see transactions from stores they have partnerships in
-        if ($user->isPartner()) {
+        // Partner sees only their partnership store transactions
+        if ($user?->isPartner()) {
             $accessibleStoreIds = $user->getAccessibleStoreIds();
-
             return $query->whereIn('store_id', $accessibleStoreIds);
         }
 
-        return $query->whereNull('id'); // Return empty for other user types
+        // Staff and others see nothing
+        return $query->whereNull('id');
     }
 
     public static function form(Form $form): Form
