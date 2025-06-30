@@ -31,6 +31,11 @@ class User extends Authenticatable
         'last_login_at',
         'avatar_url',
         'is_active',
+        'avatar',
+        'title',
+        'phone',
+        'bio',
+        'language',
     ];
 
     /**
@@ -73,6 +78,16 @@ class User extends Authenticatable
     public function createdTransactions(): HasMany
     {
         return $this->hasMany(Transaction::class, 'created_by');
+    }
+
+    public function settings()
+    {
+        return $this->hasOne(UserSetting::class);
+    }
+
+    public function loginLogs(): HasMany
+    {
+        return $this->hasMany(UserLoginLog::class);
     }
 
     // Scopes
@@ -360,5 +375,64 @@ class User extends Authenticatable
     public function canAccessSalesRepDashboard(): bool
     {
         return $this->isSalesRep() || $this->isAdmin() || $this->isCompanyOwner();
+    }
+
+    /**
+     * Get or create user settings
+     */
+    public function getSettings(): UserSetting
+    {
+        return $this->settings()->firstOrCreate(
+            ['user_id' => $this->id],
+            UserSetting::make(['user_id' => $this->id])->attributesToArray()
+        );
+    }
+
+    /**
+     * Get formatted date according to user preference
+     */
+    public function formatDate($date): string
+    {
+        if (!$date) return '';
+        
+        $format = $this->getSettings()->date_format ?? 'd/m/Y';
+        return $date instanceof \DateTime ? $date->format($format) : \Carbon\Carbon::parse($date)->format($format);
+    }
+
+    /**
+     * Get formatted time according to user preference
+     */
+    public function formatTime($time): string
+    {
+        if (!$time) return '';
+        
+        $format = $this->getSettings()->time_format ?? 'H:i';
+        return $time instanceof \DateTime ? $time->format($format) : \Carbon\Carbon::parse($time)->format($format);
+    }
+
+    /**
+     * Get formatted datetime according to user preference
+     */
+    public function formatDateTime($datetime): string
+    {
+        if (!$datetime) return '';
+        
+        $settings = $this->getSettings();
+        $format = $settings->date_format . ' ' . $settings->time_format;
+        return $datetime instanceof \DateTime ? $datetime->format($format) : \Carbon\Carbon::parse($datetime)->format($format);
+    }
+
+    /**
+     * Get avatar URL
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->avatar) {
+            return \Storage::url($this->avatar);
+        }
+
+        // Generate Gravatar URL as fallback
+        $hash = md5(strtolower(trim($this->email)));
+        return "https://www.gravatar.com/avatar/{$hash}?d=mp&s=200";
     }
 }

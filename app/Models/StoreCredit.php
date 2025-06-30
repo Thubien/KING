@@ -106,7 +106,7 @@ class StoreCredit extends Model
     /**
      * Store credit kullan
      */
-    public function use(float $amount, int $transactionId = null): bool
+    public function use(float $amount, int $transactionId = null, string $reference = null, string $notes = null): bool
     {
         if (!$this->canBeUsed($amount)) {
             return false;
@@ -121,6 +121,8 @@ class StoreCredit extends Model
             'date' => now()->toDateTimeString(),
             'amount' => $amount,
             'transaction_id' => $transactionId,
+            'reference' => $reference,
+            'notes' => $notes,
             'remaining' => $this->remaining_amount,
             'user' => auth()->user()->name ?? 'System',
         ];
