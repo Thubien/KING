@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('customer_timeline_events', function (Blueprint $table) {
+        if (!Schema::hasTable('customer_timeline_events')) {
+            Schema::create('customer_timeline_events', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             
@@ -49,7 +50,8 @@ return new class extends Migration
             $table->index(['customer_id', 'created_at']);
             $table->index(['customer_id', 'event_type']);
             $table->index(['related_model', 'related_id']);
-        });
+            });
+        }
     }
 
     public function down(): void

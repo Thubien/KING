@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('store_credits', function (Blueprint $table) {
+        if (!Schema::hasTable('store_credits')) {
+            Schema::create('store_credits', function (Blueprint $table) {
             $table->id();
             
             // Temel bilgiler
@@ -68,7 +69,8 @@ return new class extends Migration
             $table->index('customer_email');
             $table->index(['company_id', 'store_id']);
             $table->index('expires_at');
-        });
+            });
+        }
     }
 
     /**

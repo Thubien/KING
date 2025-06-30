@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_login_logs', function (Blueprint $table) {
+        if (!Schema::hasTable('user_login_logs')) {
+            Schema::create('user_login_logs', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             $table->string('ip_address', 45);
@@ -26,7 +27,8 @@ return new class extends Migration
             $table->timestamp('logged_out_at')->nullable();
             
             $table->index(['user_id', 'logged_in_at']);
-        });
+            });
+        }
     }
 
     /**

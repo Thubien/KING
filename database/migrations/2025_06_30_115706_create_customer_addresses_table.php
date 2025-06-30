@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('customer_addresses', function (Blueprint $table) {
+        if (!Schema::hasTable('customer_addresses')) {
+            Schema::create('customer_addresses', function (Blueprint $table) {
             $table->id();
             $table->foreignId('customer_id')->constrained()->cascadeOnDelete();
             
@@ -36,7 +37,8 @@ return new class extends Migration
             // Indexes
             $table->index(['customer_id', 'type']);
             $table->index(['customer_id', 'is_default']);
-        });
+            });
+        }
     }
 
     public function down(): void

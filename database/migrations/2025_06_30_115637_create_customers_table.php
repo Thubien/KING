@@ -8,7 +8,8 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('customers', function (Blueprint $table) {
+        if (!Schema::hasTable('customers')) {
+            Schema::create('customers', function (Blueprint $table) {
             $table->id();
             $table->foreignId('company_id')->constrained()->cascadeOnDelete();
             $table->foreignId('store_id')->constrained()->cascadeOnDelete();
@@ -61,7 +62,8 @@ return new class extends Migration
             // Unique constraint per store
             $table->unique(['store_id', 'email']);
             $table->unique(['store_id', 'phone']);
-        });
+            });
+        }
     }
 
     public function down(): void

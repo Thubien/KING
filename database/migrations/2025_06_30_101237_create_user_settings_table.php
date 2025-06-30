@@ -11,7 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user_settings', function (Blueprint $table) {
+        if (!Schema::hasTable('user_settings')) {
+            Schema::create('user_settings', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
             
@@ -42,7 +43,8 @@ return new class extends Migration
             
             // Unique index
             $table->unique('user_id');
-        });
+            });
+        }
     }
 
     /**
