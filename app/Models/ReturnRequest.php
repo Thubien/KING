@@ -99,6 +99,11 @@ class ReturnRequest extends Model
     {
         return $this->hasOne(StoreCredit::class);
     }
+    
+    public function customer()
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     public function getStatusColorAttribute()
     {
@@ -391,6 +396,77 @@ class ReturnRequest extends Model
         }
 
         return true;
+    }
+    
+    /**
+     * Create or link customer from return request data
+     */
+    public function createOrLinkCustomer(): void
+    {
+        if ($this->customer_id || (!$this->customer_phone && !$this->customer_email)) {
+            return;
+        }
+        
+        // Find or create customer
+        $customer = Customer::findOrCreateFromData([
+            'name' => $this->customer_name,
+            'phone' => $this->customer_phone,
+            'email' => $this->customer_email,
+            'source' => 'return',
+            'notes' => "İlk kayıt: İade talebi #{$this->id}",
+        ], $this->store);
+        
+        if ($customer) {
+            $this->customer_id = $customer->id;
+            $this->saveQuietly(); // Don't trigger events again
+            
+            // Log timeline event
+            $customer->logTimelineEvent(
+                'return_requested',
+                'İade talebi oluşturuldu',
+                "Ürün: {$this->product_name}, Tutar: {$this->refund_amount} {$this->store->currency}",
+                [
+                    'product_name' => $this->product_name,
+                    'refund_amount' => $this->refund_amount,
+                    'currency' => $this->store->currency,
+                    'return_reason' => $this->return_reason,
+                ],
+                'ReturnRequest',
+                $this->id
+            );
+        }
+    }
+    
+    // Boot method
+    protected static function boot()
+    {
+        parent::boot();
+        
+        static::created(function ($returnRequest) {
+            // Create or link customer
+            $returnRequest->createOrLinkCustomer();
+        });
+        
+        static::updated(function ($returnRequest) {
+            // When completed, update customer statistics
+            if ($returnRequest->wasChanged('status') && $returnRequest->status === 'completed' && $returnRequest->customer_id) {
+                $returnRequest->customer->updateStatistics();
+                
+                // Log timeline event
+                $returnRequest->customer->logTimelineEvent(
+                    'return_completed',
+                    'İade tamamlandı',
+                    "İade yöntemi: {$returnRequest->refund_method_label}",
+                    [
+                        'refund_method' => $returnRequest->refund_method,
+                        'refund_amount' => $returnRequest->refund_amount,
+                        'store_credit_code' => $returnRequest->store_credit_code,
+                    ],
+                    'ReturnRequest',
+                    $returnRequest->id
+                );
+            }
+        });
     }
 
 }

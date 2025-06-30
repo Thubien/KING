@@ -96,6 +96,11 @@ class Store extends Model
     {
         return $this->partnerships()->where('status', 'active');
     }
+    
+    public function customers(): HasMany
+    {
+        return $this->hasMany(Customer::class);
+    }
 
     // Scopes
     public function scopeActive($query)

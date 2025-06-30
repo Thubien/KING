@@ -60,6 +60,11 @@ class StoreCredit extends Model
     {
         return $this->belongsTo(ReturnRequest::class);
     }
+    
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
+    }
 
     // Scopes
     public function scopeActive($query)

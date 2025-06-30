@@ -263,6 +263,11 @@ class Transaction extends Model
         static::updated(function ($transaction) {
             if ($transaction->wasChanged('status') && $transaction->status === 'APPROVED') {
                 $transaction->handlePaymentProcessorLogic();
+                
+                // Create or link customer for sales transactions
+                if ($transaction->category === 'SALES' && $transaction->type === 'income' && !$transaction->customer_id) {
+                    $transaction->createOrLinkCustomer();
+                }
             }
         });
     }
@@ -301,6 +306,11 @@ class Transaction extends Model
     public function salesRep(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sales_rep_id');
+    }
+    
+    public function customer(): BelongsTo
+    {
+        return $this->belongsTo(Customer::class);
     }
 
     // Transaction editor relationships
@@ -649,5 +659,56 @@ class Transaction extends Model
         }
 
         return $totals;
+    }
+    
+    /**
+     * Create or link customer from transaction data
+     */
+    public function createOrLinkCustomer(): void
+    {
+        if (!$this->customer_info || $this->customer_id) {
+            return;
+        }
+        
+        $customerData = is_string($this->customer_info) 
+            ? json_decode($this->customer_info, true) 
+            : $this->customer_info;
+            
+        if (!$customerData || (!isset($customerData['phone']) && !isset($customerData['email']))) {
+            return;
+        }
+        
+        // Find or create customer
+        $customer = Customer::findOrCreateFromData([
+            'name' => $customerData['name'] ?? null,
+            'phone' => $customerData['phone'] ?? null,
+            'email' => $customerData['email'] ?? null,
+            'whatsapp_number' => $customerData['whatsapp'] ?? null,
+            'source' => 'manual',
+            'notes' => $customerData['notes'] ?? null,
+        ], $this->store);
+        
+        if ($customer) {
+            $this->customer_id = $customer->id;
+            $this->saveQuietly(); // Don't trigger events again
+            
+            // Log timeline event
+            $customer->logTimelineEvent(
+                'order_placed',
+                'Sipariş alındı',
+                "Tutar: {$this->amount} {$this->currency}",
+                [
+                    'amount' => $this->amount,
+                    'currency' => $this->currency,
+                    'payment_method' => $this->payment_method,
+                    'sales_channel' => $this->sales_channel,
+                ],
+                'Transaction',
+                $this->id
+            );
+            
+            // Update customer statistics
+            $customer->updateStatistics();
+        }
     }
 }
