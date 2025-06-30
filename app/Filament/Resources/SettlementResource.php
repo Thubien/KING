@@ -58,7 +58,10 @@ class SettlementResource extends Resource
                         Forms\Components\Select::make('partnership_id')
                             ->label('Partnership')
                             ->relationship('partnership', 'id')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->store->name} - {$record->user->name} ({$record->ownership_percentage}%)"
+                            ->getOptionLabelFromRecordUsing(fn ($record) => 
+                                $record && $record->store && $record->user 
+                                    ? "{$record->store->name} - {$record->user->name} ({$record->ownership_percentage}%)"
+                                    : 'Unknown Partnership'
                             )
                             ->searchable()
                             ->preload()
@@ -212,7 +215,10 @@ class SettlementResource extends Resource
 
                 Tables\Filters\SelectFilter::make('partnership')
                     ->relationship('partnership', 'id')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->store->name} - {$record->user->name}"
+                    ->getOptionLabelFromRecordUsing(fn ($record) => 
+                        $record && $record->store && $record->user 
+                            ? "{$record->store->name} - {$record->user->name}"
+                            : 'Unknown Partnership'
                     )
                     ->searchable()
                     ->preload(),

@@ -17,6 +17,7 @@ class Store extends Model
     protected $fillable = [
         'company_id',
         'name',
+        'platform',
         'shopify_domain',
         'shopify_store_id',
         'shopify_access_token',

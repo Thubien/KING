@@ -129,6 +129,68 @@ class ReturnRequestResource extends Resource
                             ->disabled(fn ($context) => $context === 'edit'),
                     ]),
 
+                Forms\Components\Section::make('İade Yöntemi')
+                    ->description('Müşteriye nasıl iade yapılacak?')
+                    ->icon('heroicon-o-banknotes')
+                    ->schema([
+                        Select::make('refund_method')
+                            ->label('İade Yöntemi')
+                            ->options(ReturnRequest::REFUND_METHODS)
+                            ->default('cash')
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(fn ($set) => $set('resolution', null))
+                            ->helperText(function ($state, $get) {
+                                $store = \App\Models\Store::find($get('store_id'));
+                                if (!$store) return '';
+                                
+                                return match($state) {
+                                    'cash' => $store->platform === 'shopify' 
+                                        ? 'Shopify mağazalar için sadece takip amaçlı kayıt tutulur, finansal etki olmaz.' 
+                                        : 'Nakit iade kasadan düşülecektir.',
+                                    'exchange' => 'Değişim işlemi finansal etki yaratmaz.',
+                                    'store_credit' => 'Müşteriye store credit kodu verilecektir.',
+                                    default => ''
+                                };
+                            }),
+
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                TextInput::make('exchange_product_name')
+                                    ->label('Değişim Ürün Adı')
+                                    ->visible(fn ($get) => $get('refund_method') === 'exchange')
+                                    ->required(fn ($get) => $get('refund_method') === 'exchange'),
+
+                                TextInput::make('exchange_product_sku')
+                                    ->label('Değişim Ürün SKU')
+                                    ->visible(fn ($get) => $get('refund_method') === 'exchange'),
+                            ]),
+
+                        Forms\Components\Grid::make(2)
+                            ->schema([
+                                TextInput::make('exchange_product_price')
+                                    ->label('Değişim Ürün Fiyatı')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->visible(fn ($get) => $get('refund_method') === 'exchange'),
+
+                                TextInput::make('exchange_difference')
+                                    ->label('Fark Tutarı (+/-)')
+                                    ->numeric()
+                                    ->prefix('$')
+                                    ->visible(fn ($get) => $get('refund_method') === 'exchange')
+                                    ->helperText('Müşteri ödeyecekse +, biz ödeyeceksek -'),
+                            ]),
+
+                        TextInput::make('customer_email')
+                            ->label('Müşteri E-posta')
+                            ->email()
+                            ->visible(fn ($get) => $get('refund_method') === 'store_credit')
+                            ->required(fn ($get) => $get('refund_method') === 'store_credit')
+                            ->helperText('Store credit kodu bu adrese gönderilecek'),
+                    ])
+                    ->visible(fn ($context) => $context === 'edit'),
+
                 Select::make('status')
                     ->options(ReturnRequest::STATUSES)
                     ->default('pending')
@@ -145,6 +207,16 @@ class ReturnRequestResource extends Resource
                 Select::make('resolution')
                     ->options(ReturnRequest::RESOLUTIONS)
                     ->label('Çözüm')
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, $set) {
+                        // Resolution'a göre refund_method'u otomatik ayarla
+                        match($state) {
+                            'refund' => $set('refund_method', 'cash'),
+                            'exchange' => $set('refund_method', 'exchange'),
+                            'store_credit' => $set('refund_method', 'store_credit'),
+                            default => null
+                        };
+                    })
                     ->visible(fn ($context, $get) => $context === 'edit' && in_array($get('status'), ['processing', 'completed'])),
 
                 TextInput::make('tracking_number')
@@ -229,6 +301,36 @@ class ReturnRequestResource extends Resource
                         'warning' => 'store_credit',
                         'danger' => 'rejected',
                     ]),
+
+                BadgeColumn::make('refund_method')
+                    ->label('İade Yöntemi')
+                    ->formatStateUsing(fn ($state) => ReturnRequest::REFUND_METHODS[$state] ?? $state)
+                    ->colors([
+                        'success' => 'cash',
+                        'info' => 'exchange',
+                        'warning' => 'store_credit',
+                    ])
+                    ->icon(fn ($state) => match($state) {
+                        'cash' => 'heroicon-o-banknotes',
+                        'exchange' => 'heroicon-o-arrow-path',
+                        'store_credit' => 'heroicon-o-ticket',
+                        default => null
+                    }),
+
+                TextColumn::make('refund_amount')
+                    ->label('İade Tutarı')
+                    ->money(fn ($record) => strtolower($record->currency), true)
+                    ->formatStateUsing(function ($state, $record) {
+                        if ($record->refund_method === 'cash' && $record->shouldCreateFinancialRecord()) {
+                            return '-' . number_format($state, 2) . ' ' . $record->currency;
+                        }
+                        return number_format($state, 2) . ' ' . $record->currency;
+                    })
+                    ->color(fn ($record) => 
+                        $record->refund_method === 'cash' && $record->shouldCreateFinancialRecord() 
+                            ? 'danger' 
+                            : 'gray'
+                    ),
 
                 TextColumn::make('created_at')
                     ->label('Talep Tarihi')
