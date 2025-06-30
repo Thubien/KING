@@ -19,32 +19,32 @@ class EnsureUserAccess
         $user = Auth::user();
 
         // Ensure user is authenticated
-        if (!$user) {
+        if (! $user) {
             return redirect()->route('filament.admin.auth.login');
         }
 
         // Ensure user has valid company_id
-        if (!$user->company_id) {
+        if (! $user->company_id) {
             abort(403, 'User must be associated with a company.');
         }
 
         // Ensure user is active
-        if (!$user->is_active) {
+        if (! $user->is_active) {
             abort(403, 'User account is inactive.');
         }
 
         // Set company context for global scopes
-        if (!session()->has('company_id')) {
+        if (! session()->has('company_id')) {
             session(['company_id' => $user->company_id]);
         }
 
         // Update last login timestamp
-        if (!$user->last_login_at || $user->last_login_at->diffInMinutes(now()) > 30) {
+        if (! $user->last_login_at || $user->last_login_at->diffInMinutes(now()) > 30) {
             $user->update(['last_login_at' => now()]);
         }
 
         // Redirect partners to partner dashboard if they're trying to access admin routes
-        if ($user->user_type === 'partner' && $request->is('admin/*') && !$request->is('admin/partner-dashboard')) {
+        if ($user->user_type === 'partner' && $request->is('admin/*') && ! $request->is('admin/partner-dashboard')) {
             // Allow access to partner-specific resources
             $allowedPartnerRoutes = [
                 'admin/partner-dashboard',
@@ -52,13 +52,13 @@ class EnsureUserAccess
                 'admin/transactions',
                 'admin/stores',
             ];
-            
+
             $currentPath = $request->path();
             $isAllowedRoute = collect($allowedPartnerRoutes)->contains(function ($route) use ($currentPath) {
                 return str_starts_with($currentPath, $route);
             });
-            
-            if (!$isAllowedRoute) {
+
+            if (! $isAllowedRoute) {
                 return redirect()->route('filament.admin.pages.partner-dashboard');
             }
         }

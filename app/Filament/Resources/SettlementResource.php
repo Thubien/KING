@@ -3,8 +3,8 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\SettlementResource\Pages;
-use App\Models\Settlement;
 use App\Models\Partnership;
+use App\Models\Settlement;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -18,13 +18,13 @@ class SettlementResource extends Resource
     protected static ?string $model = Settlement::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-    
+
     protected static ?string $navigationLabel = 'Debt Settlements';
-    
+
     protected static ?string $navigationGroup = 'Partnership';
-    
+
     protected static ?string $modelLabel = 'Settlement';
-    
+
     protected static ?int $navigationSort = 2;
 
     public static function getEloquentQuery(): Builder
@@ -58,8 +58,7 @@ class SettlementResource extends Resource
                         Forms\Components\Select::make('partnership_id')
                             ->label('Partnership')
                             ->relationship('partnership', 'id')
-                            ->getOptionLabelFromRecordUsing(fn ($record) => 
-                                "{$record->store->name} - {$record->user->name} ({$record->ownership_percentage}%)"
+                            ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->store->name} - {$record->user->name} ({$record->ownership_percentage}%)"
                             )
                             ->searchable()
                             ->preload()
@@ -73,7 +72,7 @@ class SettlementResource extends Resource
                                     $set('_current_debt', $partnership->getFormattedDebtBalance());
                                 }
                             })
-                            ->helperText(fn ($get) => $get('_current_debt') 
+                            ->helperText(fn ($get) => $get('_current_debt')
                                 ? "Current debt balance: {$get('_current_debt')}"
                                 : 'Select a partnership to see current debt balance'),
 
@@ -83,7 +82,7 @@ class SettlementResource extends Resource
                             ->required()
                             ->reactive()
                             ->helperText(function ($state) {
-                                return match($state) {
+                                return match ($state) {
                                     'payment' => 'Partner pays back debt to reduce balance',
                                     'withdrawal' => 'Partner withdraws profit (increases debt)',
                                     'expense' => 'Settle personal expense as debt',
@@ -163,7 +162,7 @@ class SettlementResource extends Resource
                     ->label('Partner')
                     ->sortable()
                     ->searchable()
-                    ->description(fn ($record) => $record->partnership->ownership_percentage . '% ownership'),
+                    ->description(fn ($record) => $record->partnership->ownership_percentage.'% ownership'),
 
                 Tables\Columns\BadgeColumn::make('settlement_type')
                     ->label('Type')
@@ -213,8 +212,7 @@ class SettlementResource extends Resource
 
                 Tables\Filters\SelectFilter::make('partnership')
                     ->relationship('partnership', 'id')
-                    ->getOptionLabelFromRecordUsing(fn ($record) => 
-                        "{$record->store->name} - {$record->user->name}"
+                    ->getOptionLabelFromRecordUsing(fn ($record) => "{$record->store->name} - {$record->user->name}"
                     )
                     ->searchable()
                     ->preload(),
@@ -224,8 +222,7 @@ class SettlementResource extends Resource
                     ->label('Approve')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
-                    ->visible(fn ($record) => 
-                        $record->canBeApproved() && 
+                    ->visible(fn ($record) => $record->canBeApproved() &&
                         (Auth::user()->isCompanyOwner() || Auth::user()->isAdmin())
                     )
                     ->form([
@@ -256,8 +253,7 @@ class SettlementResource extends Resource
                     ->label('Reject')
                     ->icon('heroicon-o-x-circle')
                     ->color('danger')
-                    ->visible(fn ($record) => 
-                        $record->canBeApproved() && 
+                    ->visible(fn ($record) => $record->canBeApproved() &&
                         (Auth::user()->isCompanyOwner() || Auth::user()->isAdmin())
                     )
                     ->form([
@@ -287,8 +283,7 @@ class SettlementResource extends Resource
                     ->label('Mark Complete')
                     ->icon('heroicon-o-check-badge')
                     ->color('info')
-                    ->visible(fn ($record) => 
-                        $record->status === 'approved' && 
+                    ->visible(fn ($record) => $record->status === 'approved' &&
                         (Auth::user()->isCompanyOwner() || Auth::user()->isAdmin())
                     )
                     ->action(function ($record) {

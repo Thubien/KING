@@ -2,9 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Models\User;
 use Illuminate\Support\Number;
 
 class SalesRepDashboard extends BaseWidget
@@ -12,9 +12,9 @@ class SalesRepDashboard extends BaseWidget
     protected function getStats(): array
     {
         $user = auth()->user();
-        
+
         // Only show for sales reps or admins
-        if (!$user->canAccessSalesRepDashboard()) {
+        if (! $user->canAccessSalesRepDashboard()) {
             return [];
         }
 
@@ -31,11 +31,11 @@ class SalesRepDashboard extends BaseWidget
     {
         $stats = $user->getSalesRepStats();
         $customerStats = $user->getCustomerStats();
-        
+
         return [
             Stat::make(' Monthly Sales', Number::currency($stats['current_month_sales'], 'USD'))
-                ->description($stats['growth_percentage'] >= 0 
-                    ? "+{$stats['growth_percentage']}% from last month" 
+                ->description($stats['growth_percentage'] >= 0
+                    ? "+{$stats['growth_percentage']}% from last month"
                     : "{$stats['growth_percentage']}% from last month")
                 ->descriptionIcon($stats['growth_percentage'] >= 0 ? 'heroicon-m-arrow-trending-up' : 'heroicon-m-arrow-trending-down')
                 ->color($stats['growth_percentage'] >= 0 ? 'success' : 'danger'),
@@ -70,24 +70,24 @@ class SalesRepDashboard extends BaseWidget
     protected function getCompanyStats(): array
     {
         $company = auth()->user()->company;
-        
+
         // Get all sales reps in company
-        $salesReps = User::whereHas('roles', function($query) {
-                $query->where('name', 'sales_rep');
-            })
+        $salesReps = User::whereHas('roles', function ($query) {
+            $query->where('name', 'sales_rep');
+        })
             ->where('company_id', $company->id)
             ->get();
 
-        $totalMonthlySales = $salesReps->sum(fn($rep) => $rep->getMonthlySales());
-        $totalOrders = $salesReps->sum(fn($rep) => $rep->getSalesRepStats()['total_orders']);
+        $totalMonthlySales = $salesReps->sum(fn ($rep) => $rep->getMonthlySales());
+        $totalOrders = $salesReps->sum(fn ($rep) => $rep->getSalesRepStats()['total_orders']);
         $avgOrderValue = $totalOrders > 0 ? $totalMonthlySales / $totalOrders : 0;
-        
+
         // Calculate total commission owed
-        $totalCommission = $salesReps->sum(fn($rep) => $rep->getMonthlyCommission());
-        
+        $totalCommission = $salesReps->sum(fn ($rep) => $rep->getMonthlyCommission());
+
         // Top performing sales rep
-        $topRep = $salesReps->sortByDesc(fn($rep) => $rep->getMonthlySales())->first();
-        
+        $topRep = $salesReps->sortByDesc(fn ($rep) => $rep->getMonthlySales())->first();
+
         return [
             Stat::make('🏢 Company Sales', Number::currency($totalMonthlySales, 'USD'))
                 ->description('Total manual sales this month')
@@ -110,7 +110,7 @@ class SalesRepDashboard extends BaseWidget
                 ->color('info'),
 
             Stat::make('👑 Top Performer', $topRep?->name ?? 'No sales yet')
-                ->description($topRep ? Number::currency($topRep->getMonthlySales(), 'USD') . ' this month' : 'Waiting for first sale')
+                ->description($topRep ? Number::currency($topRep->getMonthlySales(), 'USD').' this month' : 'Waiting for first sale')
                 ->descriptionIcon('heroicon-m-trophy')
                 ->color('success'),
 

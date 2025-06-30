@@ -24,12 +24,12 @@ return new class extends Migration
             $table->json('metadata')->nullable();
             $table->timestamp('last_sync_at')->nullable();
             $table->timestamps();
-            
+
             // Performance indexes
             $table->index(['company_id', 'is_primary']);
             $table->index(['bank_type', 'currency']);
             $table->index(['is_active', 'is_primary']);
-            
+
             // Ensure only one primary account per company
             $table->unique(['company_id', 'is_primary']);
         });

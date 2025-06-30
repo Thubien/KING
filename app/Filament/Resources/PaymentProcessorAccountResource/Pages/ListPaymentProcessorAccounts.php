@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\PaymentProcessorAccountResource\Pages;
 
 use App\Filament\Resources\PaymentProcessorAccountResource;
+use App\Models\PaymentProcessorAccount;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use App\Models\PaymentProcessorAccount;
 
 class ListPaymentProcessorAccounts extends ListRecords
 {
@@ -15,7 +15,7 @@ class ListPaymentProcessorAccounts extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
-            
+
             Actions\Action::make('createDefaults')
                 ->label('Create Default Processors')
                 ->icon('heroicon-m-plus-circle')
@@ -26,6 +26,7 @@ class ListPaymentProcessorAccounts extends ListRecords
                 })
                 ->visible(function (): bool {
                     $company = auth()->user()->company;
+
                     return PaymentProcessorAccount::where('company_id', $company->id)->count() === 0;
                 }),
         ];

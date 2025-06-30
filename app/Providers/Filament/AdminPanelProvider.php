@@ -42,6 +42,9 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\StoreOverviewWidget::class,
                 \App\Filament\Widgets\RecentTransactionsWidget::class,
                 \App\Filament\Widgets\PartnershipRevenueWidget::class,
+                \App\Filament\Widgets\FinancialOverviewWidget::class,
+                \App\Filament\Widgets\PartnerOverviewWidget::class,
+                \App\Filament\Widgets\RecentActivityWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,

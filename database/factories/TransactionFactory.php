@@ -19,10 +19,10 @@ class TransactionFactory extends Factory
     public function definition(): array
     {
         $isIncome = $this->faker->boolean(60); // 60% chance of income
-        $amount = $isIncome ? 
-            $this->faker->randomFloat(2, 50, 1000) : 
+        $amount = $isIncome ?
+            $this->faker->randomFloat(2, 50, 1000) :
             -$this->faker->randomFloat(2, 10, 500);
-        
+
         return [
             'store_id' => Store::factory(),
             'created_by' => User::factory(),
@@ -45,7 +45,7 @@ class TransactionFactory extends Factory
                 'operational',
                 'partnerships',
                 'investments',
-                'other'
+                'other',
             ]),
             'description' => $this->faker->sentence(),
             'transaction_date' => $this->faker->dateTimeBetween('-6 months', 'now'),

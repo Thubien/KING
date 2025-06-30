@@ -19,8 +19,8 @@ class StoreFactory extends Factory
     {
         return [
             'company_id' => Company::factory(),
-            'name' => $this->faker->company() . ' Store',
-            'shopify_domain' => $this->faker->unique()->word() . '.myshopify.com',
+            'name' => $this->faker->company().' Store',
+            'shopify_domain' => $this->faker->unique()->word().'.myshopify.com',
             'shopify_store_id' => $this->faker->numerify('########'),
             'shopify_access_token' => $this->faker->optional()->regexify('[A-Za-z0-9]{20}'),
             'currency' => 'USD',

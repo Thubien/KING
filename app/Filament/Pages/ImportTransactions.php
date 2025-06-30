@@ -23,25 +23,29 @@ class ImportTransactions extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-up-tray';
+
     protected static ?string $navigationLabel = 'Import Transactions';
+
     protected static ?string $title = 'Import Transactions';
+
     protected static ?int $navigationSort = 3;
+
     protected static ?string $navigationGroup = 'Financial';
-    
+
     public static function shouldRegisterNavigation(): bool
     {
         return false; // Hide from navigation
     }
-    
+
     protected static string $view = 'filament.pages.import-transactions';
 
     public ?array $data = [];
-    
+
     public function mount(): void
     {
         $this->form->fill();
     }
-    
+
     public function form(Form $form): Form
     {
         return $form
@@ -58,7 +62,7 @@ class ImportTransactions extends Page implements HasForms
                             ->directory('imports')
                             ->preserveFilenames()
                             ->helperText('Supported formats: Payoneer, Mercury Bank, Stripe, and standard bank statements'),
-                            
+
                         Select::make('source_type')
                             ->label('Source Type (Optional)')
                             ->options([
@@ -72,7 +76,7 @@ class ImportTransactions extends Page implements HasForms
                             ->default('auto')
                             ->helperText('Leave as auto-detect for automatic format detection'),
                     ]),
-                    
+
                 Section::make('Import Settings')
                     ->schema([
                         Select::make('default_store_id')
@@ -83,7 +87,7 @@ class ImportTransactions extends Page implements HasForms
                             )
                             ->searchable()
                             ->helperText('Transactions will be imported as pending and can be assigned later'),
-                            
+
                         Select::make('bank_account_id')
                             ->label('Bank Account')
                             ->options(
@@ -92,17 +96,17 @@ class ImportTransactions extends Page implements HasForms
                             )
                             ->searchable()
                             ->helperText('Select the bank account these transactions belong to'),
-                            
+
                         Toggle::make('skip_duplicates')
                             ->label('Skip Duplicate Transactions')
                             ->default(true)
                             ->helperText('Skip transactions that already exist in the system'),
-                            
+
                         Toggle::make('auto_categorize')
                             ->label('Enable Smart Suggestions')
                             ->default(true)
                             ->helperText('Use pattern matching to suggest categories (requires manual confirmation)'),
-                            
+
                         Textarea::make('notes')
                             ->label('Import Notes')
                             ->rows(2)
@@ -111,26 +115,26 @@ class ImportTransactions extends Page implements HasForms
             ])
             ->statePath('data');
     }
-    
+
     public function import(): void
     {
         $data = $this->form->getState();
-        
+
         try {
             // Get the uploaded file
             /** @var TemporaryUploadedFile $uploadedFile */
             $uploadedFile = $data['csv_file'];
-            
-            if (!$uploadedFile) {
+
+            if (! $uploadedFile) {
                 throw new \Exception('No file uploaded');
             }
-            
+
             // Get the actual file path
-            $filePath = storage_path('app/public/' . $uploadedFile->store('imports', 'public'));
-            
+            $filePath = storage_path('app/public/'.$uploadedFile->store('imports', 'public'));
+
             // Create import orchestrator
             $orchestrator = app(ImportOrchestrator::class);
-            
+
             // Prepare import options
             $options = [
                 'source_type' => $data['source_type'] === 'auto' ? null : $data['source_type'],
@@ -141,10 +145,10 @@ class ImportTransactions extends Page implements HasForms
                 'notes' => $data['notes'] ?? null,
                 'user_id' => Auth::id(),
             ];
-            
+
             // Start the import
             $result = $orchestrator->importFromCsv($filePath, $options);
-            
+
             if ($result->success) {
                 Notification::make()
                     ->title('Import started successfully')
@@ -153,10 +157,10 @@ class ImportTransactions extends Page implements HasForms
                     ->actions([
                         \Filament\Notifications\Actions\Action::make('view')
                             ->label('View Import')
-                            ->url("/admin/import-batches/{$result->importBatch->id}")
+                            ->url("/admin/import-batches/{$result->importBatch->id}"),
                     ])
                     ->send();
-                    
+
                 // Clear the form
                 $this->form->fill([
                     'csv_file' => null,
@@ -164,7 +168,7 @@ class ImportTransactions extends Page implements HasForms
                     'skip_duplicates' => true,
                     'auto_categorize' => true,
                 ]);
-                
+
                 // Redirect to import history
                 $this->redirect('/admin/import-batches');
             } else {
@@ -180,14 +184,14 @@ class ImportTransactions extends Page implements HasForms
                 ->body($e->getMessage())
                 ->danger()
                 ->send();
-                
+
             \Log::error('Import error', [
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
         }
     }
-    
+
     public function getFormActions(): array
     {
         return [

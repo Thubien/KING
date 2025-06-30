@@ -2,12 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Crypt;
 
 class Store extends Model
@@ -55,7 +55,7 @@ class Store extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         // Global scope for multi-tenancy (only if user has company)
         static::addGlobalScope('company', function (Builder $builder) {
             if (auth()->check() && auth()->user()->company_id) {
@@ -64,7 +64,7 @@ class Store extends Model
         });
 
         static::creating(function ($store) {
-            if (!$store->company_id && auth()->check()) {
+            if (! $store->company_id && auth()->check()) {
                 $store->company_id = auth()->user()->company_id;
             }
         });
@@ -146,7 +146,7 @@ class Store extends Model
     // Business Logic Methods
     public function isConnected(): bool
     {
-        return !empty($this->shopify_access_token) && $this->status === 'active';
+        return ! empty($this->shopify_access_token) && $this->status === 'active';
     }
 
     public function isActive(): bool
@@ -156,7 +156,7 @@ class Store extends Model
 
     public function needsSync(): bool
     {
-        if (!$this->last_sync_at) {
+        if (! $this->last_sync_at) {
             return true;
         }
 
@@ -190,7 +190,7 @@ class Store extends Model
             ->where('category', 'revenue')
             ->where('status', 'completed');
 
-        return match($period) {
+        return match ($period) {
             'day' => $query->whereDate('transaction_date', today())->sum('amount_usd'),
             'week' => $query->whereBetween('transaction_date', [now()->startOfWeek(), now()->endOfWeek()])->sum('amount_usd'),
             'month' => $query->whereMonth('transaction_date', now()->month)->sum('amount_usd'),
@@ -251,7 +251,7 @@ class Store extends Model
 
     public function getFormattedInventoryValueAttribute(): string
     {
-        return $this->currency . ' ' . number_format($this->inventory_value, 2);
+        return $this->currency.' '.number_format($this->inventory_value, 2);
     }
 
     public function getTotalInventoryItemsAttribute(): int
@@ -282,7 +282,7 @@ class Store extends Model
         $array['admin_url'] = $this->admin_url;
         $array['inventory_value'] = $this->inventory_value;
         $array['formatted_inventory_value'] = $this->formatted_inventory_value;
-        
+
         return $array;
     }
 }

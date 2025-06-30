@@ -2,14 +2,14 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Transaction;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Transaction;
 
 class PartnerProfitShareWidget extends ChartWidget
 {
     protected static ?string $heading = 'My Profit Share - Last 6 Months';
-    
+
     protected static ?int $sort = 2;
 
     public static function canView(): bool
@@ -20,8 +20,8 @@ class PartnerProfitShareWidget extends ChartWidget
     protected function getData(): array
     {
         $user = Auth::user();
-        
-        if (!$user->isPartner()) {
+
+        if (! $user->isPartner()) {
             return [
                 'datasets' => [],
                 'labels' => [],
@@ -35,23 +35,23 @@ class PartnerProfitShareWidget extends ChartWidget
         for ($i = 5; $i >= 0; $i--) {
             $date = now()->subMonths($i);
             $months[] = $date->format('M Y');
-            
+
             $monthStart = $date->startOfMonth();
             $monthEnd = $date->copy()->endOfMonth();
-            
+
             $totalProfit = 0;
-            
+
             // Calculate profit for each partnership
             foreach ($user->getActivePartnerships() as $partnership) {
                 $storeRevenue = Transaction::where('store_id', $partnership->store_id)
                     ->where('category', 'SALES')
                     ->whereBetween('created_at', [$monthStart, $monthEnd])
                     ->sum('amount');
-                
+
                 $partnerProfit = $storeRevenue * ($partnership->ownership_percentage / 100);
                 $totalProfit += $partnerProfit;
             }
-            
+
             $profitData[] = round($totalProfit, 2);
         }
 

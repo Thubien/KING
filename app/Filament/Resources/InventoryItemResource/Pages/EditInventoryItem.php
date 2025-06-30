@@ -21,6 +21,7 @@ class EditInventoryItem extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $data['total_value'] = $data['quantity'] * $data['unit_cost'];
+
         return $data;
     }
 

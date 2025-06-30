@@ -26,7 +26,7 @@ class ReturnRequest extends Model
         'handled_by',
         'media',
     ];
-    
+
     protected $casts = [
         'media' => 'array',
         'refund_amount' => 'decimal:2',
@@ -81,15 +81,15 @@ class ReturnRequest extends Model
     {
         $total = $this->checklists->where('stage', $this->status)->count();
         $checked = $this->checklists->where('stage', $this->status)->where('is_checked', true)->count();
-        
+
         return $total > 0 ? round(($checked / $total) * 100) : 0;
     }
-    
+
     public function getStatusLabelAttribute()
     {
         return self::STATUSES[$this->status] ?? $this->status;
     }
-    
+
     public function getResolutionLabelAttribute()
     {
         return self::RESOLUTIONS[$this->resolution] ?? $this->resolution;

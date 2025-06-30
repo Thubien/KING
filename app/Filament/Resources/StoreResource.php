@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoreResource\Pages;
-use App\Filament\Resources\StoreResource\RelationManagers;
 use App\Models\Store;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,16 +10,15 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class StoreResource extends Resource
 {
     protected static ?string $model = Store::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
-    
+
     protected static ?string $navigationGroup = 'Business Management';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool
@@ -51,6 +49,7 @@ class StoreResource extends Resource
         // Partners only see stores they have partnerships in
         if ($user->isPartner()) {
             $accessibleStoreIds = $user->getAccessibleStoreIds();
+
             return $query->whereIn('id', $accessibleStoreIds);
         }
 
@@ -87,7 +86,7 @@ class StoreResource extends Resource
                                     ])
                                     ->columnSpanFull()
                                     ->visible(fn ($record) => $record === null), // Only show on create
-                                    
+
                                 Forms\Components\Select::make('company_id')
                                     ->relationship('company', 'name')
                                     ->required(),
@@ -122,10 +121,10 @@ class StoreResource extends Resource
                                             'SGD' => 'SGD - Singapore Dollar',
                                             'MXN' => 'MXN - Mexican Peso',
                                         ];
-                                        
+
                                         // Add separator
                                         $allCurrencies = $commonCurrencies + ['---' => '─────────────────'];
-                                        
+
                                         // Add all other ISO currencies
                                         $isoCurrencies = [
                                             'AED' => 'AED - UAE Dirham',
@@ -159,7 +158,7 @@ class StoreResource extends Resource
                                             'VND' => 'VND - Vietnamese Dong',
                                             'ZAR' => 'ZAR - South African Rand',
                                         ];
-                                        
+
                                         return $allCurrencies + $isoCurrencies;
                                     })
                                     ->default('USD')
@@ -171,20 +170,20 @@ class StoreResource extends Resource
                                     ->dehydrated(fn ($record) => $record === null) // Only save on create
                                     ->reactive()
                                     ->afterStateUpdated(function ($state, $set, $livewire) {
-                                        if ($state && !session('currency_warning_shown_' . $livewire->getId())) {
+                                        if ($state && ! session('currency_warning_shown_'.$livewire->getId())) {
                                             \Filament\Notifications\Notification::make()
                                                 ->warning()
                                                 ->persistent()
                                                 ->title('Important: Currency Selection is Permanent')
-                                                ->body('Once saved, the primary currency cannot be changed. All transactions, reports, and balances will be permanently recorded in ' . $state . '.')
+                                                ->body('Once saved, the primary currency cannot be changed. All transactions, reports, and balances will be permanently recorded in '.$state.'.')
                                                 ->actions([
                                                     \Filament\Notifications\Actions\Action::make('understand')
                                                         ->label('I Understand')
-                                                        ->close()
+                                                        ->close(),
                                                 ])
                                                 ->send();
-                                            
-                                            session(['currency_warning_shown_' . $livewire->getId() => true]);
+
+                                            session(['currency_warning_shown_'.$livewire->getId() => true]);
                                         }
                                     }),
                                 Forms\Components\TextInput::make('country_code')
@@ -196,14 +195,14 @@ class StoreResource extends Resource
                                 Forms\Components\TextInput::make('logo_url')
                                     ->maxLength(255),
                             ]),
-                        
+
                         Forms\Components\Tabs\Tab::make('API Integrations')
                             ->schema([
                                 Forms\Components\Placeholder::make('api_integrations_notice')
                                     ->label('')
                                     ->content(function () {
                                         $user = auth()->user();
-                                        if (!$user->company->canUseApiIntegrations()) {
+                                        if (! $user->company->canUseApiIntegrations()) {
                                             return '**API Integrations are Premium Features**
 
  Upgrade to Premium or Enterprise to unlock:
@@ -213,19 +212,19 @@ class StoreResource extends Resource
 • PayPal API integration
 • Advanced reconciliation
 
-Currently on: **' . ucfirst($user->company->subscription_plan) . ' Plan**';
+Currently on: **'.ucfirst($user->company->subscription_plan).' Plan**';
                                         }
-                                        
+
                                         return '**API Integrations Enabled**
 
-Your ' . ucfirst($user->company->subscription_plan) . ' plan includes:
+Your '.ucfirst($user->company->subscription_plan).' plan includes:
 • Real-time transaction sync
 • Automatic categorization  
 • Live webhooks
 • Advanced reconciliation';
                                     })
                                     ->columnSpanFull(),
-                                    
+
                                 Forms\Components\Section::make('Stripe Integration')
                                     ->description('Connect your Stripe account for real-time transaction sync')
                                     ->schema([
@@ -234,22 +233,22 @@ Your ' . ucfirst($user->company->subscription_plan) . ' plan includes:
                                             ->password()
                                             ->placeholder('sk_live_... or sk_test_...')
                                             ->helperText('Your Stripe secret API key for accessing transaction data')
-                                            ->disabled(fn () => !auth()->user()?->company?->canUseApiIntegrations())
+                                            ->disabled(fn () => ! auth()->user()?->company?->canUseApiIntegrations())
                                             ->dehydrated(fn ($state) => filled($state)),
-                                            
+
                                         Forms\Components\TextInput::make('stripe_publishable_key')
                                             ->label('Stripe Publishable Key')
                                             ->placeholder('pk_live_... or pk_test_...')
                                             ->helperText('Optional: For enhanced webhook verification')
-                                            ->disabled(fn () => !auth()->user()?->company?->canUseApiIntegrations())
+                                            ->disabled(fn () => ! auth()->user()?->company?->canUseApiIntegrations())
                                             ->dehydrated(fn ($state) => filled($state)),
-                                            
+
                                         Forms\Components\Toggle::make('stripe_sync_enabled')
                                             ->label('Enable Stripe Sync')
                                             ->helperText('Automatically sync transactions from Stripe')
-                                            ->disabled(fn () => !auth()->user()?->company?->canUseApiIntegrations())
+                                            ->disabled(fn () => ! auth()->user()?->company?->canUseApiIntegrations())
                                             ->default(false),
-                                            
+
                                         Forms\Components\DateTimePicker::make('last_stripe_sync')
                                             ->label('Last Stripe Sync')
                                             ->displayFormat('M j, Y H:i')
@@ -257,8 +256,8 @@ Your ' . ucfirst($user->company->subscription_plan) . ' plan includes:
                                             ->helperText('When transactions were last synced from Stripe'),
                                     ])
                                     ->collapsible()
-                                    ->collapsed(fn () => !auth()->user()?->company?->canUseApiIntegrations()),
-                                    
+                                    ->collapsed(fn () => ! auth()->user()?->company?->canUseApiIntegrations()),
+
                                 Forms\Components\Section::make('PayPal Integration')
                                     ->description('Connect PayPal for transaction sync (Coming Soon)')
                                     ->schema([
@@ -276,7 +275,7 @@ We\'re working on PayPal API integration. For now, you can:
                                     ->collapsed(true),
                             ])
                             ->badge(fn () => auth()->user()?->company?->canUseApiIntegrations() ? 'Enabled' : 'Premium'),
-                            
+
                         Forms\Components\Tabs\Tab::make('Configuration')
                             ->schema([
                                 Forms\Components\TextInput::make('shopify_webhook_endpoints'),

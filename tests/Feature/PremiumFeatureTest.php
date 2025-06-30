@@ -2,12 +2,11 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\Company;
 use App\Models\Store;
-use App\Models\User;
 use App\Services\Import\Strategies\StripeApiStrategy;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 class PremiumFeatureTest extends TestCase
 {
@@ -19,7 +18,7 @@ class PremiumFeatureTest extends TestCase
         $company = Company::factory()->create([
             'plan' => 'starter',
             'is_trial' => false,
-            'api_integrations_enabled' => false
+            'api_integrations_enabled' => false,
         ]);
 
         $this->assertFalse($company->canUseApiIntegrations());
@@ -32,7 +31,7 @@ class PremiumFeatureTest extends TestCase
         $company = Company::factory()->create([
             'plan' => 'professional',
             'is_trial' => false,
-            'api_integrations_enabled' => false // Should still work due to plan
+            'api_integrations_enabled' => false, // Should still work due to plan
         ]);
 
         $this->assertTrue($company->canUseApiIntegrations());
@@ -44,7 +43,7 @@ class PremiumFeatureTest extends TestCase
     {
         $company = Company::factory()->create([
             'plan' => 'enterprise',
-            'is_trial' => false
+            'is_trial' => false,
         ]);
 
         $this->assertTrue($company->canUseApiIntegrations());
@@ -59,7 +58,7 @@ class PremiumFeatureTest extends TestCase
         $company = Company::factory()->create([
             'plan' => 'starter',
             'is_trial' => true,
-            'trial_ends_at' => now()->addDays(7)
+            'trial_ends_at' => now()->addDays(7),
         ]);
 
         $this->assertTrue($company->canUseApiIntegrations());
@@ -72,7 +71,7 @@ class PremiumFeatureTest extends TestCase
         $company = Company::factory()->create([
             'plan' => 'professional',
             'api_calls_this_month' => 5000,
-            'max_api_calls_per_month' => 0 // Use plan default
+            'max_api_calls_per_month' => 0, // Use plan default
         ]);
 
         $this->assertEquals(5000, $company->getRemainingApiCalls());
@@ -90,7 +89,7 @@ class PremiumFeatureTest extends TestCase
     {
         $company = Company::factory()->create([
             'plan' => 'professional',
-            'api_calls_this_month' => 10000 // At limit
+            'api_calls_this_month' => 10000, // At limit
         ]);
 
         $this->assertEquals(0, $company->getRemainingApiCalls());
@@ -103,14 +102,14 @@ class PremiumFeatureTest extends TestCase
         $company = Company::factory()->create([
             'plan' => 'starter',
             'is_trial' => false,
-            'api_integrations_enabled' => false
+            'api_integrations_enabled' => false,
         ]);
 
         $store = Store::factory()->create([
-            'company_id' => $company->id
+            'company_id' => $company->id,
         ]);
 
-        $strategy = new StripeApiStrategy();
+        $strategy = new StripeApiStrategy;
         $result = $strategy->import(['secret_key' => 'sk_test_dummy'], $store);
 
         $this->assertEquals(0, $result->successfulRecords);
@@ -121,7 +120,7 @@ class PremiumFeatureTest extends TestCase
     {
         $company = Company::factory()->create([
             'plan' => 'professional',
-            'api_calls_this_month' => 5000
+            'api_calls_this_month' => 5000,
         ]);
 
         $company->resetMonthlyApiUsage();

@@ -2,15 +2,15 @@
 
 namespace Tests\Feature;
 
+use App\Mail\PartnerInvitationMail;
+use App\Models\Company;
+use App\Models\Partnership;
+use App\Models\Store;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Store;
-use App\Models\Partnership;
-use App\Mail\PartnerInvitationMail;
 
 class PartnerInvitationTest extends TestCase
 {
@@ -19,7 +19,7 @@ class PartnerInvitationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles and permissions
         $this->artisan('db:seed', ['--class' => 'PermissionsAndRolesSeeder']);
     }
@@ -32,7 +32,7 @@ class PartnerInvitationTest extends TestCase
         $company = Company::factory()->create();
         $owner = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'company_owner'
+            'user_type' => 'company_owner',
         ]);
         $owner->assignRole('company_owner');
 
@@ -47,7 +47,7 @@ class PartnerInvitationTest extends TestCase
             'ownership_percentage' => 25.00,
             'role' => 'partner',
             'partnership_start_date' => now(),
-            'status' => 'PENDING_INVITATION'
+            'status' => 'PENDING_INVITATION',
         ]);
 
         // Generate invitation token and send email
@@ -64,7 +64,7 @@ class PartnerInvitationTest extends TestCase
             'store_id' => $store->id,
             'partner_email' => $partnerEmail,
             'status' => 'PENDING_INVITATION',
-            'ownership_percentage' => 25.00
+            'ownership_percentage' => 25.00,
         ]);
 
         $this->assertNotNull($partnership->fresh()->invitation_token);
@@ -85,7 +85,7 @@ class PartnerInvitationTest extends TestCase
             'ownership_percentage' => 30.00,
             'role' => 'partner',
             'partnership_start_date' => now(),
-            'status' => 'PENDING_INVITATION'
+            'status' => 'PENDING_INVITATION',
         ]);
 
         $token = $partnership->generateInvitationToken();
@@ -130,7 +130,7 @@ class PartnerInvitationTest extends TestCase
         // Create partnership with expired invitation
         $company = Company::factory()->create();
         $store = Store::factory()->create(['company_id' => $company->id]);
-        
+
         $partnership = Partnership::create([
             'store_id' => $store->id,
             'partner_email' => $this->faker->email,
@@ -139,7 +139,7 @@ class PartnerInvitationTest extends TestCase
             'partnership_start_date' => now(),
             'status' => 'PENDING_INVITATION',
             'invitation_token' => bin2hex(random_bytes(32)),
-            'invited_at' => now()->subDays(8) // 8 days ago = expired
+            'invited_at' => now()->subDays(8), // 8 days ago = expired
         ]);
 
         // Test expired invitation
@@ -161,14 +161,14 @@ class PartnerInvitationTest extends TestCase
         // Create partnership for existing email
         $company = Company::factory()->create();
         $store = Store::factory()->create(['company_id' => $company->id]);
-        
+
         $partnership = Partnership::create([
             'store_id' => $store->id,
             'partner_email' => $existingUser->email,
             'ownership_percentage' => 25.00,
             'role' => 'partner',
             'partnership_start_date' => now(),
-            'status' => 'PENDING_INVITATION'
+            'status' => 'PENDING_INVITATION',
         ]);
 
         $token = $partnership->generateInvitationToken();

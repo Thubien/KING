@@ -12,6 +12,7 @@ class CreateInventoryItem extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['total_value'] = $data['quantity'] * $data['unit_cost'];
+
         return $data;
     }
 

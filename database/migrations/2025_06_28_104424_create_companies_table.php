@@ -27,7 +27,7 @@ return new class extends Migration
             $table->boolean('is_trial')->default(true);
             $table->timestamp('trial_ends_at')->nullable();
             $table->timestamps();
-            
+
             $table->index(['status', 'plan']);
             $table->index(['is_trial', 'trial_ends_at']);
         });

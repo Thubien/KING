@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Crypt;
 
 class BankAccount extends Model
@@ -52,11 +52,11 @@ class BankAccount extends Model
     // Common bank types (for suggestions, not restrictions)
     const SUGGESTED_TYPES = [
         'commercial' => 'Commercial Bank',
-        'credit_union' => 'Credit Union', 
+        'credit_union' => 'Credit Union',
         'online' => 'Online Bank',
         'investment' => 'Investment Bank',
         'savings' => 'Savings & Loan',
-        'other' => 'Other Institution'
+        'other' => 'Other Institution',
     ];
 
     // Popular international banks (for autocomplete)
@@ -104,25 +104,25 @@ class BankAccount extends Model
     }
 
     // Business Logic Methods
-    public function addBalance(float $amount, string $description = null): void
+    public function addBalance(float $amount, ?string $description = null): void
     {
         $this->increment('current_balance', $amount);
-        
+
         $this->logBalanceChange('added', $amount, $description);
     }
 
-    public function subtractBalance(float $amount, string $description = null): void
+    public function subtractBalance(float $amount, ?string $description = null): void
     {
         if ($amount > $this->current_balance) {
             throw new \InvalidArgumentException('Insufficient balance');
         }
 
         $this->decrement('current_balance', $amount);
-        
+
         $this->logBalanceChange('subtracted', $amount, $description);
     }
 
-    public function logBalanceChange(string $type, float $amount, string $description = null): void
+    public function logBalanceChange(string $type, float $amount, ?string $description = null): void
     {
         \Log::info('Bank Account Balance Change', [
             'bank_account_id' => $this->id,
@@ -131,7 +131,7 @@ class BankAccount extends Model
             'amount' => $amount,
             'description' => $description,
             'current_balance' => $this->current_balance,
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
     }
 
@@ -162,12 +162,12 @@ class BankAccount extends Model
         if ($this->account_name) {
             return $this->account_name;
         }
-        
+
         if ($this->bank_name) {
-            return $this->bank_name . ' Account';
+            return $this->bank_name.' Account';
         }
-        
-        return $this->getBankTypeName() . ' Account';
+
+        return $this->getBankTypeName().' Account';
     }
 
     public function getBankTypeName(): string
@@ -176,12 +176,12 @@ class BankAccount extends Model
         if (isset(self::SUGGESTED_TYPES[$this->bank_type])) {
             return self::SUGGESTED_TYPES[$this->bank_type];
         }
-        
+
         // If bank_name is provided, use that
         if ($this->bank_name) {
             return $this->bank_name;
         }
-        
+
         // Otherwise return the bank_type as-is (custom input)
         return $this->bank_type ?: 'Unknown Bank';
     }
@@ -189,33 +189,36 @@ class BankAccount extends Model
     public function getFullBankInfo(): string
     {
         $parts = [];
-        
+
         if ($this->bank_name) {
             $parts[] = $this->bank_name;
         }
-        
+
         if ($this->bank_branch) {
             $parts[] = $this->bank_branch;
         }
-        
+
         if ($this->country_code && $this->country_code !== 'US') {
             $parts[] = strtoupper($this->country_code);
         }
-        
+
         return implode(' - ', $parts) ?: $this->getBankTypeName();
     }
 
     public function getFormattedBalance(): string
     {
-        return number_format($this->current_balance, 2) . ' ' . $this->currency;
+        return number_format($this->current_balance, 2).' '.$this->currency;
     }
 
     public function getMaskedAccountNumber(): string
     {
-        if (!$this->account_number) return 'N/A';
-        
+        if (! $this->account_number) {
+            return 'N/A';
+        }
+
         $decrypted = $this->account_number;
-        return '****' . substr($decrypted, -4);
+
+        return '****'.substr($decrypted, -4);
     }
 
     // Static helper methods
@@ -228,7 +231,7 @@ class BankAccount extends Model
             'currency' => $currency,
             'current_balance' => 0,
             'is_primary' => true,
-            'is_active' => true
+            'is_active' => true,
         ]);
     }
 
@@ -245,7 +248,7 @@ class BankAccount extends Model
     public static function getCountrySpecificFields(string $countryCode): array
     {
         $fields = [];
-        
+
         switch (strtoupper($countryCode)) {
             case 'US':
                 $fields = ['routing_number' => 'Routing Number (9 digits)'];
@@ -270,15 +273,15 @@ class BankAccount extends Model
                 break;
             case 'UA':
                 $fields = [
-                    'iban' => 'IBAN (UA + 27 digits)', 
+                    'iban' => 'IBAN (UA + 27 digits)',
                     'bank_code' => 'MFO Code (6 digits)',
-                    'account_number' => 'Account Number (14 digits)'
+                    'account_number' => 'Account Number (14 digits)',
                 ];
                 break;
             default:
                 $fields = ['iban' => 'IBAN (if available)', 'swift_code' => 'SWIFT/BIC Code'];
         }
-        
+
         return $fields;
     }
 

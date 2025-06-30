@@ -15,7 +15,7 @@ return new class extends Migration
             // Partner's debt balance tracking
             $table->decimal('debt_balance', 12, 2)->default(0)->after('ownership_percentage')
                 ->comment('Partner debt balance (positive = owes money, negative = has credit)');
-            
+
             // Track last debt update for audit
             $table->timestamp('debt_last_updated_at')->nullable()->after('debt_balance');
         });

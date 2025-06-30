@@ -26,7 +26,7 @@ return new class extends Migration
             $table->string('tracking_number')->nullable();
             $table->foreignId('handled_by')->nullable()->constrained('users');
             $table->timestamps();
-            
+
             $table->index(['company_id', 'status']);
             $table->index(['store_id', 'created_at']);
         });

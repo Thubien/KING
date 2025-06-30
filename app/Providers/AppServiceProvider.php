@@ -2,8 +2,8 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\ServiceProvider;
 use App\Services\Import\ImportOrchestrator;
+use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -14,7 +14,7 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register Import Orchestrator as singleton
         $this->app->singleton(ImportOrchestrator::class, function ($app) {
-            return new ImportOrchestrator();
+            return new ImportOrchestrator;
         });
     }
 

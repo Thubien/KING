@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Company;
+use App\Models\Partnership;
+use App\Models\Store;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Store;
-use App\Models\Partnership;
-use App\Models\Transaction;
 
 class PartnerDashboardPerformanceTest extends TestCase
 {
@@ -17,7 +17,7 @@ class PartnerDashboardPerformanceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles and permissions
         $this->artisan('db:seed', ['--class' => 'PermissionsAndRolesSeeder']);
     }
@@ -31,7 +31,7 @@ class PartnerDashboardPerformanceTest extends TestCase
         // Create a partner with access to multiple stores
         $partner = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner->assignRole('partner');
 
@@ -41,7 +41,7 @@ class PartnerDashboardPerformanceTest extends TestCase
                 'store_id' => $store->id,
                 'user_id' => $partner->id,
                 'ownership_percentage' => 20.00,
-                'status' => 'ACTIVE'
+                'status' => 'ACTIVE',
             ]);
         }
 
@@ -50,7 +50,7 @@ class PartnerDashboardPerformanceTest extends TestCase
             Transaction::factory()->count(20)->create([
                 'store_id' => $store->id,
                 'category' => 'revenue',
-                'type' => 'income'
+                'type' => 'income',
             ]);
         }
 
@@ -73,7 +73,7 @@ class PartnerDashboardPerformanceTest extends TestCase
 
         // Performance assertion - should complete in under 500ms
         $this->assertLessThan(500, $executionTime, "Dashboard queries took {$executionTime}ms, which exceeds 500ms threshold");
-        
+
         echo "\nDashboard performance test completed in {$executionTime}ms";
     }
 
@@ -87,19 +87,19 @@ class PartnerDashboardPerformanceTest extends TestCase
             $stores = Store::factory()->count(3)->create(['company_id' => $company->id]);
             $partners = User::factory()->count(5)->create([
                 'company_id' => $company->id,
-                'user_type' => 'partner'
+                'user_type' => 'partner',
             ]);
 
             foreach ($partners as $partner) {
                 $partner->assignRole('partner');
                 $allPartners->push($partner);
-                
+
                 // Create partnerships
                 foreach ($stores->random(2) as $store) {
                     Partnership::factory()->create([
                         'store_id' => $store->id,
                         'user_id' => $partner->id,
-                        'status' => 'ACTIVE'
+                        'status' => 'ACTIVE',
                     ]);
                 }
             }
@@ -116,7 +116,7 @@ class PartnerDashboardPerformanceTest extends TestCase
         foreach ($allPartners as $partner) {
             $accessibleStores = $partner->getAccessibleStoreIds();
             $partnerships = $partner->getActivePartnerships();
-            
+
             // Verify data isolation
             foreach ($partnerships as $partnership) {
                 $this->assertEquals($partner->company_id, $partnership->store->company_id);
@@ -128,7 +128,7 @@ class PartnerDashboardPerformanceTest extends TestCase
 
         // Should complete data isolation checks for all partners in under 1 second
         $this->assertLessThan(1000, $executionTime, "Data isolation verification took {$executionTime}ms for {$allPartners->count()} partners");
-        
+
         echo "\nData isolation performance test completed in {$executionTime}ms for {$allPartners->count()} partners";
     }
 
@@ -137,10 +137,10 @@ class PartnerDashboardPerformanceTest extends TestCase
         // Create test data
         $company = Company::factory()->create();
         $stores = Store::factory()->count(3)->create(['company_id' => $company->id]);
-        
+
         $partner = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner->assignRole('partner');
 
@@ -148,13 +148,13 @@ class PartnerDashboardPerformanceTest extends TestCase
             Partnership::factory()->create([
                 'store_id' => $store->id,
                 'user_id' => $partner->id,
-                'status' => 'ACTIVE'
+                'status' => 'ACTIVE',
             ]);
-            
+
             Transaction::factory()->count(10)->create([
                 'store_id' => $store->id,
                 'category' => 'revenue',
-                'type' => 'income'
+                'type' => 'income',
             ]);
         }
 
@@ -171,7 +171,7 @@ class PartnerDashboardPerformanceTest extends TestCase
 
         // Should not exceed reasonable number of queries (N+1 prevention)
         $this->assertLessThan(15, $queryCount, "Dashboard operations generated {$queryCount} queries, which may indicate N+1 problems");
-        
+
         echo "\nQuery optimization test: {$queryCount} queries executed for dashboard operations";
     }
 }

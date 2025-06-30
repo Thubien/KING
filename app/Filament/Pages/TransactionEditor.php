@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Transaction;
 use App\Models\Store;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\SmartSuggestionService;
 use Filament\Forms\Components\DatePicker;
@@ -14,7 +14,6 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Actions\BulkAction;
 use Filament\Tables\Columns\Layout\Split;
@@ -35,15 +34,18 @@ class TransactionEditor extends Page implements HasForms, HasTable
     use InteractsWithTable;
 
     protected static ?string $navigationIcon = 'heroicon-o-pencil-square';
+
     protected static ?string $navigationLabel = 'Transaction Editor';
+
     protected static ?string $title = 'Transaction Editor';
+
     protected static ?int $navigationSort = 2;
-    
+
     public static function shouldRegisterNavigation(): bool
     {
         return false; // Hide from navigation
     }
-    
+
     protected static string $view = 'filament.pages.transaction-editor';
 
     public function table(Table $table): Table
@@ -55,7 +57,7 @@ class TransactionEditor extends Page implements HasForms, HasTable
                         $query->whereHas('store', function ($q) {
                             $q->where('company_id', Auth::user()->company_id);
                         })
-                        ->orWhereNull('store_id');
+                            ->orWhereNull('store_id');
                     })
                     ->with(['store', 'partner', 'matchedTransaction', 'splitTransactions'])
                     ->orderBy('transaction_date', 'desc')
@@ -117,8 +119,11 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                 ->color('gray')
                                 ->size('xs')
                                 ->formatStateUsing(function (?Transaction $record): ?string {
-                                    if (!$record || !$record->subcategory || !$record->category) return null;
+                                    if (! $record || ! $record->subcategory || ! $record->category) {
+                                        return null;
+                                    }
                                     $subcategories = Transaction::SUBCATEGORIES[$record->category] ?? [];
+
                                     return $subcategories[$record->subcategory] ?? $record->subcategory;
                                 })
                                 ->visible(fn (?Transaction $record): bool => $record && $record->subcategory !== null),
@@ -165,9 +170,9 @@ class TransactionEditor extends Page implements HasForms, HasTable
                     ->color('primary')
                     ->form(function (Transaction $record) {
                         // Get smart suggestion
-                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService = new SmartSuggestionService;
                         $suggestion = $suggestionService->suggestAssignment($record);
-                        
+
                         return [
                             // Transaction info at the top
                             \Filament\Forms\Components\Section::make('Transaction Details')
@@ -187,29 +192,29 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                                     </div>
                                                     <div class='flex justify-between'>
                                                         <span class='text-sm text-gray-500'>Amount:</span>
-                                                        <span class='text-sm font-bold " . ($record->amount >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$record->currency} " . number_format(abs($record->amount), 2) . "</span>
+                                                        <span class='text-sm font-bold ".($record->amount >= 0 ? 'text-green-600' : 'text-red-600')."'>{$record->currency} ".number_format(abs($record->amount), 2).'</span>
                                                     </div>
                                                 </div>
-                                            ");
+                                            ');
                                         }),
                                 ])
                                 ->collapsible()
                                 ->collapsed(false),
-                            
+
                             // Show suggestion if available
                             \Filament\Forms\Components\Section::make()
                                 ->schema([
                                     \Filament\Forms\Components\Placeholder::make('suggestion')
                                         ->label('Smart Suggestion')
                                         ->content(function () use ($suggestion) {
-                                            if (!$suggestion) {
+                                            if (! $suggestion) {
                                                 return 'No suggestion available';
                                             }
-                                            
+
                                             $store = Store::find($suggestion['store_id']);
                                             $storeName = $store ? $store->name : 'Select store';
                                             $category = Transaction::CATEGORIES[$suggestion['category']] ?? $suggestion['category'];
-                                            
+
                                             return "Store: {$storeName} | Category: {$category} | Confidence: {$suggestion['confidence']}%";
                                         }),
                                     \Filament\Forms\Components\Placeholder::make('reason')
@@ -219,7 +224,7 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                 ])
                                 ->visible(fn () => $suggestion !== null)
                                 ->collapsible(),
-                                
+
                             Select::make('store_id')
                                 ->label('Store')
                                 ->options(Store::where('company_id', Auth::user()->company_id)->pluck('name', 'id'))
@@ -228,8 +233,8 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                 ->default($suggestion['store_id'] ?? null),
                             Select::make('category')
                                 ->label('Category')
-                                ->options(fn (Transaction $record) => $record->amount >= 0 
-                                    ? Transaction::getIncomeCategories() 
+                                ->options(fn (Transaction $record) => $record->amount >= 0
+                                    ? Transaction::getIncomeCategories()
                                     : array_diff_key(Transaction::CATEGORIES, Transaction::getIncomeCategories()))
                                 ->required()
                                 ->reactive()
@@ -269,9 +274,9 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             'user_notes' => $data['user_notes'] ?? null,
                             'assignment_status' => 'assigned',
                         ]);
-                        
+
                         // Learn from this assignment
-                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService = new SmartSuggestionService;
                         $suggestionService->learnFromAssignment($record);
 
                         Notification::make()
@@ -281,7 +286,7 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             ->send();
                     })
                     ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'pending'),
-                    
+
                 Action::make('edit')
                     ->label('Edit')
                     ->icon('heroicon-o-pencil')
@@ -305,15 +310,15 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                                     </div>
                                                     <div class='flex justify-between'>
                                                         <span class='text-sm text-gray-500'>Amount:</span>
-                                                        <span class='text-sm font-bold " . ($record->amount >= 0 ? 'text-green-600' : 'text-red-600') . "'>{$record->currency} " . number_format(abs($record->amount), 2) . "</span>
+                                                        <span class='text-sm font-bold ".($record->amount >= 0 ? 'text-green-600' : 'text-red-600')."'>{$record->currency} ".number_format(abs($record->amount), 2).'</span>
                                                     </div>
                                                 </div>
-                                            ");
+                                            ');
                                         }),
                                 ])
                                 ->collapsible()
                                 ->collapsed(false),
-                                
+
                             Select::make('store_id')
                                 ->label('Store')
                                 ->options(Store::where('company_id', Auth::user()->company_id)->pluck('name', 'id'))
@@ -322,8 +327,8 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                 ->default($record->store_id),
                             Select::make('category')
                                 ->label('Category')
-                                ->options(fn (Transaction $record) => $record->amount >= 0 
-                                    ? Transaction::getIncomeCategories() 
+                                ->options(fn (Transaction $record) => $record->amount >= 0
+                                    ? Transaction::getIncomeCategories()
                                     : array_diff_key(Transaction::CATEGORIES, Transaction::getIncomeCategories()))
                                 ->required()
                                 ->reactive()
@@ -365,9 +370,9 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             'partner_id' => $data['partner_id'] ?? null,
                             'user_notes' => $data['user_notes'] ?? null,
                         ]);
-                        
+
                         // Learn from edit
-                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService = new SmartSuggestionService;
                         $suggestionService->learnFromAssignment($record);
 
                         Notification::make()
@@ -376,19 +381,19 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             ->send();
                     })
                     ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'assigned'),
-                
+
                 Action::make('split')
                     ->label('Split')
                     ->icon('heroicon-o-squares-2x2')
                     ->color('info')
                     ->url(fn (Transaction $record): string => TransactionSplit::getUrl(['transaction' => $record]))
                     ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'pending' && $record->amount < 0),
-                
+
                 Action::make('match')
                     ->label('Match Transfer')
                     ->icon('heroicon-o-link')
                     ->color('warning')
-                    ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'pending' && !$record->matched_transaction_id),
+                    ->visible(fn (?Transaction $record): bool => $record && $record->assignment_status === 'pending' && ! $record->matched_transaction_id),
             ])
             ->bulkActions([
                 BulkAction::make('bulk_assign')
@@ -416,22 +421,22 @@ class TransactionEditor extends Page implements HasForms, HasTable
                             ->visible(fn (callable $get): bool => array_key_exists($get('category'), Transaction::SUBCATEGORIES)),
                     ])
                     ->action(function (Collection $records, array $data): void {
-                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService = new SmartSuggestionService;
                         $assigned = 0;
                         $skipped = 0;
-                        
+
                         $records->each(function (Transaction $record) use ($data, $suggestionService, &$assigned, &$skipped) {
                             // Only update if same type (income/expense)
                             $isIncomeCategory = Transaction::isIncomeCategory($data['category']);
-                            if (($record->amount >= 0 && $isIncomeCategory) || 
-                                ($record->amount < 0 && !$isIncomeCategory)) {
+                            if (($record->amount >= 0 && $isIncomeCategory) ||
+                                ($record->amount < 0 && ! $isIncomeCategory)) {
                                 $record->update([
                                     'store_id' => $data['store_id'],
                                     'category' => $data['category'],
                                     'subcategory' => $data['subcategory'] ?? null,
                                     'assignment_status' => 'assigned',
                                 ]);
-                                
+
                                 // Learn from bulk assignment
                                 $suggestionService->learnFromAssignment($record);
                                 $assigned++;
@@ -441,13 +446,13 @@ class TransactionEditor extends Page implements HasForms, HasTable
                         });
 
                         Notification::make()
-                            ->title("Bulk assignment completed")
-                            ->body("Assigned: {$assigned} transactions" . ($skipped > 0 ? ", Skipped: {$skipped} (wrong type)" : ""))
+                            ->title('Bulk assignment completed')
+                            ->body("Assigned: {$assigned} transactions".($skipped > 0 ? ", Skipped: {$skipped} (wrong type)" : ''))
                             ->success()
                             ->send();
                     })
                     ->deselectRecordsAfterCompletion(),
-                    
+
                 BulkAction::make('bulk_assign_by_pattern')
                     ->label('Smart Assign by Pattern')
                     ->icon('heroicon-o-sparkles')
@@ -456,23 +461,23 @@ class TransactionEditor extends Page implements HasForms, HasTable
                     ->modalHeading('Smart Pattern Assignment')
                     ->modalDescription('This will analyze transaction descriptions and assign categories based on patterns.')
                     ->action(function (Collection $records): void {
-                        $suggestionService = new SmartSuggestionService();
+                        $suggestionService = new SmartSuggestionService;
                         $assigned = 0;
                         $noSuggestion = 0;
-                        
+
                         $records->each(function (Transaction $record) use ($suggestionService, &$assigned, &$noSuggestion) {
                             if ($record->assignment_status === 'pending') {
                                 $suggestion = $suggestionService->suggestAssignment($record);
-                                
+
                                 if ($suggestion && $suggestion['confidence'] >= 75) {
                                     $record->update([
                                         'store_id' => $suggestion['store_id'],
                                         'category' => $suggestion['category'],
                                         'subcategory' => $suggestion['subcategory'] ?? null,
                                         'assignment_status' => 'assigned',
-                                        'user_notes' => 'Auto-assigned with ' . $suggestion['confidence'] . '% confidence',
+                                        'user_notes' => 'Auto-assigned with '.$suggestion['confidence'].'% confidence',
                                     ]);
-                                    
+
                                     $suggestionService->learnFromAssignment($record);
                                     $assigned++;
                                 } else {
@@ -480,10 +485,10 @@ class TransactionEditor extends Page implements HasForms, HasTable
                                 }
                             }
                         });
-                        
+
                         Notification::make()
                             ->title('Smart assignment completed')
-                            ->body("Assigned: {$assigned} transactions" . ($noSuggestion > 0 ? ", No suggestion for: {$noSuggestion}" : ""))
+                            ->body("Assigned: {$assigned} transactions".($noSuggestion > 0 ? ", No suggestion for: {$noSuggestion}" : ''))
                             ->success()
                             ->send();
                     })
@@ -507,13 +512,13 @@ class TransactionEditor extends Page implements HasForms, HasTable
                 $q->where('company_id', Auth::user()->company_id);
             })
             ->orWhereNull('store_id');
-        
+
         $total = $query->count();
         $pending = $query->clone()->where('assignment_status', 'pending')->count();
         $assigned = $query->clone()->where('assignment_status', 'assigned')->count();
-        
+
         $progress = $total > 0 ? round(($assigned / $total) * 100) : 0;
-        
+
         return [
             'total' => number_format($total),
             'pending' => number_format($pending),
@@ -521,5 +526,4 @@ class TransactionEditor extends Page implements HasForms, HasTable
             'progress' => $progress,
         ];
     }
-
 }

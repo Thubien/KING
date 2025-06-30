@@ -28,9 +28,9 @@ return new class extends Migration
         Schema::table('stores', function (Blueprint $table) {
             $table->dropColumn([
                 'stripe_secret_key',
-                'stripe_publishable_key', 
+                'stripe_publishable_key',
                 'stripe_sync_enabled',
-                'last_stripe_sync'
+                'last_stripe_sync',
             ]);
         });
     }

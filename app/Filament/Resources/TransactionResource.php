@@ -3,7 +3,6 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\TransactionResource\Pages;
-use App\Filament\Resources\TransactionResource\RelationManagers;
 use App\Models\Transaction;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -11,16 +10,15 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-    
+
     protected static ?string $navigationLabel = 'Transactions';
-    
+
     protected static ?int $navigationSort = 4;
 
     public static function canViewAny(): bool
@@ -51,12 +49,13 @@ class TransactionResource extends Resource
         // Sales reps see only their own transactions
         if ($user->isSalesRep()) {
             return $query->where('company_id', $user->company_id)
-                         ->where('sales_rep_id', $user->id);
+                ->where('sales_rep_id', $user->id);
         }
 
         // Partners only see transactions from stores they have partnerships in
         if ($user->isPartner()) {
             $accessibleStoreIds = $user->getAccessibleStoreIds();
+
             return $query->whereIn('store_id', $accessibleStoreIds);
         }
 
@@ -130,12 +129,12 @@ class TransactionResource extends Resource
                     ->searchable()
                     ->limit(40)
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('amount_usd')
                     ->money('USD')
                     ->sortable()
                     ->color('success'),
-                    
+
                 Tables\Columns\TextColumn::make('sales_channel')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -154,7 +153,7 @@ class TransactionResource extends Resource
                         'referral' => 'Referral',
                         default => 'Other',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('payment_method')
                     ->badge()
                     ->color('gray')
@@ -169,21 +168,21 @@ class TransactionResource extends Resource
                         'store_credit' => 'Credit',
                         default => 'Other',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('store.name')
                     ->label('Store')
                     ->sortable()
                     ->limit(20),
-                    
+
                 Tables\Columns\TextColumn::make('salesRep.name')
                     ->label('Sales Rep')
                     ->placeholder('—')
                     ->limit(20),
-                    
+
                 Tables\Columns\TextColumn::make('transaction_date')
                     ->dateTime('M j, Y')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
@@ -194,7 +193,7 @@ class TransactionResource extends Resource
                         'refunded' => 'danger',
                         default => 'gray',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('data_source')
                     ->badge()
                     ->color('info')
@@ -219,7 +218,7 @@ class TransactionResource extends Resource
                         'referral' => 'Referral',
                         'other' => 'Other',
                     ]),
-                    
+
                 Tables\Filters\SelectFilter::make('payment_method')
                     ->options([
                         'cash' => 'Cash',
@@ -232,7 +231,7 @@ class TransactionResource extends Resource
                         'store_credit' => 'Store Credit',
                         'other' => 'Other',
                     ]),
-                    
+
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'pending' => 'Pending',
@@ -241,11 +240,11 @@ class TransactionResource extends Resource
                         'failed' => 'Failed',
                         'refunded' => 'Refunded',
                     ]),
-                    
+
                 Tables\Filters\Filter::make('this_month')
                     ->query(fn (Builder $query): Builder => $query->whereMonth('transaction_date', now()->month))
                     ->default(),
-                    
+
                 Tables\Filters\Filter::make('this_year')
                     ->query(fn (Builder $query): Builder => $query->whereYear('transaction_date', now()->year)),
             ])

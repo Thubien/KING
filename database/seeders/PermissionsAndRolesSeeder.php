@@ -23,24 +23,24 @@ class PermissionsAndRolesSeeder extends Seeder
             'invite_partners',
             'view_all_stores',
             'view_all_profit_shares',
-            
+
             // Partner permissions
             'view_own_stores',
             'view_own_profit_shares',
             'manage_personal_expenses',
-            
+
             // Store management
             'create_stores',
             'edit_stores',
             'delete_stores',
             'view_store_analytics',
-            
+
             // Financial management
             'manage_transactions',
             'view_financial_reports',
             'manage_bank_accounts',
             'manage_payment_processors',
-            
+
             // Partnership management
             'create_partnerships',
             'edit_partnerships',
@@ -53,7 +53,7 @@ class PermissionsAndRolesSeeder extends Seeder
         }
 
         // Create roles and assign permissions
-        
+
         // Company Owner Role
         $companyOwnerRole = Role::create(['name' => 'company_owner']);
         $companyOwnerRole->givePermissionTo([

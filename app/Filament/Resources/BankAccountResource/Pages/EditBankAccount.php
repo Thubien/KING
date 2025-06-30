@@ -16,7 +16,7 @@ class EditBankAccount extends EditRecord
             Actions\DeleteAction::make(),
         ];
     }
-    
+
     protected function mutateFormDataBeforeSave(array $data): array
     {
         // Ensure only one primary account
@@ -25,7 +25,7 @@ class EditBankAccount extends EditRecord
                 ->where('id', '!=', $this->record->id)
                 ->update(['is_primary' => false]);
         }
-        
+
         return $data;
     }
 }

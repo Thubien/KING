@@ -36,4 +36,4 @@ interface ImportStrategyInterface
      * Check if this strategy can handle the given data
      */
     public function canHandle($data): bool;
-} 
+}

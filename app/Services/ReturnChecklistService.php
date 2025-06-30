@@ -15,13 +15,13 @@ class ReturnChecklistService
                 'İade onayı verildi',
                 'Kargo bilgisi iletildi',
             ],
-            
+
             'in_transit' => [
                 'Kargo takip numarası alındı',
                 'Ürün kargoya verildi',
                 'Kargo takibi yapılıyor',
             ],
-            
+
             'processing' => [
                 'Ürün teslim alındı',
                 'Ürün kontrol edildi',
@@ -29,7 +29,7 @@ class ReturnChecklistService
                 'İşlem başlatıldı',
                 'Müşteri bilgilendirildi',
             ],
-            
+
             'completed' => [
                 'İşlem tamamlandı',
                 'Kayıtlar güncellendi',
@@ -40,7 +40,7 @@ class ReturnChecklistService
     public static function createChecklistsForStage($returnRequest, $stage)
     {
         $items = self::getStageChecklists()[$stage] ?? [];
-        
+
         foreach ($items as $item) {
             ReturnChecklist::create([
                 'return_request_id' => $returnRequest->id,

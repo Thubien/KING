@@ -2,13 +2,13 @@
 
 namespace App\Services;
 
-use App\Models\Company;
 use App\Models\BankAccount;
+use App\Models\Company;
 use App\Models\PaymentProcessorAccount;
 use App\Models\Store;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
 class BalanceValidationService
 {
@@ -23,12 +23,12 @@ class BalanceValidationService
         $cashTotal = $this->calculateTotalRealMoney($company);
         $inventoryTotal = $this->calculateTotalInventoryValue($company);
         $totalAssets = $cashTotal + $inventoryTotal;
-        
+
         $calculatedBalance = $this->calculateStoreBalances($company);
-        
+
         $difference = abs($totalAssets - $calculatedBalance);
         $isValid = $difference <= $this->tolerance;
-        
+
         $result = [
             'is_valid' => $isValid,
             'cash_total' => $cashTotal,
@@ -39,13 +39,13 @@ class BalanceValidationService
             'difference' => $difference,
             'tolerance' => $this->tolerance,
             'breakdown' => $this->getDetailedBreakdown($company),
-            'timestamp' => now()
+            'timestamp' => now(),
         ];
-        
-        if (!$isValid) {
+
+        if (! $isValid) {
             $this->logBalanceDiscrepancy($company, $result);
         }
-        
+
         return $result;
     }
 
@@ -58,12 +58,12 @@ class BalanceValidationService
         // Bank accounts'taki para
         $bankTotal = BankAccount::where('company_id', $company->id)
             ->sum('current_balance');
-            
+
         // Payment processor'lardaki para (current + pending)
         $processorTotal = PaymentProcessorAccount::where('company_id', $company->id)
             ->where('is_active', true)
             ->sum(\DB::raw('current_balance + pending_balance'));
-            
+
         return $bankTotal + $processorTotal;
     }
 
@@ -72,7 +72,7 @@ class BalanceValidationService
      */
     private function calculateStoreBalances(Company $company): float
     {
-        return $company->stores->sum(function($store) {
+        return $company->stores->sum(function ($store) {
             return $this->calculateStoreBalance($store);
         });
     }
@@ -82,7 +82,7 @@ class BalanceValidationService
      */
     private function calculateTotalInventoryValue(Company $company): float
     {
-        return $company->stores->sum(function($store) {
+        return $company->stores->sum(function ($store) {
             return $store->inventory_value;
         });
     }
@@ -96,12 +96,12 @@ class BalanceValidationService
             ->where('status', 'APPROVED')
             ->whereIn('type', ['INCOME', 'SALES'])
             ->sum('amount');
-            
+
         $expenses = Transaction::where('store_id', $store->id)
             ->where('status', 'APPROVED')
             ->whereIn('type', ['EXPENSE', 'PERSONAL', 'BUSINESS'])
             ->sum('amount');
-            
+
         return $income - $expenses;
     }
 
@@ -116,17 +116,17 @@ class BalanceValidationService
         $stores = $company->stores;
 
         return [
-            'bank_accounts' => $bankAccounts->map(function($account) {
+            'bank_accounts' => $bankAccounts->map(function ($account) {
                 return [
                     'id' => $account->id,
                     'bank_type' => $account->bank_type,
                     'currency' => $account->currency,
                     'current_balance' => $account->current_balance,
-                    'formatted_balance' => $account->getFormattedBalance()
+                    'formatted_balance' => $account->getFormattedBalance(),
                 ];
             })->toArray(),
-            
-            'payment_processors' => $processorAccounts->map(function($account) {
+
+            'payment_processors' => $processorAccounts->map(function ($account) {
                 return [
                     'id' => $account->id,
                     'processor_type' => $account->processor_type,
@@ -136,18 +136,19 @@ class BalanceValidationService
                     'total_balance' => $account->getTotalBalance(),
                     'formatted_current' => $account->getFormattedCurrentBalance(),
                     'formatted_pending' => $account->getFormattedPendingBalance(),
-                    'formatted_total' => $account->getFormattedTotalBalance()
+                    'formatted_total' => $account->getFormattedTotalBalance(),
                 ];
             })->toArray(),
-            
-            'stores' => $stores->map(function($store) {
+
+            'stores' => $stores->map(function ($store) {
                 $balance = $this->calculateStoreBalance($store);
+
                 return [
                     'id' => $store->id,
                     'name' => $store->name,
                     'currency' => $store->currency,
                     'calculated_balance' => $balance,
-                    'formatted_balance' => number_format($balance, 2) . ' ' . $store->currency,
+                    'formatted_balance' => number_format($balance, 2).' '.$store->currency,
                     'inventory_value' => $store->inventory_value,
                     'formatted_inventory_value' => $store->formatted_inventory_value,
                     'inventory_items_count' => $store->total_inventory_items,
@@ -160,10 +161,10 @@ class BalanceValidationService
                         'expenses' => Transaction::where('store_id', $store->id)
                             ->where('status', 'APPROVED')
                             ->whereIn('type', ['EXPENSE', 'PERSONAL', 'BUSINESS'])
-                            ->count()
-                    ]
+                            ->count(),
+                    ],
                 ];
-            })->toArray()
+            })->toArray(),
         ];
     }
 
@@ -180,13 +181,13 @@ class BalanceValidationService
             'difference' => $result['difference'],
             'tolerance' => $result['tolerance'],
             'breakdown' => $result['breakdown'],
-            'timestamp' => $result['timestamp']
+            'timestamp' => $result['timestamp'],
         ]);
-        
+
         // Cache the error for dashboard display
         Cache::put(
-            "balance_error_company_{$company->id}", 
-            $result, 
+            "balance_error_company_{$company->id}",
+            $result,
             now()->addHours(24)
         );
     }
@@ -197,11 +198,11 @@ class BalanceValidationService
     public function runScheduledBalanceCheck(): void
     {
         $companies = Company::all();
-        
+
         foreach ($companies as $company) {
             $result = $this->validateCompanyBalance($company);
-            
-            if (!$result['is_valid']) {
+
+            if (! $result['is_valid']) {
                 // Send notification to company admins
                 $this->notifyBalanceDiscrepancy($company, $result);
             }
@@ -216,7 +217,7 @@ class BalanceValidationService
         // Bu kısım email/slack notification için
         Log::warning('Balance discrepancy notification sent', [
             'company_id' => $company->id,
-            'difference' => $result['difference']
+            'difference' => $result['difference'],
         ]);
     }
 
@@ -228,7 +229,7 @@ class BalanceValidationService
         return Cache::remember(
             "company_balance_{$company->id}",
             300, // 5 minutes cache
-            function() use ($company) {
+            function () use ($company) {
                 return $this->validateCompanyBalance($company);
             }
         );
@@ -240,6 +241,7 @@ class BalanceValidationService
     public function forceRecalculation(Company $company): array
     {
         Cache::forget("company_balance_{$company->id}");
+
         return $this->validateCompanyBalance($company);
     }
 
@@ -247,8 +249,8 @@ class BalanceValidationService
      * Balance adjustment - admin tool
      */
     public function createBalanceAdjustment(
-        Company $company, 
-        float $adjustmentAmount, 
+        Company $company,
+        float $adjustmentAmount,
         string $reason,
         string $adjustmentType = 'MANUAL_CORRECTION'
     ): void {
@@ -265,14 +267,14 @@ class BalanceValidationService
             'status' => 'APPROVED',
             'created_by' => auth()->id(),
             'is_adjustment' => true,
-            'adjustment_type' => $adjustmentType
+            'adjustment_type' => $adjustmentType,
         ]);
-        
+
         Log::info('Balance adjustment created', [
             'company_id' => $company->id,
             'adjustment_amount' => $adjustmentAmount,
             'reason' => $reason,
-            'created_by' => auth()->id()
+            'created_by' => auth()->id(),
         ]);
     }
 }

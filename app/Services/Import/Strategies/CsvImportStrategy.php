@@ -5,24 +5,26 @@ namespace App\Services\Import\Strategies;
 use App\Models\ImportBatch;
 use App\Models\Transaction;
 use App\Services\Import\Contracts\ImportStrategyInterface;
-use App\Services\Import\ImportResult;
 use App\Services\Import\Detectors\BankFormatDetector;
-use App\Services\Import\Parsers\DateParser;
+use App\Services\Import\ImportResult;
 use App\Services\Import\Parsers\AmountParser;
-use Illuminate\Support\Facades\Log;
+use App\Services\Import\Parsers\DateParser;
 use Exception;
+use Illuminate\Support\Facades\Log;
 
 class CsvImportStrategy implements ImportStrategyInterface
 {
     private BankFormatDetector $formatDetector;
+
     private DateParser $dateParser;
+
     private AmountParser $amountParser;
 
     public function __construct()
     {
-        $this->formatDetector = new BankFormatDetector();
-        $this->dateParser = new DateParser();
-        $this->amountParser = new AmountParser();
+        $this->formatDetector = new BankFormatDetector;
+        $this->dateParser = new DateParser;
+        $this->amountParser = new AmountParser;
     }
 
     /**
@@ -35,18 +37,20 @@ class CsvImportStrategy implements ImportStrategyInterface
         try {
             // Parse CSV data
             $csvData = $this->parseCsvData($data);
-            
+
             if (empty($csvData)) {
                 $errors[] = 'CSV file is empty or could not be parsed';
+
                 return $errors;
             }
 
             // Get headers and detect format
             $headers = array_keys($csvData[0]);
             $format = $this->formatDetector->detectFormat($headers);
-            
+
             if ($format === BankFormatDetector::FORMAT_UNKNOWN) {
                 $errors[] = 'Unknown CSV format. Supported formats: Mercury Bank, Payoneer, Stripe Balance, Stripe Payments';
+
                 return $errors;
             }
 
@@ -55,7 +59,7 @@ class CsvImportStrategy implements ImportStrategyInterface
             $errors = array_merge($errors, $formatErrors);
 
         } catch (Exception $e) {
-            $errors[] = "Failed to validate CSV: " . $e->getMessage();
+            $errors[] = 'Failed to validate CSV: '.$e->getMessage();
         }
 
         return $errors;
@@ -69,7 +73,7 @@ class CsvImportStrategy implements ImportStrategyInterface
         try {
             // Parse CSV data
             $csvData = $this->parseCsvData($data);
-            
+
             if (empty($csvData)) {
                 return ImportResult::failure('CSV file is empty or could not be parsed');
             }
@@ -94,7 +98,7 @@ class CsvImportStrategy implements ImportStrategyInterface
             foreach ($csvData as $index => $record) {
                 try {
                     $result = $this->processRecord($record, $format, $mapping, $batch, $index + 1);
-                    
+
                     switch ($result['status']) {
                         case 'success':
                             $successfulRecords++;
@@ -107,7 +111,7 @@ class CsvImportStrategy implements ImportStrategyInterface
                             break;
                         case 'failed':
                             $failedRecords++;
-                            $errors[] = "Row " . ($index + 1) . ": " . $result['error'];
+                            $errors[] = 'Row '.($index + 1).': '.$result['error'];
                             break;
                     }
 
@@ -118,19 +122,19 @@ class CsvImportStrategy implements ImportStrategyInterface
                             'successful_records' => $successfulRecords,
                             'failed_records' => $failedRecords,
                             'duplicate_records' => $duplicateRecords,
-                            'skipped_records' => $skippedRecords
+                            'skipped_records' => $skippedRecords,
                         ]);
                     }
 
                 } catch (Exception $e) {
                     $failedRecords++;
-                    $errors[] = "Row " . ($index + 1) . ": " . $e->getMessage();
-                    
+                    $errors[] = 'Row '.($index + 1).': '.$e->getMessage();
+
                     Log::error('CSV Import Error', [
                         'batch_id' => $batch->batch_id,
                         'row' => $index + 1,
                         'error' => $e->getMessage(),
-                        'record' => $record
+                        'record' => $record,
                     ]);
                 }
             }
@@ -140,7 +144,7 @@ class CsvImportStrategy implements ImportStrategyInterface
                 'format_detected' => $this->formatDetector->getFormatDisplayName($format),
                 'confidence_score' => $this->formatDetector->getDetectionConfidence($headers, $format),
                 'currency_detected' => $this->detectPrimaryCurrency($csvData, $format, $mapping),
-                'date_range' => $this->getDateRange($csvData, $format, $mapping)
+                'date_range' => $this->getDateRange($csvData, $format, $mapping),
             ];
 
             return ImportResult::success(
@@ -153,18 +157,18 @@ class CsvImportStrategy implements ImportStrategyInterface
                 metadata: [
                     'format' => $format,
                     'mapping' => $mapping,
-                    'errors' => array_slice($errors, 0, 20) // Limit errors to first 20
+                    'errors' => array_slice($errors, 0, 20), // Limit errors to first 20
                 ]
             );
 
         } catch (Exception $e) {
             Log::error('CSV Import Failed', [
                 'batch_id' => $batch->batch_id,
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
 
             return ImportResult::failure(
-                errorMessage: 'Import failed: ' . $e->getMessage(),
+                errorMessage: 'Import failed: '.$e->getMessage(),
                 metadata: ['format' => $format ?? 'unknown']
             );
         }
@@ -184,7 +188,7 @@ class CsvImportStrategy implements ImportStrategyInterface
             $headers = array_keys($csvData[0]);
             $format = $this->formatDetector->detectFormat($headers);
 
-            return match($format) {
+            return match ($format) {
                 BankFormatDetector::FORMAT_MERCURY => 'mercury',
                 BankFormatDetector::FORMAT_PAYONEER => 'payoneer',
                 BankFormatDetector::FORMAT_STRIPE_BALANCE => 'stripe',
@@ -225,7 +229,7 @@ class CsvImportStrategy implements ImportStrategyInterface
 
             $headers = array_keys($csvData[0]);
             $format = $this->formatDetector->detectFormat($headers);
-            
+
             return $format !== BankFormatDetector::FORMAT_UNKNOWN;
         } catch (Exception $e) {
             return false;
@@ -255,12 +259,12 @@ class CsvImportStrategy implements ImportStrategyInterface
      */
     private function parseCsvString(string $csvContent): array
     {
-        $lines = str_getcsv($csvContent, "\n", '"', "\\");
+        $lines = str_getcsv($csvContent, "\n", '"', '\\');
         if (empty($lines)) {
             return [];
         }
 
-        $headers = str_getcsv($lines[0], ',', '"', "\\");
+        $headers = str_getcsv($lines[0], ',', '"', '\\');
         $data = [];
 
         for ($i = 1; $i < count($lines); $i++) {
@@ -268,8 +272,8 @@ class CsvImportStrategy implements ImportStrategyInterface
                 continue; // Skip empty lines
             }
 
-            $row = str_getcsv($lines[$i], ',', '"', "\\");
-            
+            $row = str_getcsv($lines[$i], ',', '"', '\\');
+
             // Ensure row has same number of columns as headers
             while (count($row) < count($headers)) {
                 $row[] = '';
@@ -289,16 +293,16 @@ class CsvImportStrategy implements ImportStrategyInterface
         try {
             // Extract and parse data
             $transactionData = $this->extractTransactionData($record, $format, $mapping);
-            
+
             // Get or create a default store for the company (temporary for Phase 3)
             $store = \App\Models\Store::where('company_id', $batch->company_id)->first();
-            if (!$store) {
+            if (! $store) {
                 $store = \App\Models\Store::create([
                     'company_id' => $batch->company_id,
                     'name' => 'Default Store',
                     'shopify_domain' => 'default.myshopify.com',
                     'is_active' => true,
-                    'sync_enabled' => false
+                    'sync_enabled' => false,
                 ]);
             }
 
@@ -319,8 +323,8 @@ class CsvImportStrategy implements ImportStrategyInterface
                 'metadata' => [
                     'import_source' => 'csv',
                     'format' => $format,
-                    'row_number' => $rowNumber
-                ]
+                    'row_number' => $rowNumber,
+                ],
             ]);
 
             return ['status' => 'success', 'transaction_id' => $transaction->id];
@@ -328,7 +332,7 @@ class CsvImportStrategy implements ImportStrategyInterface
         } catch (Exception $e) {
             return [
                 'status' => 'failed',
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ];
         }
     }
@@ -343,7 +347,7 @@ class CsvImportStrategy implements ImportStrategyInterface
         // Extract date
         if (isset($mapping['date'])) {
             $data['transaction_date'] = $this->dateParser->parseDate(
-                $record[$mapping['date']], 
+                $record[$mapping['date']],
                 $format
             );
         }
@@ -352,8 +356,8 @@ class CsvImportStrategy implements ImportStrategyInterface
         if (isset($mapping['amount'])) {
             $currency = isset($mapping['currency']) ? $record[$mapping['currency']] ?? null : null;
             $data['amount'] = $this->amountParser->parseAmount(
-                $record[$mapping['amount']], 
-                $format, 
+                $record[$mapping['amount']],
+                $format,
                 $currency
             );
         }
@@ -362,7 +366,7 @@ class CsvImportStrategy implements ImportStrategyInterface
         $fieldMap = [
             'description' => 'description',
             'currency' => 'currency',
-            'id' => 'external_id'
+            'id' => 'external_id',
         ];
 
         foreach ($fieldMap as $csvField => $dataField) {
@@ -379,7 +383,7 @@ class CsvImportStrategy implements ImportStrategyInterface
      */
     private function detectPrimaryCurrency(array $csvData, string $format, array $mapping): ?string
     {
-        if (!isset($mapping['currency'])) {
+        if (! isset($mapping['currency'])) {
             return 'USD'; // Default
         }
 
@@ -391,7 +395,7 @@ class CsvImportStrategy implements ImportStrategyInterface
             }
         }
 
-        return !empty($currencies) ? array_key_first($currencies) : 'USD';
+        return ! empty($currencies) ? array_key_first($currencies) : 'USD';
     }
 
     /**
@@ -399,7 +403,7 @@ class CsvImportStrategy implements ImportStrategyInterface
      */
     private function getDateRange(array $csvData, string $format, array $mapping): array
     {
-        if (!isset($mapping['date'])) {
+        if (! isset($mapping['date'])) {
             return [];
         }
 
@@ -423,7 +427,7 @@ class CsvImportStrategy implements ImportStrategyInterface
         return [
             'start_date' => $minDate->format('Y-m-d'),
             'end_date' => $maxDate->format('Y-m-d'),
-            'days_covered' => $maxDate->diffInDays($minDate) + 1
+            'days_covered' => $maxDate->diffInDays($minDate) + 1,
         ];
     }
-} 
+}

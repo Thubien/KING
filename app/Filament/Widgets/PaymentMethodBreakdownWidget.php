@@ -9,44 +9,44 @@ use Illuminate\Support\Facades\Auth;
 class PaymentMethodBreakdownWidget extends ChartWidget
 {
     protected static ?string $heading = 'Payment Method Distribution';
-    
+
     protected static ?int $sort = 6;
-    
-    protected int | string | array $columnSpan = [
+
+    protected int|string|array $columnSpan = [
         'md' => 2,
         'xl' => 3,
     ];
-    
+
     public ?string $filter = 'this_month';
-    
+
     protected function getData(): array
     {
         $user = Auth::user();
         $company = $user->company;
-        
+
         $query = Transaction::where('company_id', $company->id);
-        
+
         if ($this->filter === 'this_month') {
             $query->whereMonth('transaction_date', now()->month)
-                  ->whereYear('transaction_date', now()->year);
+                ->whereYear('transaction_date', now()->year);
         } elseif ($this->filter === 'last_month') {
             $query->whereMonth('transaction_date', now()->subMonth()->month)
-                  ->whereYear('transaction_date', now()->subMonth()->year);
+                ->whereYear('transaction_date', now()->subMonth()->year);
         } elseif ($this->filter === 'this_year') {
             $query->whereYear('transaction_date', now()->year);
         }
-        
+
         $paymentData = $query->selectRaw('payment_method, SUM(amount_usd) as total')
             ->groupBy('payment_method')
             ->orderBy('total', 'desc')
             ->get();
-        
+
         $methods = $paymentData->pluck('payment_method')->toArray();
         $totals = $paymentData->pluck('total')->toArray();
-        
+
         // Map payment method names to emojis
-        $methodLabels = array_map(function($method) {
-            return match($method) {
+        $methodLabels = array_map(function ($method) {
+            return match ($method) {
                 'cash' => 'Cash',
                 'credit_card' => 'Credit Card',
                 'bank_transfer' => 'Bank Transfer',
@@ -58,7 +58,7 @@ class PaymentMethodBreakdownWidget extends ChartWidget
                 default => 'Other'
             };
         }, $methods);
-        
+
         return [
             'datasets' => [
                 [
@@ -80,12 +80,12 @@ class PaymentMethodBreakdownWidget extends ChartWidget
             'labels' => $methodLabels,
         ];
     }
-    
+
     protected function getType(): string
     {
         return 'pie';
     }
-    
+
     protected function getFilters(): ?array
     {
         return [
@@ -94,7 +94,7 @@ class PaymentMethodBreakdownWidget extends ChartWidget
             'this_year' => 'This Year',
         ];
     }
-    
+
     protected function getOptions(): array
     {
         return [
@@ -111,10 +111,11 @@ class PaymentMethodBreakdownWidget extends ChartWidget
             ],
         ];
     }
-    
+
     public static function canView(): bool
     {
         $user = Auth::user();
+
         return $user?->isCompanyOwner() || $user?->isAdmin();
     }
 }

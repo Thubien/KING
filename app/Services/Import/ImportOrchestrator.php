@@ -5,10 +5,10 @@ namespace App\Services\Import;
 use App\Models\ImportBatch;
 use App\Services\Import\Contracts\ImportStrategyInterface;
 use App\Services\Import\Strategies\CsvImportStrategy;
+use Exception;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Exception;
 
 class ImportOrchestrator
 {
@@ -26,8 +26,8 @@ class ImportOrchestrator
     protected function registerStrategies(): void
     {
         // Register CSV import strategy
-        $this->strategies['csv'] = new CsvImportStrategy();
-        
+        $this->strategies['csv'] = new CsvImportStrategy;
+
         // TODO: Register additional strategies as they are created
         // $this->strategies['shopify'] = app(ShopifyImportStrategy::class);
         // $this->strategies['stripe'] = app(StripeImportStrategy::class);
@@ -39,6 +39,7 @@ class ImportOrchestrator
     public function registerStrategy(string $name, ImportStrategyInterface $strategy): self
     {
         $this->strategies[$name] = $strategy;
+
         return $this;
     }
 
@@ -53,13 +54,14 @@ class ImportOrchestrator
         try {
             // Create import batch for tracking
             $batch = $this->createImportBatch($importType, $data, $options);
-            
+
             // Find appropriate strategy
             $strategy = $this->findStrategy($importType, $data);
-            
-            if (!$strategy) {
+
+            if (! $strategy) {
                 $errorMessage = "No suitable import strategy found for type: {$importType}";
                 $batch->markAsFailed($errorMessage);
+
                 return ImportResult::failure($errorMessage);
             }
 
@@ -68,9 +70,10 @@ class ImportOrchestrator
 
             // Validate data before processing
             $validationResult = $strategy->validate($data);
-            if (!empty($validationResult)) {
-                $errorMessage = "Data validation failed";
+            if (! empty($validationResult)) {
+                $errorMessage = 'Data validation failed';
                 $batch->markAsFailed($errorMessage, $validationResult);
+
                 return ImportResult::failure($errorMessage, $validationResult);
             }
 
@@ -115,7 +118,7 @@ class ImportOrchestrator
             $file = $options['file'];
             $filename = $file->getClientOriginalName();
             $path = $file->store('imports');
-            
+
             $batchData = array_merge($batchData, [
                 'original_filename' => $filename,
                 'file_path' => $path,
@@ -172,7 +175,7 @@ class ImportOrchestrator
 
         try {
             // Detect source type if not already set
-            if (!$batch->source_type) {
+            if (! $batch->source_type) {
                 $sourceType = $strategy->detectSource($data);
                 if ($sourceType) {
                     $batch->update(['source_type' => $sourceType]);
@@ -256,7 +259,7 @@ class ImportOrchestrator
      */
     public function reprocessImport(ImportBatch $batch): ImportResult
     {
-        if (!$batch->canBeReprocessed()) {
+        if (! $batch->canBeReprocessed()) {
             return ImportResult::failure('Import cannot be reprocessed');
         }
 
@@ -278,6 +281,7 @@ class ImportOrchestrator
         // Get file data and reprocess
         if ($batch->file_path && Storage::exists($batch->file_path)) {
             $fileContent = Storage::get($batch->file_path);
+
             return $this->import($batch->import_type, $fileContent, [
                 'existing_batch' => $batch,
                 'source_type' => $batch->source_type,
@@ -286,4 +290,4 @@ class ImportOrchestrator
 
         return ImportResult::failure('Import file not found');
     }
-} 
+}

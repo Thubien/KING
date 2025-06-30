@@ -2,14 +2,14 @@
 
 namespace Tests\Feature;
 
-use Illuminate\Foundation\Testing\RefreshDatabase;
-use Tests\TestCase;
 use App\Models\Company;
-use App\Models\Store;
-use App\Models\User;
-use App\Models\Transaction;
 use App\Models\Partnership;
+use App\Models\Store;
+use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Spatie\Permission\Models\Role;
+use Tests\TestCase;
 
 class SalesRepCommissionTest extends TestCase
 {
@@ -18,7 +18,7 @@ class SalesRepCommissionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles first
         Role::create(['name' => 'sales_rep']);
         Role::create(['name' => 'company_owner']);
@@ -50,7 +50,7 @@ class SalesRepCommissionTest extends TestCase
             'type' => 'INCOME',
             'status' => 'APPROVED',
             'data_source' => 'manual_entry',
-            'transaction_date' => now()
+            'transaction_date' => now(),
         ]);
 
         Transaction::factory()->create([
@@ -61,7 +61,7 @@ class SalesRepCommissionTest extends TestCase
             'type' => 'INCOME',
             'status' => 'APPROVED',
             'data_source' => 'manual_entry',
-            'transaction_date' => now()
+            'transaction_date' => now(),
         ]);
 
         // Create transaction for last month (should not count)
@@ -73,7 +73,7 @@ class SalesRepCommissionTest extends TestCase
             'type' => 'INCOME',
             'status' => 'APPROVED',
             'data_source' => 'manual_entry',
-            'transaction_date' => now()->subMonth()
+            'transaction_date' => now()->subMonth(),
         ]);
 
         $monthlySales = $salesRep->getMonthlySales();
@@ -92,7 +92,7 @@ class SalesRepCommissionTest extends TestCase
             'store_id' => $store->id,
             'user_id' => $salesRep->id,
             'ownership_percentage' => 15.0,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Create sales for this month
@@ -104,7 +104,7 @@ class SalesRepCommissionTest extends TestCase
             'type' => 'INCOME',
             'status' => 'APPROVED',
             'data_source' => 'manual_entry',
-            'transaction_date' => now()
+            'transaction_date' => now(),
         ]);
 
         $commission = $salesRep->getMonthlyCommission(null, $store->id);
@@ -123,7 +123,7 @@ class SalesRepCommissionTest extends TestCase
             'store_id' => $store->id,
             'user_id' => $salesRep->id,
             'ownership_percentage' => 20.0,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Current month: 3 orders totaling $600
@@ -136,7 +136,7 @@ class SalesRepCommissionTest extends TestCase
                 'type' => 'INCOME',
                 'status' => 'APPROVED',
                 'data_source' => 'manual_entry',
-                'transaction_date' => now()
+                'transaction_date' => now(),
             ]);
         }
 
@@ -149,7 +149,7 @@ class SalesRepCommissionTest extends TestCase
             'type' => 'INCOME',
             'status' => 'APPROVED',
             'data_source' => 'manual_entry',
-            'transaction_date' => now()->subMonth()
+            'transaction_date' => now()->subMonth(),
         ]);
 
         $stats = $salesRep->getSalesRepStats();
@@ -175,7 +175,7 @@ class SalesRepCommissionTest extends TestCase
             'sales_rep_id' => $salesRep->id,
             'customer_info' => ['name' => 'Ayşe Yılmaz', 'phone' => '+905321234567'],
             'data_source' => 'manual_entry',
-            'type' => 'INCOME'
+            'type' => 'INCOME',
         ]);
 
         Transaction::factory()->create([
@@ -183,7 +183,7 @@ class SalesRepCommissionTest extends TestCase
             'sales_rep_id' => $salesRep->id,
             'customer_info' => ['name' => 'Ayşe Yılmaz', 'phone' => '+905321234567'],
             'data_source' => 'manual_entry',
-            'type' => 'INCOME'
+            'type' => 'INCOME',
         ]);
 
         // Customer 2: 1 order
@@ -192,7 +192,7 @@ class SalesRepCommissionTest extends TestCase
             'sales_rep_id' => $salesRep->id,
             'customer_info' => ['name' => 'Mehmet Demir', 'phone' => '+905559876543'],
             'data_source' => 'manual_entry',
-            'type' => 'INCOME'
+            'type' => 'INCOME',
         ]);
 
         // Customer 3: 1 order
@@ -201,7 +201,7 @@ class SalesRepCommissionTest extends TestCase
             'sales_rep_id' => $salesRep->id,
             'customer_info' => ['name' => 'Fatma Şen', 'phone' => '+905551234567'],
             'data_source' => 'manual_entry',
-            'type' => 'INCOME'
+            'type' => 'INCOME',
         ]);
 
         $customerStats = $salesRep->getCustomerStats();
@@ -229,10 +229,10 @@ class SalesRepCommissionTest extends TestCase
     {
         $company = Company::factory()->create();
         $store = Store::factory()->create(['company_id' => $company->id]);
-        
+
         $salesRep1 = User::factory()->create(['company_id' => $company->id]);
         $salesRep1->assignRole('sales_rep');
-        
+
         $salesRep2 = User::factory()->create(['company_id' => $company->id]);
         $salesRep2->assignRole('sales_rep');
 
@@ -241,14 +241,14 @@ class SalesRepCommissionTest extends TestCase
             'store_id' => $store->id,
             'sales_rep_id' => $salesRep1->id,
             'data_source' => 'manual_entry',
-            'type' => 'INCOME'
+            'type' => 'INCOME',
         ]);
 
         $order2 = Transaction::factory()->create([
             'store_id' => $store->id,
             'sales_rep_id' => $salesRep2->id,
             'data_source' => 'manual_entry',
-            'type' => 'INCOME'
+            'type' => 'INCOME',
         ]);
 
         // Test sales rep 1 can only see their own transactions

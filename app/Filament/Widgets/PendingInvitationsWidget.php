@@ -11,8 +11,8 @@ class PendingInvitationsWidget extends BaseWidget
 {
     protected function getStats(): array
     {
-        $cacheKey = 'widget:pending_invitations:' . auth()->user()->company_id;
-        
+        $cacheKey = 'widget:pending_invitations:'.auth()->user()->company_id;
+
         $stats = Cache::remember($cacheKey, now()->addMinutes(5), function () {
             $pendingInvitations = Partnership::pendingInvitation()->count();
             $expiredInvitations = Partnership::pendingInvitation()
@@ -21,10 +21,10 @@ class PendingInvitationsWidget extends BaseWidget
             $recentInvitations = Partnership::pendingInvitation()
                 ->where('invited_at', '>=', now()->subDays(3))
                 ->count();
-                
+
             return compact('pendingInvitations', 'expiredInvitations', 'recentInvitations');
         });
-        
+
         extract($stats);
 
         return [

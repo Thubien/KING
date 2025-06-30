@@ -29,7 +29,7 @@ return new class extends Migration
             $table->json('sync_errors')->nullable();
             $table->json('settings')->nullable();
             $table->timestamps();
-            
+
             $table->index(['company_id', 'status']);
             $table->index(['shopify_domain']);
             $table->index(['last_sync_at']);

@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
-use App\Models\Store;
 use App\Models\Partnership;
+use App\Models\Store;
 use App\Models\Transaction;
-use App\Policies\StorePolicy;
 use App\Policies\PartnershipPolicy;
+use App\Policies\StorePolicy;
 use App\Policies\TransactionPolicy;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
 

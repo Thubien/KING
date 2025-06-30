@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\User;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
-use App\Models\User;
 
 class ClearPartnerCache extends Command
 {
@@ -57,9 +57,10 @@ class ClearPartnerCache extends Command
     protected function clearUserCache(int $userId): void
     {
         $user = User::find($userId);
-        
-        if (!$user) {
+
+        if (! $user) {
             $this->error("User with ID {$userId} not found.");
+
             return;
         }
 
@@ -71,7 +72,7 @@ class ClearPartnerCache extends Command
     {
         // Get all companies and clear their widget caches
         $companies = \App\Models\Company::pluck('id');
-        
+
         foreach ($companies as $companyId) {
             Cache::forget("widget:pending_invitations:{$companyId}");
         }
@@ -82,7 +83,7 @@ class ClearPartnerCache extends Command
     protected function clearStoreCaches(): void
     {
         $stores = \App\Models\Store::pluck('id');
-        
+
         foreach ($stores as $storeId) {
             Cache::forget("store:{$storeId}:partnerships");
             Cache::forget("store:{$storeId}:total_ownership");

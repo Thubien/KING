@@ -2,16 +2,16 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\Partnership;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
 use Illuminate\Support\Facades\Auth;
-use App\Models\Partnership;
 
 class PartnerStoresWidget extends BaseWidget
 {
     protected static ?string $heading = 'My Store Partnerships';
-    
+
     protected static ?int $sort = 3;
 
     public static function canView(): bool
@@ -34,13 +34,13 @@ class PartnerStoresWidget extends BaseWidget
                     ->label('Store Name')
                     ->weight('medium')
                     ->searchable(),
-                    
+
                 Tables\Columns\TextColumn::make('ownership_percentage')
                     ->label('Ownership')
-                    ->formatStateUsing(fn ($state) => number_format($state, 2) . '%')
+                    ->formatStateUsing(fn ($state) => number_format($state, 2).'%')
                     ->badge()
                     ->color(fn ($state) => $state > 50 ? 'success' : ($state > 25 ? 'warning' : 'gray')),
-                    
+
                 Tables\Columns\TextColumn::make('role')
                     ->label('Role')
                     ->badge()
@@ -51,40 +51,41 @@ class PartnerStoresWidget extends BaseWidget
                         'manager' => 'gray',
                         default => 'gray',
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('partnership_start_date')
                     ->label('Since')
                     ->date('M j, Y')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('current_month_revenue')
                     ->label('This Month Revenue')
                     ->getStateUsing(function ($record) {
                         $currentMonth = now()->startOfMonth();
                         $nextMonth = now()->addMonth()->startOfMonth();
-                        
+
                         $revenue = $record->store->transactions()
                             ->where('category', 'SALES')
                             ->whereBetween('created_at', [$currentMonth, $nextMonth])
                             ->sum('amount');
-                            
-                        return '$' . number_format($revenue, 2);
+
+                        return '$'.number_format($revenue, 2);
                     })
                     ->color('success'),
-                    
+
                 Tables\Columns\TextColumn::make('my_profit_share')
                     ->label('My Share')
                     ->getStateUsing(function ($record) {
                         $currentMonth = now()->startOfMonth();
                         $nextMonth = now()->addMonth()->startOfMonth();
-                        
+
                         $revenue = $record->store->transactions()
                             ->where('category', 'SALES')
                             ->whereBetween('created_at', [$currentMonth, $nextMonth])
                             ->sum('amount');
-                            
+
                         $myShare = $revenue * ($record->ownership_percentage / 100);
-                        return '$' . number_format($myShare, 2);
+
+                        return '$'.number_format($myShare, 2);
                     })
                     ->weight('bold')
                     ->color('primary'),

@@ -9,44 +9,44 @@ use Illuminate\Support\Facades\Auth;
 class SalesChannelBreakdownWidget extends ChartWidget
 {
     protected static ?string $heading = 'Sales Channel Performance';
-    
+
     protected static ?int $sort = 2;
-    
-    protected int | string | array $columnSpan = [
+
+    protected int|string|array $columnSpan = [
         'md' => 2,
         'xl' => 3,
     ];
-    
+
     public ?string $filter = 'this_month';
-    
+
     protected function getData(): array
     {
         $user = Auth::user();
         $company = $user->company;
-        
+
         $query = Transaction::where('company_id', $company->id);
-        
+
         if ($this->filter === 'this_month') {
             $query->whereMonth('transaction_date', now()->month)
-                  ->whereYear('transaction_date', now()->year);
+                ->whereYear('transaction_date', now()->year);
         } elseif ($this->filter === 'last_month') {
             $query->whereMonth('transaction_date', now()->subMonth()->month)
-                  ->whereYear('transaction_date', now()->subMonth()->year);
+                ->whereYear('transaction_date', now()->subMonth()->year);
         } elseif ($this->filter === 'this_year') {
             $query->whereYear('transaction_date', now()->year);
         }
-        
+
         $channelData = $query->selectRaw('sales_channel, SUM(amount_usd) as total')
             ->groupBy('sales_channel')
             ->orderBy('total', 'desc')
             ->get();
-        
+
         $channels = $channelData->pluck('sales_channel')->toArray();
         $totals = $channelData->pluck('total')->toArray();
-        
+
         // Map channel names to emojis
-        $channelLabels = array_map(function($channel) {
-            return match($channel) {
+        $channelLabels = array_map(function ($channel) {
+            return match ($channel) {
                 'shopify' => 'Shopify',
                 'instagram' => 'Instagram',
                 'telegram' => 'Telegram',
@@ -57,7 +57,7 @@ class SalesChannelBreakdownWidget extends ChartWidget
                 default => 'Other'
             };
         }, $channels);
-        
+
         return [
             'datasets' => [
                 [
@@ -78,12 +78,12 @@ class SalesChannelBreakdownWidget extends ChartWidget
             'labels' => $channelLabels,
         ];
     }
-    
+
     protected function getType(): string
     {
         return 'doughnut';
     }
-    
+
     protected function getFilters(): ?array
     {
         return [
@@ -92,7 +92,7 @@ class SalesChannelBreakdownWidget extends ChartWidget
             'this_year' => 'This Year',
         ];
     }
-    
+
     protected function getOptions(): array
     {
         return [
@@ -109,10 +109,11 @@ class SalesChannelBreakdownWidget extends ChartWidget
             ],
         ];
     }
-    
+
     public static function canView(): bool
     {
         $user = Auth::user();
+
         return $user?->isCompanyOwner() || $user?->isAdmin();
     }
 }

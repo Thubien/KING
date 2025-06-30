@@ -7,13 +7,13 @@ use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class ChecklistsRelationManager extends RelationManager
 {
     protected static string $relationship = 'checklists';
+
     protected static ?string $title = 'Kontrol Listesi';
+
     protected static ?string $pluralLabel = 'Kontrol Adımları';
 
     public function form(Form $form): Form
@@ -25,12 +25,12 @@ class ChecklistsRelationManager extends RelationManager
                     ->options(\App\Models\ReturnRequest::STATUSES)
                     ->required()
                     ->disabled(),
-                    
+
                 Forms\Components\TextInput::make('item_text')
                     ->label('Kontrol Adımı')
                     ->required()
                     ->maxLength(255),
-                    
+
                 Forms\Components\Toggle::make('is_checked')
                     ->label('Tamamlandı')
                     ->reactive()
@@ -55,18 +55,18 @@ class ChecklistsRelationManager extends RelationManager
                     ->label('Aşama')
                     ->formatStateUsing(fn ($state) => \App\Models\ReturnRequest::STATUSES[$state] ?? $state)
                     ->badge()
-                    ->color(fn ($state) => match($state) {
+                    ->color(fn ($state) => match ($state) {
                         'pending' => 'gray',
                         'in_transit' => 'warning',
                         'processing' => 'info',
                         'completed' => 'success',
                         default => 'gray'
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('item_text')
                     ->label('Kontrol Adımı')
                     ->searchable(),
-                    
+
                 Tables\Columns\ToggleColumn::make('is_checked')
                     ->label('Tamamlandı')
                     ->afterStateUpdated(function ($record, $state) {
@@ -75,11 +75,11 @@ class ChecklistsRelationManager extends RelationManager
                             'checked_by' => $state ? auth()->id() : null,
                         ]);
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('checkedBy.name')
                     ->label('Tamamlayan')
                     ->placeholder('-'),
-                    
+
                 Tables\Columns\TextColumn::make('checked_at')
                     ->label('Tamamlanma Zamanı')
                     ->dateTime('d.m.Y H:i')
@@ -90,7 +90,7 @@ class ChecklistsRelationManager extends RelationManager
                 Tables\Filters\SelectFilter::make('stage')
                     ->label('Aşama')
                     ->options(\App\Models\ReturnRequest::STATUSES),
-                    
+
                 Tables\Filters\TernaryFilter::make('is_checked')
                     ->label('Durum')
                     ->placeholder('Tümü')
@@ -118,7 +118,7 @@ class ChecklistsRelationManager extends RelationManager
                         });
                     })
                     ->deselectRecordsAfterCompletion(),
-                    
+
                 Tables\Actions\BulkAction::make('mark_uncompleted')
                     ->label('Tamamlanmadı Olarak İşaretle')
                     ->icon('heroicon-o-x-mark')

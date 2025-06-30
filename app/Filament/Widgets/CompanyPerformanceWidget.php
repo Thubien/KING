@@ -3,35 +3,33 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Transaction;
-use App\Models\Store;
-use App\Models\Partnership;
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Illuminate\Support\Facades\Auth;
-use Carbon\Carbon;
 
 class CompanyPerformanceWidget extends ChartWidget
 {
     protected static ?string $heading = ' Revenue Trends (Last 6 Months)';
-    
+
     protected static ?int $sort = 1;
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     public ?string $filter = 'revenue';
-    
+
     protected function getData(): array
     {
         $user = Auth::user();
         $company = $user->company;
-        
+
         // Get last 6 months
         $months = collect();
         for ($i = 5; $i >= 0; $i--) {
             $months->push(Carbon::now()->subMonths($i));
         }
-        
-        $labels = $months->map(fn($month) => $month->format('M Y'))->toArray();
-        
+
+        $labels = $months->map(fn ($month) => $month->format('M Y'))->toArray();
+
         if ($this->filter === 'revenue') {
             // Revenue by month
             $revenueData = $months->map(function ($month) use ($company) {
@@ -40,7 +38,7 @@ class CompanyPerformanceWidget extends ChartWidget
                     ->whereYear('transaction_date', $month->year)
                     ->sum('amount_usd');
             })->toArray();
-            
+
             // Revenue by sales channel
             $shopifyData = $months->map(function ($month) use ($company) {
                 return Transaction::where('company_id', $company->id)
@@ -49,7 +47,7 @@ class CompanyPerformanceWidget extends ChartWidget
                     ->whereYear('transaction_date', $month->year)
                     ->sum('amount_usd');
             })->toArray();
-            
+
             $instagramData = $months->map(function ($month) use ($company) {
                 return Transaction::where('company_id', $company->id)
                     ->where('sales_channel', 'instagram')
@@ -57,7 +55,7 @@ class CompanyPerformanceWidget extends ChartWidget
                     ->whereYear('transaction_date', $month->year)
                     ->sum('amount_usd');
             })->toArray();
-            
+
             return [
                 'datasets' => [
                     [
@@ -95,7 +93,7 @@ class CompanyPerformanceWidget extends ChartWidget
                     ->whereYear('transaction_date', $month->year)
                     ->count();
             })->toArray();
-            
+
             return [
                 'datasets' => [
                     [
@@ -111,12 +109,12 @@ class CompanyPerformanceWidget extends ChartWidget
             ];
         }
     }
-    
+
     protected function getType(): string
     {
         return 'line';
     }
-    
+
     protected function getFilters(): ?array
     {
         return [
@@ -124,7 +122,7 @@ class CompanyPerformanceWidget extends ChartWidget
             'orders' => 'Order Volume',
         ];
     }
-    
+
     protected function getOptions(): array
     {
         return [
@@ -143,10 +141,11 @@ class CompanyPerformanceWidget extends ChartWidget
             ],
         ];
     }
-    
+
     public static function canView(): bool
     {
         $user = Auth::user();
+
         return $user?->isCompanyOwner() || $user?->isAdmin();
     }
 }

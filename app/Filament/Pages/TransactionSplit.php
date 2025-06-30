@@ -20,28 +20,33 @@ class TransactionSplit extends Page implements HasForms
     use InteractsWithForms;
 
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+
     protected static ?string $navigationLabel = 'Split Transaction';
+
     protected static ?string $title = 'Split Transaction Across Stores';
+
     protected static bool $shouldRegisterNavigation = false;
-    
+
     protected static string $view = 'filament.pages.transaction-split';
-    
+
     public Transaction $transaction;
+
     public array $splits = [];
-    
+
     public function mount(Transaction $transaction): void
     {
         if ($transaction->assignment_status !== 'pending') {
             redirect()->route('filament.admin.pages.transaction-editor');
+
             return;
         }
-        
+
         $this->transaction = $transaction;
-        
+
         // Initialize with equal split across all stores
         $stores = Store::where('company_id', Auth::user()->company_id)->get();
         $splitPercentage = 100 / $stores->count();
-        
+
         $this->splits = $stores->map(function ($store) use ($splitPercentage) {
             return [
                 'store_id' => $store->id,
@@ -52,10 +57,10 @@ class TransactionSplit extends Page implements HasForms
                 'notes' => null,
             ];
         })->toArray();
-        
+
         $this->form->fill(['splits' => $this->splits]);
     }
-    
+
     public function form(Form $form): Form
     {
         return $form
@@ -112,11 +117,11 @@ class TransactionSplit extends Page implements HasForms
             ])
             ->statePath('data');
     }
-    
+
     public function save(): void
     {
         $data = $this->form->getState();
-        
+
         // Validate percentages sum to 100
         $totalPercentage = collect($data['splits'])->sum('percentage');
         if (abs($totalPercentage - 100) > 0.01) {
@@ -125,16 +130,17 @@ class TransactionSplit extends Page implements HasForms
                 ->body("Percentages must sum to 100%. Current total: {$totalPercentage}%")
                 ->danger()
                 ->send();
+
             return;
         }
-        
+
         DB::transaction(function () use ($data) {
             // Mark original transaction as split
             $this->transaction->update([
                 'assignment_status' => 'split',
                 'is_split' => true,
             ]);
-            
+
             // Create split transactions
             foreach ($data['splits'] as $split) {
                 if ($split['percentage'] > 0) {
@@ -146,7 +152,7 @@ class TransactionSplit extends Page implements HasForms
                         'type' => $this->transaction->type,
                         'category' => $split['category'],
                         'subcategory' => $split['subcategory'] ?? null,
-                        'description' => $this->transaction->description . ' (Split)',
+                        'description' => $this->transaction->description.' (Split)',
                         'transaction_date' => $this->transaction->transaction_date,
                         'status' => 'completed',
                         'assignment_status' => 'assigned',
@@ -159,15 +165,15 @@ class TransactionSplit extends Page implements HasForms
                 }
             }
         });
-        
+
         Notification::make()
             ->title('Transaction split successfully')
             ->success()
             ->send();
-            
+
         redirect()->route('filament.admin.pages.transaction-editor');
     }
-    
+
     public function cancel(): void
     {
         redirect()->route('filament.admin.pages.transaction-editor');

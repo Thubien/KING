@@ -8,9 +8,13 @@ class BankFormatDetector
 {
     // Supported CSV formats
     public const FORMAT_MERCURY = 'mercury';
+
     public const FORMAT_PAYONEER = 'payoneer';
+
     public const FORMAT_STRIPE_BALANCE = 'stripe_balance';
+
     public const FORMAT_STRIPE_PAYMENTS = 'stripe_payments';
+
     public const FORMAT_UNKNOWN = 'unknown';
 
     /**
@@ -19,7 +23,7 @@ class BankFormatDetector
     public function detectFormat(array $headers): string
     {
         // Normalize headers for comparison (lowercase, trim)
-        $normalizedHeaders = array_map(fn($header) => strtolower(trim($header)), $headers);
+        $normalizedHeaders = array_map(fn ($header) => strtolower(trim($header)), $headers);
         $headerString = implode('|', $normalizedHeaders);
 
         // Mercury Bank Detection - Look for "Date (UTC)" + "Source Account"
@@ -50,7 +54,7 @@ class BankFormatDetector
      */
     public function getColumnMapping(string $format): array
     {
-        return match($format) {
+        return match ($format) {
             self::FORMAT_MERCURY => $this->getMercuryMapping(),
             self::FORMAT_PAYONEER => $this->getPayoneerMapping(),
             self::FORMAT_STRIPE_BALANCE => $this->getStripeBalanceMapping(),
@@ -64,7 +68,7 @@ class BankFormatDetector
      */
     public function getRequiredColumns(string $format): array
     {
-        return match($format) {
+        return match ($format) {
             self::FORMAT_MERCURY => ['date', 'description', 'amount', 'status'],
             self::FORMAT_PAYONEER => ['date', 'description', 'amount', 'currency', 'status'],
             self::FORMAT_STRIPE_BALANCE => ['id', 'type', 'amount', 'fee', 'net', 'currency'],
@@ -83,7 +87,7 @@ class BankFormatDetector
         $errors = [];
 
         foreach ($required as $field) {
-            if (!isset($mapping[$field]) || $mapping[$field] === null) {
+            if (! isset($mapping[$field]) || $mapping[$field] === null) {
                 $errors[] = "Required field '{$field}' not found in CSV headers";
             }
         }
@@ -96,9 +100,9 @@ class BankFormatDetector
      */
     public function getDetectionConfidence(array $headers, string $format): float
     {
-        $normalizedHeaders = array_map(fn($header) => strtolower(trim($header)), $headers);
-        
-        return match($format) {
+        $normalizedHeaders = array_map(fn ($header) => strtolower(trim($header)), $headers);
+
+        return match ($format) {
             self::FORMAT_MERCURY => $this->getMercuryConfidence($normalizedHeaders),
             self::FORMAT_PAYONEER => $this->getPayoneerConfidence($normalizedHeaders),
             self::FORMAT_STRIPE_BALANCE => $this->getStripeBalanceConfidence($normalizedHeaders),
@@ -115,7 +119,7 @@ class BankFormatDetector
         $hasDateUtc = $this->hasHeaderContaining($headers, ['date (utc)', 'date(utc)']);
         $hasSourceAccount = $this->hasHeaderContaining($headers, ['source account']);
         $hasBankDescription = $this->hasHeaderContaining($headers, ['bank description']);
-        
+
         return $hasDateUtc && $hasSourceAccount && $hasBankDescription;
     }
 
@@ -124,9 +128,15 @@ class BankFormatDetector
         $score = 0;
         $maxScore = 5;
 
-        if ($this->hasHeaderContaining($headers, ['date (utc)', 'date(utc)'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['source account'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['bank description'])) $score += 1;
+        if ($this->hasHeaderContaining($headers, ['date (utc)', 'date(utc)'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['source account'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['bank description'])) {
+            $score += 1;
+        }
 
         return round($score / $maxScore, 2);
     }
@@ -139,7 +149,7 @@ class BankFormatDetector
         $hasRunningBalance = $this->hasHeaderContaining($headers, ['running balance']);
         $hasCurrency = $this->hasHeaderContaining($headers, ['currency']);
         $hasTransactionId = $this->hasHeaderContaining($headers, ['transaction id']);
-        
+
         return $hasRunningBalance && $hasCurrency && $hasTransactionId;
     }
 
@@ -148,9 +158,15 @@ class BankFormatDetector
         $score = 0;
         $maxScore = 4;
 
-        if ($this->hasHeaderContaining($headers, ['running balance'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['currency'])) $score += 1;
-        if ($this->hasHeaderContaining($headers, ['transaction id'])) $score += 1;
+        if ($this->hasHeaderContaining($headers, ['running balance'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['currency'])) {
+            $score += 1;
+        }
+        if ($this->hasHeaderContaining($headers, ['transaction id'])) {
+            $score += 1;
+        }
 
         return round($score / $maxScore, 2);
     }
@@ -163,7 +179,7 @@ class BankFormatDetector
         $hasFee = $this->hasHeaderContaining($headers, ['fee']);
         $hasNet = $this->hasHeaderContaining($headers, ['net']);
         $hasShopMetadata = $this->hasHeaderContaining($headers, ['shop_name (metadata)', 'shop_name(metadata)']);
-        
+
         return $hasFee && $hasNet && $hasShopMetadata;
     }
 
@@ -172,9 +188,15 @@ class BankFormatDetector
         $score = 0;
         $maxScore = 5;
 
-        if ($this->hasHeaderContaining($headers, ['fee'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['net'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['shop_name (metadata)', 'shop_name(metadata)'])) $score += 1;
+        if ($this->hasHeaderContaining($headers, ['fee'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['net'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['shop_name (metadata)', 'shop_name(metadata)'])) {
+            $score += 1;
+        }
 
         return round($score / $maxScore, 2);
     }
@@ -187,7 +209,7 @@ class BankFormatDetector
         $hasAmountRefunded = $this->hasHeaderContaining($headers, ['amount refunded']);
         $hasConvertedCurrency = $this->hasHeaderContaining($headers, ['converted currency']);
         $hasCustomerEmail = $this->hasHeaderContaining($headers, ['customer email']);
-        
+
         return $hasAmountRefunded && $hasConvertedCurrency;
     }
 
@@ -196,10 +218,18 @@ class BankFormatDetector
         $score = 0;
         $maxScore = 6;
 
-        if ($this->hasHeaderContaining($headers, ['amount refunded'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['converted currency'])) $score += 2;
-        if ($this->hasHeaderContaining($headers, ['customer email'])) $score += 1;
-        if ($this->hasHeaderContaining($headers, ['statement descriptor'])) $score += 1;
+        if ($this->hasHeaderContaining($headers, ['amount refunded'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['converted currency'])) {
+            $score += 2;
+        }
+        if ($this->hasHeaderContaining($headers, ['customer email'])) {
+            $score += 1;
+        }
+        if ($this->hasHeaderContaining($headers, ['statement descriptor'])) {
+            $score += 1;
+        }
 
         return round($score / $maxScore, 2);
     }
@@ -216,6 +246,7 @@ class BankFormatDetector
                 }
             }
         }
+
         return false;
     }
 
@@ -226,7 +257,7 @@ class BankFormatDetector
     {
         return [
             'date' => 'Date (UTC)',
-            'description' => 'Description', 
+            'description' => 'Description',
             'amount' => 'Amount',
             'status' => 'Status',
             'source_account' => 'Source Account',
@@ -241,7 +272,7 @@ class BankFormatDetector
             'timestamp' => 'Timestamp',
             'original_currency' => 'Original Currency',
             'check_number' => 'Check Number',
-            'tags' => 'Tags'
+            'tags' => 'Tags',
         ];
     }
 
@@ -253,11 +284,11 @@ class BankFormatDetector
         return [
             'date' => 'Date',
             'description' => 'Description',
-            'amount' => 'Amount', 
+            'amount' => 'Amount',
             'currency' => 'Currency',
             'status' => 'Status',
             'running_balance' => 'Running Balance',
-            'transaction_id' => 'Transaction ID'
+            'transaction_id' => 'Transaction ID',
         ];
     }
 
@@ -281,7 +312,7 @@ class BankFormatDetector
             'shop_id' => 'shop_id (metadata)',
             'email' => 'email (metadata)',
             'order_id' => 'order_id (metadata)',
-            'manual_entry' => 'manual_entry (metadata)'
+            'manual_entry' => 'manual_entry (metadata)',
         ];
     }
 
@@ -318,7 +349,7 @@ class BankFormatDetector
             'shop_id' => 'shop_id (metadata)',
             'email' => 'email (metadata)',
             'order_id' => 'order_id (metadata)',
-            'manual_entry' => 'manual_entry (metadata)'
+            'manual_entry' => 'manual_entry (metadata)',
         ];
     }
 
@@ -331,7 +362,7 @@ class BankFormatDetector
             self::FORMAT_MERCURY => 'Mercury Bank',
             self::FORMAT_PAYONEER => 'Payoneer',
             self::FORMAT_STRIPE_BALANCE => 'Stripe Balance History',
-            self::FORMAT_STRIPE_PAYMENTS => 'Stripe Payments Report'
+            self::FORMAT_STRIPE_PAYMENTS => 'Stripe Payments Report',
         ];
     }
 
@@ -350,7 +381,7 @@ class BankFormatDetector
     {
         return in_array($format, [
             self::FORMAT_STRIPE_BALANCE,
-            self::FORMAT_STRIPE_PAYMENTS
+            self::FORMAT_STRIPE_PAYMENTS,
         ]);
     }
-} 
+}

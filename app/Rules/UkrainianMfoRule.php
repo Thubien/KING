@@ -25,7 +25,7 @@ class UkrainianMfoRule implements ValidationRule
         '300711' => 'Ukrsibbank BNP Paribas Group',
         '326256' => 'PRAVEX BANK',
         '325990' => 'Tascombank',
-        '300528' => 'Ukreximbank'
+        '300528' => 'Ukreximbank',
     ];
 
     /**
@@ -38,8 +38,9 @@ class UkrainianMfoRule implements ValidationRule
         }
 
         // MFO code must be exactly 6 digits
-        if (!preg_match('/^\d{6}$/', $value)) {
+        if (! preg_match('/^\d{6}$/', $value)) {
             $fail('Ukrainian MFO code must be exactly 6 digits.');
+
             return;
         }
 
@@ -51,10 +52,11 @@ class UkrainianMfoRule implements ValidationRule
 
         // For unknown MFO codes, we can still allow them but with a warning
         // This is because new banks or branches might have MFO codes not in our list
-        
+
         // Basic validation: MFO codes in Ukraine typically start with 3
-        if (!str_starts_with($value, '3')) {
+        if (! str_starts_with($value, '3')) {
             $fail('Ukrainian MFO codes typically start with "3". Please verify this code.');
+
             return;
         }
 

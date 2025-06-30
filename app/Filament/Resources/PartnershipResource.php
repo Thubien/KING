@@ -3,32 +3,29 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PartnershipResource\Pages;
-use App\Filament\Resources\PartnershipResource\RelationManagers;
 use App\Models\Partnership;
-use App\Models\Store;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 
 class PartnershipResource extends Resource
 {
     protected static ?string $model = Partnership::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
-    
+
     protected static ?string $navigationLabel = 'Partner Management';
-    
+
     protected static ?string $navigationGroup = 'Partnership';
-    
+
     protected static ?string $modelLabel = 'Partnership';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool
@@ -88,8 +85,8 @@ class PartnershipResource extends Resource
                                             $set('_available_ownership', $available);
                                         }
                                     })
-                                    ->helperText(fn (Get $get) => $get('_available_ownership') 
-                                        ? "Available ownership: {$get('_available_ownership')}%" 
+                                    ->helperText(fn (Get $get) => $get('_available_ownership')
+                                        ? "Available ownership: {$get('_available_ownership')}%"
                                         : 'Choose a store to see available ownership'),
 
                                 Forms\Components\TextInput::make('ownership_percentage')
@@ -118,7 +115,7 @@ class PartnershipResource extends Resource
                                             ->label('Choose Existing Partner')
                                             ->relationship('user', 'name', function ($query) {
                                                 return $query->where('user_type', 'partner')
-                                                           ->where('company_id', auth()->user()->company_id);
+                                                    ->where('company_id', auth()->user()->company_id);
                                             })
                                             ->searchable()
                                             ->preload()
@@ -182,28 +179,28 @@ class PartnershipResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->weight('medium'),
-                    
+
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Partner')
                     ->sortable()
                     ->searchable()
                     ->placeholder(fn ($record) => $record && $record->partner_email ? $record->partner_email : 'No Partner')
-                    ->description(fn ($record) => $record && $record->user 
-                        ? $record->user->email 
+                    ->description(fn ($record) => $record && $record->user
+                        ? $record->user->email
                         : ($record && $record->partner_email ? 'Invitation sent' : null)),
-                    
+
                 Tables\Columns\TextColumn::make('ownership_percentage')
                     ->label('Ownership')
                     ->sortable()
-                    ->formatStateUsing(fn ($state) => number_format($state, 1) . '%')
+                    ->formatStateUsing(fn ($state) => number_format($state, 1).'%')
                     ->badge()
-                    ->color(fn ($state) => match(true) {
+                    ->color(fn ($state) => match (true) {
                         $state >= 50 => 'success',
-                        $state >= 25 => 'warning', 
+                        $state >= 25 => 'warning',
                         $state >= 10 => 'info',
                         default => 'gray'
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('debt_balance')
                     ->label('Debt Balance')
                     ->getStateUsing(fn (Partnership $record) => $record->getFormattedDebtBalance())
@@ -218,7 +215,7 @@ class PartnershipResource extends Resource
                         'has_credit' => 'heroicon-o-check-circle',
                         default => null,
                     }),
-                    
+
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->formatStateUsing(fn (string $state): string => match ($state) {
@@ -245,7 +242,7 @@ class PartnershipResource extends Resource
                     ->relationship('store', 'name')
                     ->searchable()
                     ->preload(),
-                    
+
                 Tables\Filters\SelectFilter::make('status')
                     ->label('Filter by Status')
                     ->options([

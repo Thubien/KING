@@ -14,6 +14,7 @@ class PartnerInvitationMail extends Mailable
     use Queueable, SerializesModels;
 
     public Partnership $partnership;
+
     public string $invitationUrl;
 
     /**

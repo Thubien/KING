@@ -2,13 +2,13 @@
 
 namespace Tests\Feature;
 
+use App\Models\Company;
+use App\Models\Partnership;
+use App\Models\Store;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
-use App\Models\User;
-use App\Models\Company;
-use App\Models\Store;
-use App\Models\Partnership;
-use App\Models\Transaction;
 
 class PartnerDataIsolationTest extends TestCase
 {
@@ -17,7 +17,7 @@ class PartnerDataIsolationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        
+
         // Create roles and permissions
         $this->artisan('db:seed', ['--class' => 'PermissionsAndRolesSeeder']);
     }
@@ -35,13 +35,13 @@ class PartnerDataIsolationTest extends TestCase
         // Create partners
         $partner1 = User::factory()->create([
             'company_id' => $company1->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner1->assignRole('partner');
 
         $partner2 = User::factory()->create([
             'company_id' => $company2->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner2->assignRole('partner');
 
@@ -49,13 +49,13 @@ class PartnerDataIsolationTest extends TestCase
         $partnership1 = Partnership::factory()->create([
             'store_id' => $store1->id,
             'user_id' => $partner1->id,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         $partnership2 = Partnership::factory()->create([
             'store_id' => $store2->id,
             'user_id' => $partner2->id,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Test that partner1 can only see their own partnerships
@@ -81,13 +81,13 @@ class PartnerDataIsolationTest extends TestCase
         // Create partners
         $partner1 = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner1->assignRole('partner');
 
         $partner2 = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner2->assignRole('partner');
 
@@ -95,13 +95,13 @@ class PartnerDataIsolationTest extends TestCase
         Partnership::factory()->create([
             'store_id' => $store1->id,
             'user_id' => $partner1->id,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         Partnership::factory()->create([
             'store_id' => $store2->id,
             'user_id' => $partner2->id,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Create transactions
@@ -120,11 +120,11 @@ class PartnerDataIsolationTest extends TestCase
     {
         // Create company
         $company = Company::factory()->create();
-        
+
         // Create company owner
         $owner = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'company_owner'
+            'user_type' => 'company_owner',
         ]);
         $owner->assignRole('company_owner');
 
@@ -135,7 +135,7 @@ class PartnerDataIsolationTest extends TestCase
         // Create partner
         $partner = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner->assignRole('partner');
 
@@ -143,13 +143,13 @@ class PartnerDataIsolationTest extends TestCase
         Partnership::factory()->create([
             'store_id' => $store1->id,
             'user_id' => $partner->id,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         Partnership::factory()->create([
             'store_id' => $store2->id,
             'user_id' => $owner->id,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Test that owner can access all stores
@@ -175,12 +175,12 @@ class PartnerDataIsolationTest extends TestCase
         // Create partners from different companies
         $partner1 = User::factory()->create([
             'company_id' => $company1->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
 
         $partner2 = User::factory()->create([
             'company_id' => $company2->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
 
         // Test that partners cannot access stores from other companies
@@ -201,7 +201,7 @@ class PartnerDataIsolationTest extends TestCase
         // Create partner with 25% ownership
         $partner = User::factory()->create([
             'company_id' => $company->id,
-            'user_type' => 'partner'
+            'user_type' => 'partner',
         ]);
         $partner->assignRole('partner');
 
@@ -209,19 +209,19 @@ class PartnerDataIsolationTest extends TestCase
             'store_id' => $store->id,
             'user_id' => $partner->id,
             'ownership_percentage' => 25.00,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Create transactions for current month
         $currentMonth = now()->startOfMonth();
-        
+
         // Create sales transactions totaling $1000
         Transaction::factory()->create([
             'store_id' => $store->id,
             'type' => 'income',
             'category' => 'revenue',
             'amount' => 400.00,
-            'created_at' => $currentMonth->addDays(5)
+            'created_at' => $currentMonth->addDays(5),
         ]);
 
         Transaction::factory()->create([
@@ -229,7 +229,7 @@ class PartnerDataIsolationTest extends TestCase
             'type' => 'income',
             'category' => 'revenue',
             'amount' => 600.00,
-            'created_at' => $currentMonth->addDays(10)
+            'created_at' => $currentMonth->addDays(10),
         ]);
 
         // Create non-sales transaction (should not affect profit share)
@@ -238,13 +238,13 @@ class PartnerDataIsolationTest extends TestCase
             'type' => 'expense',
             'category' => 'operational',
             'amount' => -200.00,
-            'created_at' => $currentMonth->addDays(15)
+            'created_at' => $currentMonth->addDays(15),
         ]);
 
         // Test profit share calculation
         $expectedProfitShare = 1000 * 0.25; // 25% of $1000 = $250
         $actualProfitShare = $partner->getTotalMonthlyProfitShare();
-        
+
         $this->assertEquals($expectedProfitShare, $actualProfitShare);
     }
 
@@ -258,13 +258,13 @@ class PartnerDataIsolationTest extends TestCase
         $partner1 = User::factory()->create([
             'company_id' => $company->id,
             'user_type' => 'partner',
-            'name' => 'Partner One'
+            'name' => 'Partner One',
         ]);
 
         $partner2 = User::factory()->create([
             'company_id' => $company->id,
             'user_type' => 'partner',
-            'name' => 'Partner Two'
+            'name' => 'Partner Two',
         ]);
 
         // Create partnerships for both partners in the same store
@@ -272,14 +272,14 @@ class PartnerDataIsolationTest extends TestCase
             'store_id' => $store->id,
             'user_id' => $partner1->id,
             'ownership_percentage' => 30.00,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         Partnership::factory()->create([
             'store_id' => $store->id,
             'user_id' => $partner2->id,
             'ownership_percentage' => 20.00,
-            'status' => 'ACTIVE'
+            'status' => 'ACTIVE',
         ]);
 
         // Test that partner1 can only see their own partnerships

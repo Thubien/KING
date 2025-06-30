@@ -4,25 +4,29 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BankAccountResource\Pages;
 use App\Models\BankAccount;
-use Filament\Forms;
-use Filament\Forms\Form;
-use Filament\Resources\Resource;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Filament\Support\Enums\FontWeight;
-use Filament\Forms\Get;
-use Filament\Forms\Set;
 use App\Rules\UkrainianIbanRule;
 use App\Rules\UkrainianMfoRule;
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Forms\Get;
+use Filament\Forms\Set;
+use Filament\Resources\Resource;
+use Filament\Support\Enums\FontWeight;
+use Filament\Tables;
+use Filament\Tables\Table;
 
 class BankAccountResource extends Resource
 {
     protected static ?string $model = BankAccount::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-building-library';
+
     protected static ?string $navigationLabel = 'Bank Accounts';
+
     protected static ?string $navigationGroup = 'Financial Management';
+
     protected static ?string $modelLabel = 'Bank Account';
+
     protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
@@ -38,7 +42,7 @@ class BankAccountResource extends Resource
                                     ->label('Country')
                                     ->options([
                                         'US' => 'United States',
-                                        'UK' => 'United Kingdom', 
+                                        'UK' => 'United Kingdom',
                                         'CA' => 'Canada',
                                         'AU' => 'Australia',
                                         'DE' => 'Germany',
@@ -57,7 +61,7 @@ class BankAccountResource extends Resource
                                         'FI' => 'Finland',
                                         'IE' => 'Ireland',
                                         'PT' => 'Portugal',
-                                        'OTHER' => 'Other Country'
+                                        'OTHER' => 'Other Country',
                                     ])
                                     ->searchable()
                                     ->default('US')
@@ -144,8 +148,7 @@ class BankAccountResource extends Resource
                     ->schema([
                         Forms\Components\Placeholder::make('banking_info')
                             ->label('')
-                            ->content(fn (Get $get) => 
-                                'Required fields for ' . ($get('country_code') ? strtoupper($get('country_code')) : 'US') . ' banks:'
+                            ->content(fn (Get $get) => 'Required fields for '.($get('country_code') ? strtoupper($get('country_code')) : 'US').' banks:'
                             ),
 
                         // Universal fields
@@ -164,7 +167,7 @@ class BankAccountResource extends Resource
                             ->visible(fn (Get $get) => $get('country_code') === 'US')
                             ->helperText('9-digit bank routing number'),
 
-                        // UK specific  
+                        // UK specific
                         Forms\Components\TextInput::make('sort_code')
                             ->label('Sort Code')
                             ->placeholder('XX-XX-XX')
@@ -193,11 +196,11 @@ class BankAccountResource extends Resource
                             ->label(' IBAN')
                             ->placeholder('Country-specific IBAN format')
                             ->visible(fn (Get $get) => in_array($get('country_code'), ['DE', 'FR', 'ES', 'IT', 'NL', 'BE', 'AT', 'CH', 'TR', 'UA']))
-                            ->rules(fn (Get $get) => $get('country_code') === 'UA' ? [new UkrainianIbanRule()] : [])
-                            ->helperText(fn (Get $get) => match($get('country_code')) {
+                            ->rules(fn (Get $get) => $get('country_code') === 'UA' ? [new UkrainianIbanRule] : [])
+                            ->helperText(fn (Get $get) => match ($get('country_code')) {
                                 'TR' => 'Turkish IBAN: TR + 24 digits',
                                 'UA' => 'Ukrainian IBAN: UA + 27 digits (includes MFO code)',
-                                'DE' => 'German IBAN: DE + 20 digits', 
+                                'DE' => 'German IBAN: DE + 20 digits',
                                 'FR' => 'French IBAN: FR + 25 digits',
                                 default => 'IBAN for your country'
                             }),
@@ -208,12 +211,12 @@ class BankAccountResource extends Resource
                             ->placeholder('305299')
                             ->maxLength(6)
                             ->visible(fn (Get $get) => $get('country_code') === 'UA')
-                            ->rules([new UkrainianMfoRule()])
+                            ->rules([new UkrainianMfoRule])
                             ->helperText('6-digit MFO (banking identifier) code - e.g., 305299 for PrivatBank')
-                            ->suffixAction(fn ($state) => $state && UkrainianMfoRule::getBankName($state) 
+                            ->suffixAction(fn ($state) => $state && UkrainianMfoRule::getBankName($state)
                                 ? \Filament\Forms\Components\Actions\Action::make('bank_info')
                                     ->icon('heroicon-m-information-circle')
-                                    ->tooltip('Bank: ' . UkrainianMfoRule::getBankName($state))
+                                    ->tooltip('Bank: '.UkrainianMfoRule::getBankName($state))
                                     ->color('success')
                                 : null
                             ),
@@ -265,17 +268,17 @@ class BankAccountResource extends Resource
                 Tables\Columns\TextColumn::make('bank_info')
                     ->label(' Bank')
                     ->getStateUsing(fn (BankAccount $record): string => $record->getFullBankInfo())
-                    ->description(fn (BankAccount $record) => $record->country_code 
-                        ? ' ' . strtoupper($record->country_code) 
+                    ->description(fn (BankAccount $record) => $record->country_code
+                        ? ' '.strtoupper($record->country_code)
                         : null)
                     ->searchable(['bank_name', 'bank_type'])
                     ->weight(FontWeight::SemiBold),
-                    
+
                 Tables\Columns\TextColumn::make('account_name')
                     ->label('📝 Account Name')
                     ->searchable()
                     ->description(fn (BankAccount $record) => $record->getMaskedAccountNumber()),
-                    
+
                 Tables\Columns\TextColumn::make('current_balance')
                     ->label(' Balance')
                     ->formatStateUsing(fn (BankAccount $record) => $record->getFormattedBalance())
@@ -323,7 +326,7 @@ class BankAccountResource extends Resource
                 Tables\Filters\SelectFilter::make('bank_type')
                     ->label(' Institution Type')
                     ->options(BankAccount::getSuggestedTypes()),
-                    
+
                 Tables\Filters\SelectFilter::make('currency')
                     ->label(' Currency')
                     ->options([
@@ -337,10 +340,10 @@ class BankAccountResource extends Resource
                         'CHF' => 'CHF',
                     ])
                     ->searchable(),
-                    
+
                 Tables\Filters\TernaryFilter::make('is_primary')
                     ->label(' Primary Account'),
-                    
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active Status'),
             ])
@@ -367,21 +370,21 @@ class BankAccountResource extends Resource
                             ])
                             ->default('add')
                             ->required(),
-                            
+
                         Forms\Components\TextInput::make('amount')
                             ->label('Amount')
                             ->numeric()
                             ->step(0.01)
                             ->required()
-                            ->prefix(fn ($record) => match($record->currency) {
+                            ->prefix(fn ($record) => match ($record->currency) {
                                 'USD' => '$',
                                 'EUR' => '€',
                                 'GBP' => '£',
                                 'UAH' => '₴',
                                 'TRY' => '₺',
-                                default => $record->currency . ' '
+                                default => $record->currency.' '
                             }),
-                            
+
                         Forms\Components\Textarea::make('description')
                             ->label('Description')
                             ->placeholder('Reason for balance adjustment')
@@ -397,12 +400,12 @@ class BankAccountResource extends Resource
                                 break;
                             case 'set':
                                 $record->update([
-                                    'current_balance' => $data['amount']
+                                    'current_balance' => $data['amount'],
                                 ]);
                                 $record->logBalanceChange('set_to', $data['amount'], $data['description']);
                                 break;
                         }
-                        
+
                         \Filament\Notifications\Notification::make()
                             ->title('Balance Updated')
                             ->body("Balance adjustment completed: {$data['description']}")
@@ -430,12 +433,14 @@ class BankAccountResource extends Resource
             'edit' => Pages\EditBankAccount::route('/{record}/edit'),
         ];
     }
-    
+
     public static function getNavigationBadge(): ?string
     {
         $company = auth()->user()?->company;
-        if (!$company) return null;
-        
+        if (! $company) {
+            return null;
+        }
+
         return static::getModel()::where('company_id', $company->id)
             ->where('is_active', true)
             ->count();

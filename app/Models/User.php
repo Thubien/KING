@@ -4,17 +4,17 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -172,15 +172,16 @@ class User extends Authenticatable
             ->where('status', 'ACTIVE')
             ->whereHas('store.transactions', function ($query) use ($currentMonth, $nextMonth) {
                 $query->whereBetween('created_at', [$currentMonth, $nextMonth])
-                      ->where('category', 'revenue');
+                    ->where('category', 'revenue');
             })
             ->with(['store.transactions' => function ($query) use ($currentMonth, $nextMonth) {
                 $query->whereBetween('created_at', [$currentMonth, $nextMonth])
-                      ->where('category', 'revenue');
+                    ->where('category', 'revenue');
             }])
             ->get()
             ->sum(function ($partnership) {
                 $storeRevenue = $partnership->store->transactions->sum('amount');
+
                 return $storeRevenue * ($partnership->ownership_percentage / 100);
             });
     }
@@ -219,7 +220,7 @@ class User extends Authenticatable
         return Cache::remember(
             "user:{$this->id}:total_ownership",
             now()->addMinutes(30),
-            fn() => $this->partnerships()->active()->sum('ownership_percentage')
+            fn () => $this->partnerships()->active()->sum('ownership_percentage')
         );
     }
 
@@ -236,10 +237,10 @@ class User extends Authenticatable
     /**
      * Get monthly sales for sales rep
      */
-    public function getMonthlySales(string $month = null): float
+    public function getMonthlySales(?string $month = null): float
     {
         $month = $month ?? now()->format('Y-m');
-        
+
         return $this->salesTransactions()
             ->where('type', 'INCOME')
             ->where('status', 'APPROVED')
@@ -252,9 +253,9 @@ class User extends Authenticatable
     /**
      * Get commission rate from partnership
      */
-    public function getCommissionRate(int $storeId = null): float
+    public function getCommissionRate(?int $storeId = null): float
     {
-        if (!$storeId) {
+        if (! $storeId) {
             // Default commission rate if no specific store
             return 10.0; // 10% default
         }
@@ -270,11 +271,11 @@ class User extends Authenticatable
     /**
      * Calculate monthly commission earnings
      */
-    public function getMonthlyCommission(string $month = null, int $storeId = null): float
+    public function getMonthlyCommission(?string $month = null, ?int $storeId = null): float
     {
         $month = $month ?? now()->format('Y-m');
         $sales = $this->getMonthlySales($month);
-        
+
         if ($storeId) {
             $commissionRate = $this->getCommissionRate($storeId);
         } else {
@@ -294,12 +295,12 @@ class User extends Authenticatable
     {
         $currentMonth = now()->format('Y-m');
         $lastMonth = now()->subMonth()->format('Y-m');
-        
+
         $currentSales = $this->getMonthlySales($currentMonth);
         $lastMonthSales = $this->getMonthlySales($lastMonth);
-        
-        $growth = $lastMonthSales > 0 
-            ? (($currentSales - $lastMonthSales) / $lastMonthSales) * 100 
+
+        $growth = $lastMonthSales > 0
+            ? (($currentSales - $lastMonthSales) / $lastMonthSales) * 100
             : 0;
 
         return [
@@ -318,7 +319,7 @@ class User extends Authenticatable
                 ->whereYear('transaction_date', '=', substr($currentMonth, 0, 4))
                 ->whereMonth('transaction_date', '=', substr($currentMonth, 5, 2))
                 ->avg('amount_usd') ?? 0,
-            'commission_earned' => $this->getMonthlyCommission($currentMonth)
+            'commission_earned' => $this->getMonthlyCommission($currentMonth),
         ];
     }
 
@@ -341,15 +342,15 @@ class User extends Authenticatable
 
         $repeatCustomers = $transactions
             ->groupBy('customer_info.name')
-            ->filter(fn($group) => $group->count() > 1)
+            ->filter(fn ($group) => $group->count() > 1)
             ->count();
 
         return [
             'total_customers' => $uniqueCustomers,
             'repeat_customers' => $repeatCustomers,
-            'repeat_rate' => $uniqueCustomers > 0 
-                ? round(($repeatCustomers / $uniqueCustomers) * 100, 2) 
-                : 0
+            'repeat_rate' => $uniqueCustomers > 0
+                ? round(($repeatCustomers / $uniqueCustomers) * 100, 2)
+                : 0,
         ];
     }
 

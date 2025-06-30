@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Partnership;
-use App\Models\Transaction;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -12,15 +11,15 @@ use Illuminate\Support\Facades\Auth;
 class PartnershipRevenueWidget extends BaseWidget
 {
     protected static ?string $heading = ' Partnership Performance';
-    
+
     protected static ?int $sort = 5;
-    
-    protected int | string | array $columnSpan = 'full';
-    
+
+    protected int|string|array $columnSpan = 'full';
+
     public function table(Table $table): Table
     {
         $company = Auth::user()->company;
-        
+
         return $table
             ->query(
                 Partnership::query()
@@ -39,7 +38,7 @@ class PartnershipRevenueWidget extends BaseWidget
                             ->weight('bold')
                             ->icon('heroicon-o-user')
                             ->searchable(),
-                            
+
                         Tables\Columns\TextColumn::make('monthly_revenue')
                             ->label('This Month')
                             ->getStateUsing(function (Partnership $record) {
@@ -54,13 +53,13 @@ class PartnershipRevenueWidget extends BaseWidget
                             ->alignEnd()
                             ->color('success'),
                     ]),
-                    
+
                     Tables\Columns\Layout\Split::make([
                         Tables\Columns\TextColumn::make('store.name')
                             ->label('Store')
                             ->icon('heroicon-o-building-storefront')
                             ->color('info'),
-                            
+
                         Tables\Columns\TextColumn::make('partner_share')
                             ->label('Partner Share')
                             ->getStateUsing(function (Partnership $record) {
@@ -69,13 +68,14 @@ class PartnershipRevenueWidget extends BaseWidget
                                     ->whereYear('transaction_date', now()->year)
                                     ->where('category', 'SALES')
                                     ->sum('amount');
+
                                 return $revenue * ($record->ownership_percentage / 100);
                             })
                             ->money('USD')
                             ->color('warning'),
-                            
+
                     ]),
-                    
+
                     Tables\Columns\Layout\Panel::make([
                         Tables\Columns\Layout\Split::make([
                             Tables\Columns\TextColumn::make('partnership_details')
@@ -84,7 +84,7 @@ class PartnershipRevenueWidget extends BaseWidget
                                     return "Ownership: {$record->ownership_percentage}% | Role: {$record->role}";
                                 })
                                 ->color('gray'),
-                                
+
                             Tables\Columns\TextColumn::make('debt_balance')
                                 ->label('Debt Balance')
                                 ->getStateUsing(fn (Partnership $record) => $record->getFormattedDebtBalance())
@@ -95,11 +95,12 @@ class PartnershipRevenueWidget extends BaseWidget
                                 })
                                 ->weight('bold')
                                 ->alignEnd(),
-                                
+
                             Tables\Columns\TextColumn::make('total_revenue')
                                 ->label('All Time Revenue')
                                 ->getStateUsing(function (Partnership $record) {
                                     $incomeCategories = array_keys(\App\Models\Transaction::getIncomeCategories());
+
                                     return $record->store->transactions()
                                         ->whereIn('category', $incomeCategories)
                                         ->sum('amount');
@@ -109,7 +110,7 @@ class PartnershipRevenueWidget extends BaseWidget
                                 ->alignEnd(),
                         ]),
                     ])->collapsed(false),
-                ])
+                ]),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -117,17 +118,17 @@ class PartnershipRevenueWidget extends BaseWidget
                         ->label('View Partnership')
                         ->icon('heroicon-o-eye')
                         ->url(fn (Partnership $record) => "/admin/partnerships/{$record->id}"),
-                        
+
                     Tables\Actions\Action::make('view_store')
                         ->label('View Store')
                         ->icon('heroicon-o-building-storefront')
                         ->url(fn (Partnership $record) => "/admin/stores/{$record->store_id}"),
-                        
+
                     Tables\Actions\Action::make('view_transactions')
                         ->label('View Transactions')
                         ->icon('heroicon-o-banknotes')
                         ->url(fn (Partnership $record) => "/admin/transactions?tableFilters[store_id][value]={$record->store_id}"),
-                        
+
                     Tables\Actions\Action::make('send_report')
                         ->label('Send Monthly Report')
                         ->icon('heroicon-o-envelope')
@@ -144,17 +145,18 @@ class PartnershipRevenueWidget extends BaseWidget
                         ->modalHeading('Send Monthly Report')
                         ->modalDescription('Send a detailed monthly performance report to the partner.')
                         ->modalSubmitActionLabel('Send Report'),
-                ])
+                ]),
             ])
             ->emptyStateHeading('No Active Partnerships')
             ->emptyStateDescription('Partnerships will appear here once they are created and activated.')
             ->emptyStateIcon('heroicon-o-user-group')
             ->paginated(false);
     }
-    
+
     public static function canView(): bool
     {
         $user = Auth::user();
+
         return $user && ($user->user_type === 'admin' || $user->user_type === 'company_owner');
     }
 }

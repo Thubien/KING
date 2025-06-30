@@ -2,19 +2,19 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\SyncShopifyStoreData;
 use App\Models\Store;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class ShopifyWebhookController extends Controller
 {
     public function handleOrderCreated(Request $request)
     {
-        if (!$this->verifyWebhook($request)) {
+        if (! $this->verifyWebhook($request)) {
             Log::warning('Invalid Shopify webhook signature');
+
             return response('Unauthorized', 401);
         }
 
@@ -25,8 +25,9 @@ class ShopifyWebhookController extends Controller
             ->where('status', 'active')
             ->first();
 
-        if (!$store) {
+        if (! $store) {
             Log::warning('Webhook received for unknown/inactive store', ['shop_domain' => $shopDomain]);
+
             return response('Store not found', 404);
         }
 
@@ -34,14 +35,15 @@ class ShopifyWebhookController extends Controller
             $this->createTransactionFromOrder($store, $order);
             Log::info('Order webhook processed successfully', [
                 'store_id' => $store->id,
-                'order_id' => $order['id']
+                'order_id' => $order['id'],
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to process order webhook', [
                 'store_id' => $store->id,
                 'order_id' => $order['id'],
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return response('Processing failed', 500);
         }
 
@@ -50,7 +52,7 @@ class ShopifyWebhookController extends Controller
 
     public function handleOrderUpdated(Request $request)
     {
-        if (!$this->verifyWebhook($request)) {
+        if (! $this->verifyWebhook($request)) {
             return response('Unauthorized', 401);
         }
 
@@ -61,7 +63,7 @@ class ShopifyWebhookController extends Controller
             ->where('status', 'active')
             ->first();
 
-        if (!$store) {
+        if (! $store) {
             return response('Store not found', 404);
         }
 
@@ -69,14 +71,15 @@ class ShopifyWebhookController extends Controller
             $this->updateTransactionFromOrder($store, $order);
             Log::info('Order update webhook processed', [
                 'store_id' => $store->id,
-                'order_id' => $order['id']
+                'order_id' => $order['id'],
             ]);
         } catch (\Exception $e) {
             Log::error('Failed to process order update webhook', [
                 'store_id' => $store->id,
                 'order_id' => $order['id'],
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
             ]);
+
             return response('Processing failed', 500);
         }
 
@@ -85,7 +88,7 @@ class ShopifyWebhookController extends Controller
 
     public function handleOrderPaid(Request $request)
     {
-        if (!$this->verifyWebhook($request)) {
+        if (! $this->verifyWebhook($request)) {
             return response('Unauthorized', 401);
         }
 
@@ -96,14 +99,14 @@ class ShopifyWebhookController extends Controller
             ->where('status', 'active')
             ->first();
 
-        if (!$store) {
+        if (! $store) {
             return response('Store not found', 404);
         }
 
         // Update transaction status to paid
         $transaction = Transaction::where([
             'store_id' => $store->id,
-            'external_id' => $order['id']
+            'external_id' => $order['id'],
         ])->first();
 
         if ($transaction) {
@@ -111,8 +114,8 @@ class ShopifyWebhookController extends Controller
                 'status' => 'processing',
                 'metadata' => array_merge($transaction->metadata ?? [], [
                     'payment_confirmed_at' => now()->toISOString(),
-                    'financial_status' => $order['financial_status'] ?? 'paid'
-                ])
+                    'financial_status' => $order['financial_status'] ?? 'paid',
+                ]),
             ]);
         }
 
@@ -124,7 +127,7 @@ class ShopifyWebhookController extends Controller
         $signature = $request->header('X-Shopify-Hmac-Sha256');
         $webhookSecret = config('shopify.webhook_secret');
 
-        if (!$signature || !$webhookSecret) {
+        if (! $signature || ! $webhookSecret) {
             return false;
         }
 
@@ -143,7 +146,7 @@ class ShopifyWebhookController extends Controller
         // Check if transaction already exists
         $existingTransaction = Transaction::where([
             'store_id' => $store->id,
-            'external_id' => $order['id']
+            'external_id' => $order['id'],
         ])->first();
 
         if ($existingTransaction) {
@@ -171,8 +174,8 @@ class ShopifyWebhookController extends Controller
                 'financial_status' => $order['financial_status'],
                 'fulfillment_status' => $order['fulfillment_status'],
                 'line_items_count' => count($order['line_items'] ?? []),
-                'webhook_received_at' => now()->toISOString()
-            ]
+                'webhook_received_at' => now()->toISOString(),
+            ],
         ];
 
         Transaction::create($transactionData);
@@ -182,12 +185,13 @@ class ShopifyWebhookController extends Controller
     {
         $transaction = Transaction::where([
             'store_id' => $store->id,
-            'external_id' => $order['id']
+            'external_id' => $order['id'],
         ])->first();
 
-        if (!$transaction) {
+        if (! $transaction) {
             // Create if doesn't exist
             $this->createTransactionFromOrder($store, $order);
+
             return;
         }
 
@@ -196,18 +200,20 @@ class ShopifyWebhookController extends Controller
             'metadata' => array_merge($transaction->metadata ?? [], [
                 'financial_status' => $order['financial_status'],
                 'fulfillment_status' => $order['fulfillment_status'],
-                'last_updated_at' => now()->toISOString()
-            ])
+                'last_updated_at' => now()->toISOString(),
+            ]),
         ]);
     }
 
     private function mapPaymentMethod(array $gateways): string
     {
-        if (empty($gateways)) return 'other';
+        if (empty($gateways)) {
+            return 'other';
+        }
 
         $gateway = strtolower($gateways[0]);
-        
-        return match(true) {
+
+        return match (true) {
             str_contains($gateway, 'credit') || str_contains($gateway, 'visa') || str_contains($gateway, 'mastercard') => 'credit_card',
             str_contains($gateway, 'paypal') => 'other',
             str_contains($gateway, 'apple') || str_contains($gateway, 'google') => 'other',
@@ -239,8 +245,8 @@ class ShopifyWebhookController extends Controller
     private function extractCustomerInfo(array $order): ?array
     {
         $customer = $order['customer'] ?? null;
-        
-        if (!$customer) {
+
+        if (! $customer) {
             return null;
         }
 
@@ -251,7 +257,7 @@ class ShopifyWebhookController extends Controller
             'last_name' => $customer['last_name'] ?? null,
             'phone' => $customer['phone'] ?? null,
             'total_orders' => $customer['orders_count'] ?? 1,
-            'total_spent' => $customer['total_spent'] ?? $order['total_price']
+            'total_spent' => $customer['total_spent'] ?? $order['total_price'],
         ];
     }
 
@@ -268,10 +274,11 @@ class ShopifyWebhookController extends Controller
             'CAD' => 0.73,
             'AUD' => 0.65,
             'TRY' => 0.03,
-            'UAH' => 0.025
+            'UAH' => 0.025,
         ];
 
         $rate = $rates[$currency] ?? 1.0;
+
         return (float) $amount * $rate;
     }
 }

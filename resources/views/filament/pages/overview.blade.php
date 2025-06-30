@@ -1,4 +1,15 @@
 <x-filament-panels::page>
+    @if(auth()->user()->isCompanyOwner() || auth()->user()->isAdmin())
+        <div class="fi-page-header-widgets grid grid-cols-1 gap-4 lg:grid-cols-3 mb-6">
+            @livewire(\App\Filament\Widgets\FinancialOverviewWidget::class)
+        </div>
+        
+        <div class="grid grid-cols-1 gap-4 lg:grid-cols-2 mb-6">
+            @livewire(\App\Filament\Widgets\StoreOverviewWidget::class)
+            @livewire(\App\Filament\Widgets\PartnerOverviewWidget::class)
+        </div>
+    @endif
+    
     <div class="space-y-6">
         {{-- Welcome Message --}}
         <div class="bg-white rounded-lg shadow-sm p-6 border">
@@ -126,4 +137,6 @@
             </div>
         </div>
     </div>
+    
+    @livewire(\App\Filament\Widgets\RecentActivityWidget::class)
 </x-filament-panels::page>

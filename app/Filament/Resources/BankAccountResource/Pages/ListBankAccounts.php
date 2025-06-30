@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\BankAccountResource\Pages;
 
 use App\Filament\Resources\BankAccountResource;
+use App\Models\BankAccount;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
-use App\Models\BankAccount;
 
 class ListBankAccounts extends ListRecords
 {
@@ -15,7 +15,7 @@ class ListBankAccounts extends ListRecords
     {
         return [
             Actions\CreateAction::make(),
-            
+
             Actions\Action::make('createPrimary')
                 ->label('Create Primary Account')
                 ->icon('heroicon-m-star')
@@ -26,6 +26,7 @@ class ListBankAccounts extends ListRecords
                 })
                 ->visible(function (): bool {
                     $company = auth()->user()->company;
+
                     return BankAccount::where('company_id', $company->id)->count() === 0;
                 }),
         ];

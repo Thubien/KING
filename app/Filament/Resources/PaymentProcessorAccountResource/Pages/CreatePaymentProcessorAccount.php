@@ -8,11 +8,11 @@ use Filament\Resources\Pages\CreateRecord;
 class CreatePaymentProcessorAccount extends CreateRecord
 {
     protected static string $resource = PaymentProcessorAccountResource::class;
-    
+
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['company_id'] = auth()->user()->company_id;
-        
+
         return $data;
     }
 }

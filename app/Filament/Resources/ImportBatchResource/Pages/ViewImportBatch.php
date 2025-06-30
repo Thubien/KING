@@ -15,7 +15,7 @@ class ViewImportBatch extends ViewRecord
         return [
             Actions\EditAction::make()
                 ->visible(fn () => $this->record->status === 'failed'),
-                
+
             Actions\Action::make('reprocess')
                 ->label('Reprocess Import')
                 ->icon('heroicon-o-arrow-path')
@@ -27,10 +27,10 @@ class ViewImportBatch extends ViewRecord
                 ->action(function () {
                     $orchestrator = app(\App\Services\Import\ImportOrchestrator::class);
                     $result = $orchestrator->reprocessImport($this->record);
-                    
+
                     if ($result->success) {
                         $this->redirect(static::getResource()::getUrl('view', ['record' => $this->record]));
-                        
+
                         \Filament\Notifications\Notification::make()
                             ->title('Import reprocessed successfully')
                             ->success()
@@ -43,13 +43,13 @@ class ViewImportBatch extends ViewRecord
                             ->send();
                     }
                 }),
-                
+
             Actions\Action::make('download')
                 ->label('Download File')
                 ->icon('heroicon-o-arrow-down-tray')
-                ->visible(fn () => !empty($this->record->file_path))
+                ->visible(fn () => ! empty($this->record->file_path))
                 ->url(fn () => route('import.download', $this->record))
                 ->openUrlInNewTab(),
         ];
     }
-} 
+}

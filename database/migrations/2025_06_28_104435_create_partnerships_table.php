@@ -24,15 +24,15 @@ return new class extends Migration
             $table->json('permissions')->nullable(); // Custom permissions per partnership
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             // Unique constraint: One user can only have one partnership per store
             $table->unique(['store_id', 'user_id']);
-            
+
             // Indexes for performance
             $table->index(['store_id', 'status']);
             $table->index(['user_id', 'status']);
             $table->index(['ownership_percentage']);
-            
+
             // Note: Check constraint will be added via database-level constraint or model validation
         });
     }

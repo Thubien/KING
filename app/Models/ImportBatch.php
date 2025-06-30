@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class ImportBatch extends Model
 {
@@ -61,7 +60,7 @@ class ImportBatch extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         // Multi-tenant scoping
         static::addGlobalScope('company', function (Builder $builder) {
             if (auth()->check() && auth()->user()->company_id) {
@@ -70,15 +69,15 @@ class ImportBatch extends Model
         });
 
         static::creating(function ($batch) {
-            if (!$batch->batch_id) {
-                $batch->batch_id = 'IMP-' . strtoupper(Str::random(8));
+            if (! $batch->batch_id) {
+                $batch->batch_id = 'IMP-'.strtoupper(Str::random(8));
             }
-            
-            if (!$batch->company_id && auth()->check()) {
+
+            if (! $batch->company_id && auth()->check()) {
                 $batch->company_id = auth()->user()->company_id;
             }
-            
-            if (!$batch->initiated_by && auth()->check()) {
+
+            if (! $batch->initiated_by && auth()->check()) {
                 $batch->initiated_by = auth()->id();
             }
         });
@@ -133,7 +132,7 @@ class ImportBatch extends Model
             'status' => 'processing',
             'started_at' => now(),
         ]);
-        
+
         return $this;
     }
 
@@ -142,10 +141,10 @@ class ImportBatch extends Model
         $this->update([
             'status' => 'completed',
             'completed_at' => now(),
-            'processing_time_seconds' => $this->started_at ? 
+            'processing_time_seconds' => $this->started_at ?
                 now()->diffInSeconds($this->started_at) : null,
         ]);
-        
+
         return $this;
     }
 
@@ -156,10 +155,10 @@ class ImportBatch extends Model
             'completed_at' => now(),
             'error_message' => $errorMessage,
             'errors' => $errors,
-            'processing_time_seconds' => $this->started_at ? 
+            'processing_time_seconds' => $this->started_at ?
                 now()->diffInSeconds($this->started_at) : null,
         ]);
-        
+
         return $this;
     }
 
@@ -167,6 +166,7 @@ class ImportBatch extends Model
     public function updateProgress(array $counts): self
     {
         $this->update($counts);
+
         return $this;
     }
 
@@ -174,6 +174,7 @@ class ImportBatch extends Model
     {
         $this->increment('successful_records', $count);
         $this->increment('processed_records', $count);
+
         return $this;
     }
 
@@ -181,6 +182,7 @@ class ImportBatch extends Model
     {
         $this->increment('failed_records', $count);
         $this->increment('processed_records', $count);
+
         return $this;
     }
 
@@ -188,6 +190,7 @@ class ImportBatch extends Model
     {
         $this->increment('duplicate_records', $count);
         $this->increment('processed_records', $count);
+
         return $this;
     }
 
@@ -195,6 +198,7 @@ class ImportBatch extends Model
     {
         $this->increment('skipped_records', $count);
         $this->increment('processed_records', $count);
+
         return $this;
     }
 
@@ -204,7 +208,7 @@ class ImportBatch extends Model
         if ($this->total_records === 0) {
             return 0;
         }
-        
+
         return round(($this->processed_records / $this->total_records) * 100, 2);
     }
 
@@ -213,7 +217,7 @@ class ImportBatch extends Model
         if ($this->processed_records === 0) {
             return 0;
         }
-        
+
         return round(($this->successful_records / $this->processed_records) * 100, 2);
     }
 
@@ -234,51 +238,51 @@ class ImportBatch extends Model
 
     public function hasErrors(): bool
     {
-        return !empty($this->errors) || !empty($this->error_message);
+        return ! empty($this->errors) || ! empty($this->error_message);
     }
 
     public function getFormattedFileSize(): string
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return 'Unknown';
         }
-        
+
         $bytes = $this->file_size;
         $units = ['B', 'KB', 'MB', 'GB'];
-        
+
         for ($i = 0; $bytes > 1024 && $i < count($units) - 1; $i++) {
             $bytes /= 1024;
         }
-        
-        return round($bytes, 2) . ' ' . $units[$i];
+
+        return round($bytes, 2).' '.$units[$i];
     }
 
     public function getDurationFormatted(): string
     {
-        if (!$this->processing_time_seconds) {
+        if (! $this->processing_time_seconds) {
             return 'N/A';
         }
-        
+
         $seconds = $this->processing_time_seconds;
-        
+
         if ($seconds < 60) {
-            return $seconds . 's';
+            return $seconds.'s';
         } elseif ($seconds < 3600) {
-            return round($seconds / 60, 1) . 'm';
+            return round($seconds / 60, 1).'m';
         } else {
-            return round($seconds / 3600, 1) . 'h';
+            return round($seconds / 3600, 1).'h';
         }
     }
 
     // Validation and Security
     public function canBeProcessed(): bool
     {
-        return $this->status === 'pending' && !empty($this->file_path);
+        return $this->status === 'pending' && ! empty($this->file_path);
     }
 
     public function canBeReprocessed(): bool
     {
-        return in_array($this->status, ['failed', 'completed']) && 
+        return in_array($this->status, ['failed', 'completed']) &&
                auth()->user()->hasStoreAccess($this->company_id);
     }
 
@@ -294,7 +298,7 @@ class ImportBatch extends Model
         $array['is_completed'] = $this->isCompleted();
         $array['has_failed'] = $this->hasFailed();
         $array['has_errors'] = $this->hasErrors();
-        
+
         return $array;
     }
 }

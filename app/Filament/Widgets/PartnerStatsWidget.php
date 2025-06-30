@@ -18,8 +18,8 @@ class PartnerStatsWidget extends BaseWidget
     protected function getStats(): array
     {
         $user = Auth::user();
-        
-        if (!$user->isPartner()) {
+
+        if (! $user->isPartner()) {
             return [];
         }
 
@@ -33,12 +33,12 @@ class PartnerStatsWidget extends BaseWidget
                 ->descriptionIcon('heroicon-m-building-storefront')
                 ->color('success'),
 
-            Stat::make('Total Ownership', number_format($totalOwnership, 2) . '%')
+            Stat::make('Total Ownership', number_format($totalOwnership, 2).'%')
                 ->description('Across all stores')
                 ->descriptionIcon('heroicon-m-chart-pie')
                 ->color($totalOwnership > 50 ? 'success' : ($totalOwnership > 25 ? 'warning' : 'gray')),
 
-            Stat::make('Monthly Profit', '$' . number_format($monthlyProfitShare, 2))
+            Stat::make('Monthly Profit', '$'.number_format($monthlyProfitShare, 2))
                 ->description('This month\'s earnings')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('info'),

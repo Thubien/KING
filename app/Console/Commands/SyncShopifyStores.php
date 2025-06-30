@@ -9,7 +9,7 @@ use Illuminate\Console\Command;
 class SyncShopifyStores extends Command
 {
     protected $signature = 'shopify:sync {--store-id= : Sync specific store ID} {--since= : Sync orders since date (Y-m-d)}';
-    
+
     protected $description = 'Sync Shopify store data (orders, customers, products)';
 
     public function handle(): int
@@ -22,9 +22,10 @@ class SyncShopifyStores extends Command
                 ->where('status', 'active')
                 ->whereNotNull('shopify_domain')
                 ->get();
-                
+
             if ($stores->isEmpty()) {
                 $this->error("Store ID {$storeId} not found or not active.");
+
                 return self::FAILURE;
             }
         } else {
@@ -35,6 +36,7 @@ class SyncShopifyStores extends Command
 
         if ($stores->isEmpty()) {
             $this->info('No active Shopify stores found to sync.');
+
             return self::SUCCESS;
         }
 

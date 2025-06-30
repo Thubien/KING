@@ -4,18 +4,17 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
-use Filament\Widgets\Widget;
 
 class PartnerDashboard extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-home';
-    
+
     protected static string $view = 'filament.pages.partner-dashboard';
-    
+
     protected static ?string $title = 'Partner Dashboard';
-    
+
     protected static ?string $navigationLabel = 'Dashboard';
-    
+
     protected static ?int $navigationSort = 1;
 
     public static function canAccess(): bool
@@ -40,7 +39,7 @@ class PartnerDashboard extends Page
 
     public function mount(): void
     {
-        if (!Auth::user()->isPartner()) {
+        if (! Auth::user()->isPartner()) {
             abort(403, 'Access denied. Partners only.');
         }
     }

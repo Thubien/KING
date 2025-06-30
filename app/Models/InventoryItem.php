@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -57,18 +57,19 @@ class InventoryItem extends Model
     // Calculated attributes
     public function getFormattedValueAttribute(): string
     {
-        return $this->currency . ' ' . number_format($this->total_value, 2);
+        return $this->currency.' '.number_format($this->total_value, 2);
     }
 
     public function getFormattedUnitCostAttribute(): string
     {
-        return $this->currency . ' ' . number_format($this->unit_cost, 2);
+        return $this->currency.' '.number_format($this->unit_cost, 2);
     }
 
     // Business logic
     public function calculateTotalValue(): float
     {
         $this->total_value = $this->quantity * $this->unit_cost;
+
         return $this->total_value;
     }
 

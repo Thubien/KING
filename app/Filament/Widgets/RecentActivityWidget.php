@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Transaction;
-use App\Models\Partnership;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -12,7 +11,7 @@ class RecentActivityWidget extends BaseWidget
 {
     protected static ?int $sort = 4;
 
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     public function table(Table $table): Table
     {
@@ -40,8 +39,7 @@ class RecentActivityWidget extends BaseWidget
 
                 Tables\Columns\TextColumn::make('amount')
                     ->label(' Amount')
-                    ->formatStateUsing(fn ($state, $record) => 
-                        ($record->type === 'income' ? '+' : '-') . '$' . number_format(abs($state), 2)
+                    ->formatStateUsing(fn ($state, $record) => ($record->type === 'income' ? '+' : '-').'$'.number_format(abs($state), 2)
                     )
                     ->color(fn ($record) => $record->type === 'income' ? 'success' : 'danger')
                     ->weight('medium'),

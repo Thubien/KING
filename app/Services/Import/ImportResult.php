@@ -53,7 +53,7 @@ class ImportResult
 
     public function hasErrors(): bool
     {
-        return !empty($this->errors) || !empty($this->errorMessage);
+        return ! empty($this->errors) || ! empty($this->errorMessage);
     }
 
     public function getProcessedRecords(): int
@@ -64,11 +64,11 @@ class ImportResult
     public function getSuccessRate(): float
     {
         $processed = $this->getProcessedRecords();
-        
+
         if ($processed === 0) {
             return 0;
         }
-        
+
         return round(($this->successfulRecords / $processed) * 100, 2);
     }
 
@@ -89,4 +89,4 @@ class ImportResult
             'metadata' => $this->metadata,
         ];
     }
-} 
+}

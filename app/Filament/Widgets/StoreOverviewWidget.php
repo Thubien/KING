@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\Store;
 use App\Models\Partnership;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -12,7 +11,7 @@ class StoreOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $user = auth()->user();
-        
+
         $totalStores = $user->company->stores()->count();
         $activeStores = $user->company->stores()->where('status', 'active')->count();
         $totalPartnerships = Partnership::whereHas('store', function ($query) use ($user) {

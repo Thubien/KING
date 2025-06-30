@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\ReturnRequest;
 use App\Models\Store;
 use App\Models\User;
 use App\Services\ReturnChecklistService;
+use Illuminate\Database\Seeder;
 
 class ReturnRequestSeeder extends Seeder
 {
@@ -14,11 +14,11 @@ class ReturnRequestSeeder extends Seeder
     {
         $stores = Store::all();
         $users = User::all();
-        
+
         if ($stores->isEmpty() || $users->isEmpty()) {
             return;
         }
-        
+
         $returns = [
             [
                 'order_number' => 'SHP-2024-001',
@@ -61,7 +61,7 @@ class ReturnRequestSeeder extends Seeder
                 'notes' => 'Para iadesi yapıldı',
             ],
         ];
-        
+
         foreach ($returns as $returnData) {
             $return = ReturnRequest::create([
                 'company_id' => $stores->first()->company_id,
@@ -77,10 +77,10 @@ class ReturnRequestSeeder extends Seeder
                 'notes' => $returnData['notes'] ?? null,
                 'handled_by' => $users->random()->id,
             ]);
-            
+
             // Her aşama için checklist oluştur
             ReturnChecklistService::createChecklistsForStage($return, $return->status);
-            
+
             // Bazı checklist'leri işaretle
             if ($return->status !== 'pending') {
                 $checklists = $return->checklists()->where('stage', 'pending')->get();
@@ -92,7 +92,7 @@ class ReturnRequestSeeder extends Seeder
                     ]);
                 }
             }
-            
+
             if (in_array($return->status, ['processing', 'completed'])) {
                 $checklists = $return->checklists()->where('stage', 'in_transit')->take(2)->get();
                 foreach ($checklists as $checklist) {

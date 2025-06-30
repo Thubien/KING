@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Str;
 
 class Transaction extends Model
@@ -95,7 +95,7 @@ class Transaction extends Model
         'INVESTMENT_RETURN' => 'Investment Returns', // Returns from company investments
         'INVESTMENT_INCOME' => 'Investment Income', // External investments into company
         'OTHER_INCOME' => 'Other Income', // Other income sources
-        
+
         // Expense Categories
         'RETURNS' => 'Returns & Refunds', // Real money refunds
         'PAY-PRODUCT' => 'Product Costs', // Product purchase costs
@@ -160,25 +160,36 @@ class Transaction extends Model
 
     // Assignment status options
     public const ASSIGNMENT_PENDING = 'pending';
+
     public const ASSIGNMENT_ASSIGNED = 'assigned';
+
     public const ASSIGNMENT_SPLIT = 'split';
+
     public const ASSIGNMENT_MATCHED = 'matched';
 
     // Transaction types
     public const TYPE_INCOME = 'INCOME';
+
     public const TYPE_EXPENSE = 'EXPENSE';
+
     public const TYPE_PERSONAL = 'PERSONAL';
+
     public const TYPE_BUSINESS = 'BUSINESS';
 
     // Transaction statuses
     public const STATUS_PENDING = 'PENDING';
+
     public const STATUS_APPROVED = 'APPROVED';
+
     public const STATUS_REJECTED = 'REJECTED';
 
     // Payment processor types
     public const PROCESSOR_STRIPE = 'STRIPE';
+
     public const PROCESSOR_PAYPAL = 'PAYPAL';
+
     public const PROCESSOR_SHOPIFY = 'SHOPIFY_PAYMENTS';
+
     public const PROCESSOR_MANUAL = 'MANUAL';
 
     // Sales channels (WHERE sale happened)
@@ -190,7 +201,7 @@ class Transaction extends Model
         'facebook' => 'Facebook',
         'physical' => 'Physical Store',
         'referral' => 'Referral',
-        'other' => 'Other'
+        'other' => 'Other',
     ];
 
     // Payment methods (HOW customer paid)
@@ -203,7 +214,7 @@ class Transaction extends Model
         'crypto' => 'Cryptocurrency',
         'installment' => 'Installment',
         'store_credit' => 'Store Credit',
-        'other' => 'Other'
+        'other' => 'Other',
     ];
 
     // Data sources (FROM WHERE to system)
@@ -213,14 +224,14 @@ class Transaction extends Model
         'paypal_api' => 'PayPal API',
         'manual_entry' => 'Manual Entry',
         'csv_import' => 'CSV Import',
-        'webhook' => 'Webhook'
+        'webhook' => 'Webhook',
     ];
 
     // Boot method
     protected static function boot()
     {
         parent::boot();
-        
+
         // Multi-tenant scoping
         static::addGlobalScope('company', function (Builder $builder) {
             if (auth()->check() && auth()->user()->company_id) {
@@ -231,16 +242,16 @@ class Transaction extends Model
         });
 
         static::creating(function ($transaction) {
-            if (!$transaction->transaction_id) {
-                $transaction->transaction_id = 'TXN-' . strtoupper(Str::random(8));
+            if (! $transaction->transaction_id) {
+                $transaction->transaction_id = 'TXN-'.strtoupper(Str::random(8));
             }
-            
-            if (!$transaction->created_by && auth()->check()) {
+
+            if (! $transaction->created_by && auth()->check()) {
                 $transaction->created_by = auth()->id();
             }
 
             // Convert to USD if different currency
-            if ($transaction->currency !== 'USD' && !$transaction->amount_usd) {
+            if ($transaction->currency !== 'USD' && ! $transaction->amount_usd) {
                 $transaction->amount_usd = $transaction->amount * $transaction->exchange_rate;
             } elseif ($transaction->currency === 'USD') {
                 $transaction->amount_usd = $transaction->amount;
@@ -342,7 +353,7 @@ class Transaction extends Model
     public function scopeThisMonth($query)
     {
         return $query->whereMonth('transaction_date', now()->month)
-                    ->whereYear('transaction_date', now()->year);
+            ->whereYear('transaction_date', now()->year);
     }
 
     // Business Logic Methods
@@ -350,7 +361,7 @@ class Transaction extends Model
     {
         return $this->type === 'income';
     }
-    
+
     // Helper to get income categories
     public static function getIncomeCategories(): array
     {
@@ -362,7 +373,7 @@ class Transaction extends Model
             'OTHER_INCOME' => 'Other Income',
         ];
     }
-    
+
     // Helper to check if a category is income
     public static function isIncomeCategory(string $category): bool
     {
@@ -402,17 +413,17 @@ class Transaction extends Model
     {
         // Income categories that go through payment processors
         $processorIncomeCategories = ['SALES'];
-        
+
         // SALES kategori → Payment processor'a pending balance ekle
         if (in_array($this->category, $processorIncomeCategories) && $this->type === self::TYPE_INCOME) {
             $this->addToPendingBalance();
         }
-        
+
         // Partner repayment tracking
         if ($this->category === 'PARTNER_REPAYMENT' && $this->partner_id) {
             $this->updatePartnerDebtRepayment();
         }
-        
+
         // Personal expense tracking
         if ($this->is_personal_expense && $this->partner_id) {
             $this->updatePartnerDebt();
@@ -423,19 +434,19 @@ class Transaction extends Model
     {
         // Varsayılan olarak MANUAL processor kullan (CSV imports için)
         $processorType = $this->payment_processor_type ?? self::PROCESSOR_MANUAL;
-        
+
         $processor = PaymentProcessorAccount::firstOrCreate([
             'company_id' => $this->store->company_id,
             'processor_type' => $processorType,
-            'currency' => $this->currency
+            'currency' => $this->currency,
         ], [
             'current_balance' => 0,
             'pending_balance' => 0,
-            'is_active' => true
+            'is_active' => true,
         ]);
 
         $processor->addPendingBalance(
-            $this->amount, 
+            $this->amount,
             "Sales transaction: {$this->transaction_id}"
         );
 
@@ -445,52 +456,58 @@ class Transaction extends Model
 
     private function updatePartnerDebt(): void
     {
-        if (!$this->partner_id || !$this->store_id) return;
+        if (! $this->partner_id || ! $this->store_id) {
+            return;
+        }
 
         // Find the partnership for this partner and store
         $partnership = Partnership::where('user_id', $this->partner_id)
             ->where('store_id', $this->store_id)
             ->where('status', 'ACTIVE')
             ->first();
-            
-        if (!$partnership) {
+
+        if (! $partnership) {
             \Log::warning('No active partnership found for debt tracking', [
                 'transaction_id' => $this->transaction_id,
                 'partner_id' => $this->partner_id,
-                'store_id' => $this->store_id
+                'store_id' => $this->store_id,
             ]);
+
             return;
         }
-        
+
         // Add the expense amount to partner's debt (positive amount increases debt)
         $partnership->addDebt(
-            abs($this->amount), 
+            abs($this->amount),
             "Personal expense: {$this->description}"
         );
     }
-    
+
     private function updatePartnerDebtRepayment(): void
     {
-        if (!$this->partner_id || !$this->store_id) return;
+        if (! $this->partner_id || ! $this->store_id) {
+            return;
+        }
 
         // Find the partnership for this partner and store
         $partnership = Partnership::where('user_id', $this->partner_id)
             ->where('store_id', $this->store_id)
             ->where('status', 'ACTIVE')
             ->first();
-            
-        if (!$partnership) {
+
+        if (! $partnership) {
             \Log::warning('No active partnership found for debt repayment', [
                 'transaction_id' => $this->transaction_id,
                 'partner_id' => $this->partner_id,
-                'store_id' => $this->store_id
+                'store_id' => $this->store_id,
             ]);
+
             return;
         }
-        
+
         // Reduce the debt by the repayment amount
         $partnership->reduceDebt(
-            abs($this->amount), 
+            abs($this->amount),
             "Debt repayment: {$this->description}"
         );
     }
@@ -500,7 +517,7 @@ class Transaction extends Model
      */
     public function processPayoutToBank(int $bankAccountId): void
     {
-        if (!$this->paymentProcessor) {
+        if (! $this->paymentProcessor) {
             throw new \Exception('No payment processor associated with this transaction');
         }
 
@@ -519,7 +536,7 @@ class Transaction extends Model
         // Transaction'ı güncelle
         $this->update([
             'is_pending_payout' => false,
-            'payout_date' => now()
+            'payout_date' => now(),
         ]);
     }
 
@@ -566,7 +583,7 @@ class Transaction extends Model
             self::PROCESSOR_STRIPE => 'Stripe',
             self::PROCESSOR_PAYPAL => 'PayPal',
             self::PROCESSOR_SHOPIFY => 'Shopify Payments',
-            self::PROCESSOR_MANUAL => 'Manual Entry'
+            self::PROCESSOR_MANUAL => 'Manual Entry',
         ];
 
         return $names[$this->payment_processor_type] ?? 'Unknown';
@@ -598,7 +615,7 @@ class Transaction extends Model
         // Revenue (all income categories)
         $incomeCategories = array_keys(self::getIncomeCategories());
         $revenue = $query->clone()->whereIn('category', $incomeCategories)->sum('amount_usd');
-        
+
         // Expenses (all non-income categories)
         $expenses = $query->clone()
             ->whereNotIn('category', $incomeCategories)
@@ -619,7 +636,7 @@ class Transaction extends Model
             case 'month':
                 $query->whereMonth('transaction_date', now()->month);
                 break;
-            // Add other periods as needed
+                // Add other periods as needed
         }
 
         $totals = [];
@@ -627,7 +644,7 @@ class Transaction extends Model
             $totals[$code] = [
                 'amount' => $query->clone()->where('category', $code)->sum('amount_usd'),
                 'count' => $query->clone()->where('category', $code)->count(),
-                'label' => $label
+                'label' => $label,
             ];
         }
 

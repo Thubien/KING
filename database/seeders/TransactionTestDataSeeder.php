@@ -4,10 +4,10 @@ namespace Database\Seeders;
 
 use App\Models\BankAccount;
 use App\Models\Company;
+use App\Models\Partnership;
 use App\Models\Store;
 use App\Models\Transaction;
 use App\Models\User;
-use App\Models\Partnership;
 use Carbon\Carbon;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
@@ -152,36 +152,36 @@ class TransactionTestDataSeeder extends Seeder
     {
         // Get the first user as creator
         $creator = User::where('company_id', $company->id)->first();
-        
+
         $descriptions = [
             // Income
             ['Shopify Payment - Order #1234', 'INCOME', 1250.00],
             ['Shopify Payment - Order #1235', 'INCOME', 890.50],
             ['Stripe Payout - June 2024', 'INCOME', 5420.00],
             ['Customer Payment - Invoice #456', 'INCOME', 2100.00],
-            
+
             // Expenses - Ads
             ['Facebook Ads Campaign - Summer Sale', 'EXPENSE', -450.00],
             ['Meta Business - Ad Spend June', 'EXPENSE', -320.00],
             ['Google Ads - Search Campaign', 'EXPENSE', -280.00],
             ['TikTok Ads - Product Launch', 'EXPENSE', -190.00],
-            
+
             // Expenses - Suppliers
             ['Alibaba - Product Order #789', 'EXPENSE', -3200.00],
             ['Supplier Payment - Fashion Vendor', 'EXPENSE', -1800.00],
             ['DHL Express Shipping', 'EXPENSE', -150.00],
             ['FedEx International Delivery', 'EXPENSE', -220.00],
-            
+
             // Bank Fees
             ['Payoneer Transfer Fee', 'EXPENSE', -25.00],
             ['Mercury Monthly Fee', 'EXPENSE', -20.00],
             ['International Wire Fee', 'EXPENSE', -45.00],
             ['Currency Exchange Fee USD-EUR', 'EXPENSE', -32.50],
-            
+
             // Transfers
             ['Transfer to Payoneer EUR Account', 'EXPENSE', -1000.00],
             ['Transfer from USD Account', 'INCOME', 920.00], // EUR equivalent
-            
+
             // Other
             ['Office Rent - June 2024', 'EXPENSE', -1200.00],
             ['Employee Salary - Marketing', 'EXPENSE', -2500.00],
@@ -191,7 +191,7 @@ class TransactionTestDataSeeder extends Seeder
 
         foreach ($descriptions as $index => $item) {
             $date = Carbon::now()->subDays(rand(1, 30));
-            
+
             Transaction::create([
                 'amount' => $item[2],
                 'currency' => 'USD',

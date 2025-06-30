@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class InventoryMovement extends Model
@@ -35,12 +35,19 @@ class InventoryMovement extends Model
 
     // Movement types
     const TYPE_IN = 'IN';           // Stock addition
+
     const TYPE_OUT = 'OUT';         // Stock removal
+
     const TYPE_SALE = 'SALE';       // Sold to customer
+
     const TYPE_RETURN = 'RETURN';   // Customer return
+
     const TYPE_ADJUST = 'ADJUST';   // Manual adjustment
+
     const TYPE_COUNT = 'COUNT';     // Physical count adjustment
+
     const TYPE_DAMAGE = 'DAMAGE';   // Damaged/lost items
+
     const TYPE_TRANSFER = 'TRANSFER'; // Transfer between stores
 
     // Relationships
@@ -72,7 +79,7 @@ class InventoryMovement extends Model
 
     public function getFormattedType(): string
     {
-        return match($this->movement_type) {
+        return match ($this->movement_type) {
             self::TYPE_IN => 'Stock In',
             self::TYPE_OUT => 'Stock Out',
             self::TYPE_SALE => 'Sale',
@@ -87,7 +94,7 @@ class InventoryMovement extends Model
 
     public function getTypeColor(): string
     {
-        return match($this->movement_type) {
+        return match ($this->movement_type) {
             self::TYPE_IN, self::TYPE_RETURN => 'success',
             self::TYPE_OUT, self::TYPE_SALE => 'warning',
             self::TYPE_DAMAGE => 'danger',

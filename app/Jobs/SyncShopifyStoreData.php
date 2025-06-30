@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Store;
 use App\Models\Transaction;
+use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -11,13 +12,13 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
 
 class SyncShopifyStoreData implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public $timeout = 300; // 5 minutes
+
     public $tries = 3;
 
     public function __construct(
@@ -27,22 +28,23 @@ class SyncShopifyStoreData implements ShouldQueue
 
     public function handle(): void
     {
-        if ($this->store->status !== 'active' || !$this->store->shopify_access_token) {
+        if ($this->store->status !== 'active' || ! $this->store->shopify_access_token) {
             Log::warning('Skipping sync for inactive store', ['store_id' => $this->store->id]);
+
             return;
         }
 
         Log::info('Starting Shopify sync', [
             'store_id' => $this->store->id,
-            'shop_domain' => $this->store->shopify_domain
+            'shop_domain' => $this->store->shopify_domain,
         ]);
 
         try {
             $this->syncOrders();
-            
+
             $this->store->update([
                 'last_sync_at' => now(),
-                'sync_status' => 'success'
+                'sync_status' => 'success',
             ]);
 
             Log::info('Shopify sync completed successfully', ['store_id' => $this->store->id]);
@@ -51,7 +53,7 @@ class SyncShopifyStoreData implements ShouldQueue
             Log::error('Shopify sync failed', [
                 'store_id' => $this->store->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
             ]);
 
             $this->store->update(['sync_status' => 'failed']);
@@ -62,15 +64,15 @@ class SyncShopifyStoreData implements ShouldQueue
     private function syncOrders(): void
     {
         $since = $this->since ?: $this->store->last_sync_at?->toISOString() ?: now()->subDays(30)->toISOString();
-        
-        $url = "https://{$this->store->shopify_domain}/admin/api/" . config('shopify.api_version') . "/orders.json";
-        
+
+        $url = "https://{$this->store->shopify_domain}/admin/api/".config('shopify.api_version').'/orders.json';
+
         $params = [
             'status' => 'any',
             'financial_status' => 'paid',
             'limit' => 250,
             'created_at_min' => $since,
-            'fields' => 'id,name,created_at,updated_at,total_price,currency,customer,line_items,payment_gateway_names,financial_status,fulfillment_status'
+            'fields' => 'id,name,created_at,updated_at,total_price,currency,customer,line_items,payment_gateway_names,financial_status,fulfillment_status',
         ];
 
         $page = 1;
@@ -78,10 +80,10 @@ class SyncShopifyStoreData implements ShouldQueue
 
         do {
             $response = Http::withHeaders([
-                'X-Shopify-Access-Token' => decrypt($this->store->shopify_access_token)
+                'X-Shopify-Access-Token' => decrypt($this->store->shopify_access_token),
             ])->timeout(30)->get($url, $params);
 
-            if (!$response->successful()) {
+            if (! $response->successful()) {
                 throw new \Exception("Shopify API error: HTTP {$response->status()} - {$response->body()}");
             }
 
@@ -96,7 +98,7 @@ class SyncShopifyStoreData implements ShouldQueue
             // Check if there are more pages
             $linkHeader = $response->header('Link');
             $hasNextPage = $linkHeader && str_contains($linkHeader, 'rel="next"');
-            
+
             if ($hasNextPage) {
                 // Extract next page cursor from Link header
                 preg_match('/<([^>]+)>;\s*rel="next"/', $linkHeader, $matches);
@@ -108,13 +110,13 @@ class SyncShopifyStoreData implements ShouldQueue
             }
 
             $page++;
-            
+
         } while ($hasNextPage && $page <= 10); // Limit to 10 pages per sync
 
         Log::info('Orders synced', [
             'store_id' => $this->store->id,
             'total_synced' => $totalSynced,
-            'pages_processed' => $page - 1
+            'pages_processed' => $page - 1,
         ]);
     }
 
@@ -122,7 +124,7 @@ class SyncShopifyStoreData implements ShouldQueue
     {
         $existingTransaction = Transaction::where([
             'store_id' => $this->store->id,
-            'external_id' => $order['id']
+            'external_id' => $order['id'],
         ])->first();
 
         $transactionData = [
@@ -146,8 +148,8 @@ class SyncShopifyStoreData implements ShouldQueue
                 'financial_status' => $order['financial_status'],
                 'fulfillment_status' => $order['fulfillment_status'],
                 'line_items_count' => count($order['line_items'] ?? []),
-                'synced_at' => now()->toISOString()
-            ]
+                'synced_at' => now()->toISOString(),
+            ],
         ];
 
         if ($existingTransaction) {
@@ -159,11 +161,13 @@ class SyncShopifyStoreData implements ShouldQueue
 
     private function mapPaymentMethod(array $gateways): string
     {
-        if (empty($gateways)) return 'other';
+        if (empty($gateways)) {
+            return 'other';
+        }
 
         $gateway = strtolower($gateways[0]);
-        
-        return match(true) {
+
+        return match (true) {
             str_contains($gateway, 'credit') || str_contains($gateway, 'visa') || str_contains($gateway, 'mastercard') => 'credit_card',
             str_contains($gateway, 'paypal') => 'other',
             str_contains($gateway, 'apple') || str_contains($gateway, 'google') => 'other',
@@ -195,8 +199,8 @@ class SyncShopifyStoreData implements ShouldQueue
     private function extractCustomerInfo(array $order): ?array
     {
         $customer = $order['customer'] ?? null;
-        
-        if (!$customer) {
+
+        if (! $customer) {
             return null;
         }
 
@@ -207,7 +211,7 @@ class SyncShopifyStoreData implements ShouldQueue
             'last_name' => $customer['last_name'] ?? null,
             'phone' => $customer['phone'] ?? null,
             'total_orders' => $customer['orders_count'] ?? 1,
-            'total_spent' => $customer['total_spent'] ?? $order['total_price']
+            'total_spent' => $customer['total_spent'] ?? $order['total_price'],
         ];
     }
 
@@ -225,10 +229,11 @@ class SyncShopifyStoreData implements ShouldQueue
             'CAD' => 0.73,
             'AUD' => 0.65,
             'TRY' => 0.03,
-            'UAH' => 0.025
+            'UAH' => 0.025,
         ];
 
         $rate = $rates[$currency] ?? 1.0;
+
         return (float) $amount * $rate;
     }
 
@@ -237,12 +242,12 @@ class SyncShopifyStoreData implements ShouldQueue
         Log::error('Shopify sync job failed permanently', [
             'store_id' => $this->store->id,
             'error' => $exception->getMessage(),
-            'attempts' => $this->attempts()
+            'attempts' => $this->attempts(),
         ]);
 
         $this->store->update([
             'sync_status' => 'failed',
-            'last_sync_error' => $exception->getMessage()
+            'last_sync_error' => $exception->getMessage(),
         ]);
     }
 }

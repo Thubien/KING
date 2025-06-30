@@ -18,13 +18,13 @@ class InventoryItemResource extends Resource
     protected static ?string $model = InventoryItem::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
-    
+
     protected static ?string $navigationLabel = 'Inventory';
-    
+
     protected static ?string $navigationGroup = 'Financial';
-    
+
     protected static ?string $modelLabel = 'Inventory Item';
-    
+
     protected static ?int $navigationSort = 6;
 
     public static function form(Form $form): Form
@@ -45,7 +45,7 @@ class InventoryItemResource extends Resource
                                     $set('currency', $store->currency);
                                 }
                             }),
-                            
+
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\TextInput::make('sku')
@@ -53,17 +53,17 @@ class InventoryItemResource extends Resource
                                     ->required()
                                     ->unique(ignoreRecord: true)
                                     ->placeholder('PROD-001'),
-                                    
+
                                 Forms\Components\TextInput::make('name')
                                     ->label('Item Name')
                                     ->required()
                                     ->placeholder('Product Name'),
                             ]),
-                            
+
                         Forms\Components\Textarea::make('description')
                             ->label('Description')
                             ->rows(2),
-                            
+
                         Forms\Components\Grid::make(2)
                             ->schema([
                                 Forms\Components\Select::make('category')
@@ -81,7 +81,7 @@ class InventoryItemResource extends Resource
                                         'other' => 'Other',
                                     ])
                                     ->searchable(),
-                                    
+
                                 Forms\Components\TextInput::make('supplier')
                                     ->label('Supplier')
                                     ->placeholder('Supplier name'),
@@ -98,17 +98,16 @@ class InventoryItemResource extends Resource
                                     ->required()
                                     ->default(0)
                                     ->minValue(0),
-                                    
+
                                 Forms\Components\TextInput::make('unit_cost')
                                     ->label('Unit Cost')
                                     ->numeric()
                                     ->required()
                                     ->prefix(fn ($get) => $get('currency') ?? 'USD')
                                     ->reactive()
-                                    ->afterStateUpdated(fn ($state, callable $set, $get) => 
-                                        $set('total_value', ($state ?? 0) * ($get('quantity') ?? 0))
+                                    ->afterStateUpdated(fn ($state, callable $set, $get) => $set('total_value', ($state ?? 0) * ($get('quantity') ?? 0))
                                     ),
-                                    
+
                                 Forms\Components\TextInput::make('total_value')
                                     ->label('Total Value')
                                     ->numeric()
@@ -116,7 +115,7 @@ class InventoryItemResource extends Resource
                                     ->dehydrated()
                                     ->prefix(fn ($get) => $get('currency') ?? 'USD'),
                             ]),
-                            
+
                         Forms\Components\Grid::make(3)
                             ->schema([
                                 Forms\Components\TextInput::make('reorder_point')
@@ -124,18 +123,18 @@ class InventoryItemResource extends Resource
                                     ->numeric()
                                     ->default(10)
                                     ->helperText('Alert when quantity falls below this'),
-                                    
+
                                 Forms\Components\TextInput::make('reorder_quantity')
                                     ->label('Reorder Quantity')
                                     ->numeric()
                                     ->default(50)
                                     ->helperText('Quantity to order when restocking'),
-                                    
+
                                 Forms\Components\TextInput::make('location')
                                     ->label('Storage Location')
                                     ->placeholder('Warehouse A, Shelf 3'),
                             ]),
-                            
+
                         Forms\Components\Hidden::make('currency'),
                     ]),
 
@@ -159,54 +158,59 @@ class InventoryItemResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('name')
                     ->label('Item Name')
                     ->searchable()
                     ->sortable()
                     ->description(fn ($record) => $record->description ? \Str::limit($record->description, 50) : null),
-                    
+
                 Tables\Columns\TextColumn::make('store.name')
                     ->label('Store')
                     ->sortable()
                     ->badge()
                     ->color('primary'),
-                    
+
                 Tables\Columns\TextColumn::make('quantity')
                     ->label('Stock')
                     ->sortable()
                     ->alignCenter()
                     ->badge()
                     ->color(function ($record) {
-                        if ($record->quantity <= 0) return 'danger';
-                        if ($record->quantity <= $record->reorder_point) return 'warning';
+                        if ($record->quantity <= 0) {
+                            return 'danger';
+                        }
+                        if ($record->quantity <= $record->reorder_point) {
+                            return 'warning';
+                        }
+
                         return 'success';
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('unit_cost')
                     ->label('Unit Cost')
                     ->money(fn ($record) => $record->currency)
                     ->sortable()
                     ->alignEnd(),
-                    
+
                 Tables\Columns\TextColumn::make('total_value')
                     ->label('Total Value')
                     ->money(fn ($record) => $record->currency)
                     ->sortable()
                     ->alignEnd()
                     ->weight('bold'),
-                    
+
                 Tables\Columns\TextColumn::make('category')
                     ->label('Category')
                     ->badge()
                     ->color('gray')
                     ->toggleable(),
-                    
+
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean()
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
                 Tables\Columns\TextColumn::make('last_restocked_at')
                     ->label('Last Restocked')
                     ->dateTime('M j, Y')
@@ -217,7 +221,7 @@ class InventoryItemResource extends Resource
                 Tables\Filters\SelectFilter::make('store_id')
                     ->label('Store')
                     ->relationship('store', 'name'),
-                    
+
                 Tables\Filters\SelectFilter::make('category')
                     ->options([
                         'electronics' => 'Electronics',
@@ -231,14 +235,14 @@ class InventoryItemResource extends Resource
                         'food' => 'Food & Beverage',
                         'other' => 'Other',
                     ]),
-                    
+
                 Tables\Filters\TernaryFilter::make('low_stock')
                     ->label('Low Stock')
                     ->queries(
                         true: fn ($query) => $query->whereRaw('quantity <= reorder_point'),
                         false: fn ($query) => $query->whereRaw('quantity > reorder_point'),
                     ),
-                    
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Active'),
             ])
@@ -253,7 +257,7 @@ class InventoryItemResource extends Resource
                             ->numeric()
                             ->required()
                             ->helperText('Positive to add, negative to remove'),
-                            
+
                         Forms\Components\Select::make('reason')
                             ->label('Reason')
                             ->options([
@@ -265,7 +269,7 @@ class InventoryItemResource extends Resource
                                 'other' => 'Other',
                             ])
                             ->required(),
-                            
+
                         Forms\Components\Textarea::make('notes')
                             ->label('Notes')
                             ->rows(2),
@@ -273,15 +277,15 @@ class InventoryItemResource extends Resource
                     ->action(function ($record, array $data) {
                         $record->adjustQuantity(
                             $data['adjustment'],
-                            $data['reason'] . ($data['notes'] ? ': ' . $data['notes'] : '')
+                            $data['reason'].($data['notes'] ? ': '.$data['notes'] : '')
                         );
-                        
+
                         \Filament\Notifications\Notification::make()
                             ->title('Stock adjusted successfully')
                             ->success()
                             ->send();
                     }),
-                    
+
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
@@ -314,20 +318,18 @@ class InventoryItemResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->whereHas('store', fn ($query) => 
-                $query->where('company_id', Auth::user()->company_id)
+            ->whereHas('store', fn ($query) => $query->where('company_id', Auth::user()->company_id)
             );
     }
 
     public static function getNavigationBadge(): ?string
     {
-        $lowStockCount = static::getModel()::whereHas('store', fn ($query) => 
-                $query->where('company_id', Auth::user()->company_id)
-            )
+        $lowStockCount = static::getModel()::whereHas('store', fn ($query) => $query->where('company_id', Auth::user()->company_id)
+        )
             ->where('is_active', true)
             ->whereRaw('quantity <= reorder_point')
             ->count();
-            
+
         return $lowStockCount > 0 ? $lowStockCount : null;
     }
 

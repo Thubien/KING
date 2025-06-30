@@ -17,7 +17,7 @@ return new class extends Migration
             $table->enum('status', ['PENDING_INVITATION', 'ACTIVE', 'INACTIVE'])->default('ACTIVE')->change();
             $table->timestamp('invited_at')->nullable()->after('invitation_token');
             $table->timestamp('activated_at')->nullable()->after('invited_at');
-            
+
             $table->index('invitation_token');
         });
     }

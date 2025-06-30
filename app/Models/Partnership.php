@@ -2,14 +2,11 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Validation\ValidationException;
 use Illuminate\Support\Facades\Cache;
-use App\Mail\PartnerInvitationMail;
-use Illuminate\Support\Facades\Mail;
+use Illuminate\Validation\ValidationException;
 
 class Partnership extends Model
 {
@@ -17,7 +14,7 @@ class Partnership extends Model
 
     protected $fillable = [
         'store_id',
-        'user_id', 
+        'user_id',
         'partner_email',
         'invitation_token',
         'invited_at',
@@ -82,7 +79,7 @@ class Partnership extends Model
     {
         if ($this->ownership_percentage < 0.01 || $this->ownership_percentage > 100.00) {
             throw ValidationException::withMessages([
-                'ownership_percentage' => 'Ownership percentage must be between 0.01% and 100.00%.'
+                'ownership_percentage' => 'Ownership percentage must be between 0.01% and 100.00%.',
             ]);
         }
 
@@ -93,7 +90,7 @@ class Partnership extends Model
 
         if (($currentTotal + $this->ownership_percentage) > 100.01) {
             throw ValidationException::withMessages([
-                'ownership_percentage' => 'Total ownership cannot exceed 100%.'
+                'ownership_percentage' => 'Total ownership cannot exceed 100%.',
             ]);
         }
     }
@@ -103,14 +100,14 @@ class Partnership extends Model
     {
         return $totalProfit * ($this->ownership_percentage / 100);
     }
-    
+
     // Debt Management Methods
-    public function addDebt(float $amount, string $description = null): void
+    public function addDebt(float $amount, ?string $description = null): void
     {
         $this->debt_balance += $amount;
         $this->debt_last_updated_at = now();
         $this->save();
-        
+
         // Log the debt transaction
         \Log::info('Partner debt increased', [
             'partnership_id' => $this->id,
@@ -118,16 +115,16 @@ class Partnership extends Model
             'store_id' => $this->store_id,
             'amount' => $amount,
             'new_balance' => $this->debt_balance,
-            'description' => $description
+            'description' => $description,
         ]);
     }
-    
-    public function reduceDebt(float $amount, string $description = null): void
+
+    public function reduceDebt(float $amount, ?string $description = null): void
     {
         $this->debt_balance -= $amount;
         $this->debt_last_updated_at = now();
         $this->save();
-        
+
         // Log the debt transaction
         \Log::info('Partner debt reduced', [
             'partnership_id' => $this->id,
@@ -135,20 +132,20 @@ class Partnership extends Model
             'store_id' => $this->store_id,
             'amount' => $amount,
             'new_balance' => $this->debt_balance,
-            'description' => $description
+            'description' => $description,
         ]);
     }
-    
+
     public function hasDebt(): bool
     {
         return $this->debt_balance > 0;
     }
-    
+
     public function hasCredit(): bool
     {
         return $this->debt_balance < 0;
     }
-    
+
     public function getDebtStatus(): string
     {
         if ($this->debt_balance > 0) {
@@ -156,19 +153,21 @@ class Partnership extends Model
         } elseif ($this->debt_balance < 0) {
             return 'has_credit';
         }
+
         return 'no_debt';
     }
-    
+
     public function getFormattedDebtBalance(): string
     {
         $amount = abs($this->debt_balance);
         $currency = $this->store->currency ?? 'USD';
-        
+
         if ($this->debt_balance > 0) {
-            return "-{$currency} " . number_format($amount, 2); // Owes money
+            return "-{$currency} ".number_format($amount, 2); // Owes money
         } elseif ($this->debt_balance < 0) {
-            return "+{$currency} " . number_format($amount, 2); // Has credit
+            return "+{$currency} ".number_format($amount, 2); // Has credit
         }
+
         return "{$currency} 0.00";
     }
 
@@ -185,11 +184,11 @@ class Partnership extends Model
 
     public function sendInvitationEmail(): void
     {
-        if (!$this->partner_email) {
+        if (! $this->partner_email) {
             throw new \Exception('Partner email is required to send invitation.');
         }
 
-        if (!$this->invitation_token) {
+        if (! $this->invitation_token) {
             $this->generateInvitationToken();
         }
 
@@ -198,9 +197,9 @@ class Partnership extends Model
 
     public function isInvitationValid(): bool
     {
-        return $this->status === 'PENDING_INVITATION' 
-            && $this->invitation_token 
-            && $this->invited_at 
+        return $this->status === 'PENDING_INVITATION'
+            && $this->invitation_token
+            && $this->invited_at
             && $this->invited_at->greaterThan(now()->subDays(7));
     }
 
@@ -262,7 +261,7 @@ class Partnership extends Model
             Cache::forget("user:{$this->user_id}:active_partnerships");
             Cache::forget("user:{$this->user_id}:total_ownership");
         }
-        
+
         Cache::forget("store:{$this->store_id}:partnerships");
         Cache::forget("store:{$this->store_id}:total_ownership");
     }

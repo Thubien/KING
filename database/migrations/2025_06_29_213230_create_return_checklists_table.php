@@ -20,7 +20,7 @@ return new class extends Migration
             $table->timestamp('checked_at')->nullable();
             $table->foreignId('checked_by')->nullable()->constrained('users');
             $table->timestamps();
-            
+
             $table->index(['return_request_id', 'stage']);
         });
     }

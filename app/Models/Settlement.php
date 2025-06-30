@@ -2,8 +2,8 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Settlement extends Model
@@ -42,16 +42,24 @@ class Settlement extends Model
 
     // Status constants
     const STATUS_PENDING = 'pending';
+
     const STATUS_APPROVED = 'approved';
+
     const STATUS_REJECTED = 'rejected';
+
     const STATUS_COMPLETED = 'completed';
+
     const STATUS_CANCELLED = 'cancelled';
 
     // Settlement type constants
     const TYPE_PAYMENT = 'payment';           // Partner pays back debt
+
     const TYPE_WITHDRAWAL = 'withdrawal';     // Partner withdraws profit (creates debt)
+
     const TYPE_EXPENSE = 'expense';           // Personal expense settlement
+
     const TYPE_ADJUSTMENT = 'adjustment';     // Manual adjustment
+
     const TYPE_PROFIT_SHARE = 'profit_share'; // Profit distribution
 
     // Relationships
@@ -108,9 +116,9 @@ class Settlement extends Model
     }
 
     // Business logic
-    public function approve(User $approver, string $paymentReference = null): void
+    public function approve(User $approver, ?string $paymentReference = null): void
     {
-        if (!$this->canBeApproved()) {
+        if (! $this->canBeApproved()) {
             throw new \Exception('Settlement cannot be approved in current status.');
         }
 
@@ -135,7 +143,7 @@ class Settlement extends Model
 
     public function reject(User $rejecter, string $reason): void
     {
-        if (!$this->canBeApproved()) {
+        if (! $this->canBeApproved()) {
             throw new \Exception('Settlement cannot be rejected in current status.');
         }
 
@@ -189,13 +197,13 @@ class Settlement extends Model
         } elseif (in_array($this->settlement_type, [self::TYPE_WITHDRAWAL, self::TYPE_EXPENSE])) {
             $prefix = '+'; // Increasing debt
         }
-        
-        return $prefix . $this->currency . ' ' . number_format($this->amount, 2);
+
+        return $prefix.$this->currency.' '.number_format($this->amount, 2);
     }
 
     public function getTypeColor(): string
     {
-        return match($this->settlement_type) {
+        return match ($this->settlement_type) {
             self::TYPE_PAYMENT => 'success',
             self::TYPE_WITHDRAWAL => 'warning',
             self::TYPE_EXPENSE => 'danger',
@@ -207,7 +215,7 @@ class Settlement extends Model
 
     public function getStatusColor(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_PENDING => 'warning',
             self::STATUS_APPROVED => 'info',
             self::STATUS_COMPLETED => 'success',

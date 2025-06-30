@@ -22,9 +22,9 @@ class PartnerInvitationController extends Controller
             ->where('invited_at', '>', now()->subDays(7)) // Check if not expired
             ->first();
 
-        if (!$partnership) {
+        if (! $partnership) {
             return view('partnership.invalid-invitation')->with([
-                'message' => 'This invitation is invalid or has expired.'
+                'message' => 'This invitation is invalid or has expired.',
             ]);
         }
 
@@ -48,7 +48,7 @@ class PartnerInvitationController extends Controller
             ->where('invited_at', '>', now()->subDays(7))
             ->first();
 
-        if (!$partnership) {
+        if (! $partnership) {
             return redirect()->route('partnership.invalid')
                 ->with('error', 'This invitation is invalid or has expired.');
         }
@@ -67,7 +67,7 @@ class PartnerInvitationController extends Controller
 
         // Check if user already exists with this email
         $existingUser = User::where('email', $partnership->partner_email)->first();
-        
+
         if ($existingUser) {
             return redirect()->back()
                 ->with('error', 'A user with this email already exists. Please contact the administrator.')
@@ -108,7 +108,7 @@ class PartnerInvitationController extends Controller
     public function invalidInvitation()
     {
         return view('partnership.invalid-invitation', [
-            'message' => 'This invitation link is invalid or has expired.'
+            'message' => 'This invitation link is invalid or has expired.',
         ]);
     }
 }

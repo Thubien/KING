@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\PartnershipResource\Pages;
 
 use App\Filament\Resources\PartnershipResource;
-use Filament\Actions;
-use Filament\Resources\Pages\CreateRecord;
 use Filament\Notifications\Notification;
+use Filament\Resources\Pages\CreateRecord;
 
 class CreatePartnership extends CreateRecord
 {
@@ -16,7 +15,7 @@ class CreatePartnership extends CreateRecord
         $partnership = $this->record;
 
         // If partner_email is provided but no user_id, send invitation
-        if ($partnership->partner_email && !$partnership->user_id) {
+        if ($partnership->partner_email && ! $partnership->user_id) {
             try {
                 $partnership->generateInvitationToken();
                 $partnership->sendInvitationEmail();
@@ -39,7 +38,7 @@ class CreatePartnership extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         // If partner_email is provided but no user_id, set status to PENDING_INVITATION
-        if (!empty($data['partner_email']) && empty($data['user_id'])) {
+        if (! empty($data['partner_email']) && empty($data['user_id'])) {
             $data['status'] = 'PENDING_INVITATION';
         }
 

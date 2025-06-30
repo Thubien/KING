@@ -18,7 +18,7 @@ return new class extends Migration
             $table->timestamp('last_login_at')->nullable();
             $table->string('avatar_url')->nullable();
             $table->boolean('is_active')->default(true);
-            
+
             // Indexes
             $table->index(['company_id', 'user_type']);
             $table->index(['company_id', 'is_active']);
@@ -39,7 +39,7 @@ return new class extends Migration
                 'preferences',
                 'last_login_at',
                 'avatar_url',
-                'is_active'
+                'is_active',
             ]);
         });
     }

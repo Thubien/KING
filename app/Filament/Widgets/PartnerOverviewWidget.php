@@ -3,7 +3,6 @@
 namespace App\Filament\Widgets;
 
 use App\Models\Partnership;
-use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 
@@ -12,21 +11,21 @@ class PartnerOverviewWidget extends BaseWidget
     protected function getStats(): array
     {
         $user = auth()->user();
-        
+
         $pendingInvitations = Partnership::whereHas('store', function ($query) use ($user) {
             $query->where('company_id', $user->company_id);
         })->where('status', 'PENDING_INVITATION')->count();
-        
+
         $activePartners = Partnership::whereHas('store', function ($query) use ($user) {
             $query->where('company_id', $user->company_id);
         })->where('status', 'ACTIVE')->count();
-        
+
         $expiredInvitations = Partnership::whereHas('store', function ($query) use ($user) {
             $query->where('company_id', $user->company_id);
         })
-        ->where('status', 'PENDING_INVITATION')
-        ->where('invited_at', '<=', now()->subDays(7))
-        ->count();
+            ->where('status', 'PENDING_INVITATION')
+            ->where('invited_at', '<=', now()->subDays(7))
+            ->count();
 
         return [
             Stat::make('Active Partners', $activePartners)

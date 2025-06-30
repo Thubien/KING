@@ -2,11 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Builder;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PaymentProcessorAccount extends Model
 {
@@ -36,8 +35,11 @@ class PaymentProcessorAccount extends Model
 
     // Processor types
     const TYPE_STRIPE = 'STRIPE';
+
     const TYPE_PAYPAL = 'PAYPAL';
+
     const TYPE_SHOPIFY_PAYMENTS = 'SHOPIFY_PAYMENTS';
+
     const TYPE_MANUAL = 'MANUAL'; // Manuel CSV girişleri için
 
     // Global scope for multi-tenancy
@@ -93,14 +95,14 @@ class PaymentProcessorAccount extends Model
         return $this->current_balance;
     }
 
-    public function addPendingBalance(float $amount, string $description = null): void
+    public function addPendingBalance(float $amount, ?string $description = null): void
     {
         $this->increment('pending_balance', $amount);
-        
+
         $this->logBalanceChange('pending_added', $amount, $description);
     }
 
-    public function movePendingToCurrent(float $amount, string $description = null): void
+    public function movePendingToCurrent(float $amount, ?string $description = null): void
     {
         if ($amount > $this->pending_balance) {
             throw new \InvalidArgumentException('Amount exceeds pending balance');
@@ -108,29 +110,29 @@ class PaymentProcessorAccount extends Model
 
         $this->decrement('pending_balance', $amount);
         $this->increment('current_balance', $amount);
-        
+
         $this->logBalanceChange('pending_to_current', $amount, $description);
     }
 
-    public function addCurrentBalance(float $amount, string $description = null): void
+    public function addCurrentBalance(float $amount, ?string $description = null): void
     {
         $this->increment('current_balance', $amount);
-        
+
         $this->logBalanceChange('current_added', $amount, $description);
     }
 
-    public function withdrawCurrentBalance(float $amount, string $description = null): void
+    public function withdrawCurrentBalance(float $amount, ?string $description = null): void
     {
         if ($amount > $this->current_balance) {
             throw new \InvalidArgumentException('Amount exceeds current balance');
         }
 
         $this->decrement('current_balance', $amount);
-        
+
         $this->logBalanceChange('current_withdrawn', $amount, $description);
     }
 
-    private function logBalanceChange(string $type, float $amount, string $description = null): void
+    private function logBalanceChange(string $type, float $amount, ?string $description = null): void
     {
         // Log for audit trail
         \Log::info('Payment Processor Balance Change', [
@@ -141,7 +143,7 @@ class PaymentProcessorAccount extends Model
             'description' => $description,
             'current_balance' => $this->current_balance,
             'pending_balance' => $this->pending_balance,
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
     }
 
@@ -157,7 +159,7 @@ class PaymentProcessorAccount extends Model
         $bankTotal = BankAccount::where('company_id', $companyId)->sum('current_balance');
         $processorTotal = self::where('company_id', $companyId)
             ->sum(\DB::raw('current_balance + pending_balance'));
-            
+
         return $bankTotal + $processorTotal;
     }
 
@@ -165,9 +167,9 @@ class PaymentProcessorAccount extends Model
     {
         $processors = [
             self::TYPE_STRIPE,
-            self::TYPE_PAYPAL, 
+            self::TYPE_PAYPAL,
             self::TYPE_SHOPIFY_PAYMENTS,
-            self::TYPE_MANUAL
+            self::TYPE_MANUAL,
         ];
 
         $accounts = [];
@@ -178,7 +180,7 @@ class PaymentProcessorAccount extends Model
                 'currency' => $currency,
                 'current_balance' => 0,
                 'pending_balance' => 0,
-                'is_active' => true
+                'is_active' => true,
             ]);
         }
 
@@ -192,7 +194,7 @@ class PaymentProcessorAccount extends Model
             self::TYPE_STRIPE => 'Stripe',
             self::TYPE_PAYPAL => 'PayPal',
             self::TYPE_SHOPIFY_PAYMENTS => 'Shopify Payments',
-            self::TYPE_MANUAL => 'Manual Entry'
+            self::TYPE_MANUAL => 'Manual Entry',
         ];
 
         return $names[$this->processor_type] ?? $this->processor_type;
@@ -200,16 +202,16 @@ class PaymentProcessorAccount extends Model
 
     public function getFormattedCurrentBalance(): string
     {
-        return number_format($this->current_balance, 2) . ' ' . $this->currency;
+        return number_format($this->current_balance, 2).' '.$this->currency;
     }
 
     public function getFormattedPendingBalance(): string
     {
-        return number_format($this->pending_balance, 2) . ' ' . $this->currency;
+        return number_format($this->pending_balance, 2).' '.$this->currency;
     }
 
     public function getFormattedTotalBalance(): string
     {
-        return number_format($this->getTotalBalance(), 2) . ' ' . $this->currency;
+        return number_format($this->getTotalBalance(), 2).' '.$this->currency;
     }
 }

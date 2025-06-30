@@ -2,16 +2,16 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
-use App\Models\User;
-use App\Models\Store;
-use App\Models\Partnership;
 use App\Models\BankAccount;
+use App\Models\Company;
+use App\Models\Partnership;
 use App\Models\PaymentProcessorAccount;
+use App\Models\Store;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
+use Spatie\Permission\Models\Role;
 
 class SuperAdminSeeder extends Seeder
 {

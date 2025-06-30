@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamp('last_sync_at')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
-            
+
             // Performance indexes
             $table->index(['company_id', 'processor_type']);
             $table->index(['processor_type', 'currency']);

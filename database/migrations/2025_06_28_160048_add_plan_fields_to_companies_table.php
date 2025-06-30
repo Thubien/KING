@@ -16,11 +16,11 @@ return new class extends Migration
             $table->boolean('api_integrations_enabled')->default(false)->after('trial_ends_at');
             $table->boolean('webhooks_enabled')->default(false)->after('api_integrations_enabled');
             $table->boolean('real_time_sync_enabled')->default(false)->after('webhooks_enabled');
-            
+
             // Usage Tracking
             $table->integer('api_calls_this_month')->default(0)->after('real_time_sync_enabled');
             $table->integer('max_api_calls_per_month')->default(0)->after('api_calls_this_month');
-            
+
             // Billing
             $table->string('stripe_customer_id')->nullable()->after('max_api_calls_per_month');
             $table->string('stripe_subscription_id')->nullable()->after('stripe_customer_id');
@@ -44,7 +44,7 @@ return new class extends Migration
                 'stripe_customer_id',
                 'stripe_subscription_id',
                 'last_payment_at',
-                'next_billing_date'
+                'next_billing_date',
             ]);
         });
     }

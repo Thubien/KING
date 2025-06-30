@@ -2,20 +2,20 @@
 
 namespace App\Filament\Pages;
 
-use Filament\Pages\Page;
 use Filament\Actions\Action;
+use Filament\Pages\Page;
 use Illuminate\Support\Facades\Auth;
 
 class Overview extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
-    
+
     protected static string $view = 'filament.pages.overview';
-    
+
     protected static ?string $title = 'Business Overview';
-    
+
     protected static ?string $navigationLabel = 'Overview';
-    
+
     protected static ?int $navigationSort = 0;
 
     public static function shouldRegisterNavigation(): bool
@@ -53,21 +53,11 @@ class Overview extends Page
 
     protected function getHeaderWidgets(): array
     {
-        if (Auth::user()->isCompanyOwner() || Auth::user()->isAdmin()) {
-            return [
-                \App\Filament\Widgets\FinancialOverviewWidget::class,
-                \App\Filament\Widgets\StoreOverviewWidget::class,
-                \App\Filament\Widgets\PartnerOverviewWidget::class,
-            ];
-        }
-
         return [];
     }
 
     protected function getFooterWidgets(): array
     {
-        return [
-            \App\Filament\Widgets\RecentActivityWidget::class,
-        ];
+        return [];
     }
 }

@@ -16,13 +16,13 @@ class ImportBatchResource extends Resource
     protected static ?string $model = ImportBatch::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-up-tray';
-    
+
     protected static ?string $navigationLabel = 'Import History';
-    
+
     protected static ?string $modelLabel = 'Import Batch';
-    
+
     protected static ?int $navigationSort = 4;
-    
+
     public static function shouldRegisterNavigation(): bool
     {
         return false; // Hide from navigation
@@ -43,7 +43,7 @@ class ImportBatchResource extends Resource
                         Forms\Components\TextInput::make('batch_id')
                             ->label('Batch ID')
                             ->disabled(),
-                            
+
                         Forms\Components\Select::make('import_type')
                             ->label('Import Type')
                             ->options([
@@ -55,7 +55,7 @@ class ImportBatchResource extends Resource
                                 'api' => 'API Import',
                             ])
                             ->disabled(),
-                            
+
                         Forms\Components\Select::make('source_type')
                             ->label('Source')
                             ->options([
@@ -69,63 +69,63 @@ class ImportBatchResource extends Resource
                             ->disabled(),
                     ])
                     ->columns(3),
-                    
+
                 Forms\Components\Section::make('File Information')
                     ->schema([
                         Forms\Components\TextInput::make('original_filename')
                             ->label('Original Filename')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('formatted_file_size')
                             ->label('File Size')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('mime_type')
                             ->label('File Type')
                             ->disabled(),
                     ])
                     ->columns(3)
-                    ->visible(fn ($record) => !empty($record->original_filename)),
-                    
+                    ->visible(fn ($record) => ! empty($record->original_filename)),
+
                 Forms\Components\Section::make('Processing Results')
                     ->schema([
                         Forms\Components\TextInput::make('total_records')
                             ->label('Total Records')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('successful_records')
                             ->label('Successful')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('failed_records')
                             ->label('Failed')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('duplicate_records')
                             ->label('Duplicates')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('progress_percentage')
                             ->label('Progress')
                             ->suffix('%')
                             ->disabled(),
-                            
+
                         Forms\Components\TextInput::make('success_rate')
                             ->label('Success Rate')
                             ->suffix('%')
                             ->disabled(),
                     ])
                     ->columns(3),
-                    
+
                 Forms\Components\Section::make('Additional Information')
                     ->schema([
                         Forms\Components\Textarea::make('notes')
                             ->label('Notes')
                             ->rows(3),
-                            
+
                         Forms\Components\Textarea::make('error_message')
                             ->label('Error Message')
-                            ->visible(fn ($record) => !empty($record->error_message))
+                            ->visible(fn ($record) => ! empty($record->error_message))
                             ->disabled()
                             ->rows(2),
                     ])
@@ -141,21 +141,21 @@ class ImportBatchResource extends Resource
                     ->label('Batch ID')
                     ->searchable()
                     ->copyable(),
-                    
+
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
                         'secondary' => 'pending',
-                        'warning' => 'processing', 
+                        'warning' => 'processing',
                         'success' => 'completed',
                         'danger' => 'failed',
                         'gray' => 'cancelled',
                     ]),
-                    
+
                 Tables\Columns\TextColumn::make('import_type')
                     ->label('Type')
                     ->formatStateUsing(function ($state) {
-                        return match($state) {
+                        return match ($state) {
                             'csv' => 'CSV',
                             'shopify' => 'Shopify',
                             'stripe' => 'Stripe',
@@ -165,11 +165,11 @@ class ImportBatchResource extends Resource
                             default => ucfirst($state)
                         };
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('source_type')
                     ->label('Source')
                     ->formatStateUsing(function ($state) {
-                        return match($state) {
+                        return match ($state) {
                             'payoneer' => 'Payoneer',
                             'mercury' => 'Mercury',
                             'stripe' => 'Stripe',
@@ -179,51 +179,51 @@ class ImportBatchResource extends Resource
                             default => ucfirst($state ?? 'Unknown')
                         };
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('original_filename')
                     ->label('File')
                     ->limit(30)
                     ->tooltip(fn ($record) => $record ? $record->original_filename : ''),
-                    
+
                 Tables\Columns\TextColumn::make('total_records')
                     ->label('Records')
                     ->alignRight()
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('progress_percentage')
                     ->label('Progress')
                     ->alignRight()
-                    ->formatStateUsing(fn ($record) => $record ? $record->getProgressPercentage() . '%' : '0%')
-                    ->color(fn ($record) => match(true) {
+                    ->formatStateUsing(fn ($record) => $record ? $record->getProgressPercentage().'%' : '0%')
+                    ->color(fn ($record) => match (true) {
                         $record->getProgressPercentage() == 100 => 'success',
                         $record->getProgressPercentage() > 50 => 'warning',
                         default => 'gray'
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('success_rate')
                     ->label('Success Rate')
                     ->alignRight()
-                    ->formatStateUsing(fn ($record) => $record ? $record->getSuccessRate() . '%' : '0%')
-                    ->color(fn ($record) => match(true) {
+                    ->formatStateUsing(fn ($record) => $record ? $record->getSuccessRate().'%' : '0%')
+                    ->color(fn ($record) => match (true) {
                         $record->getSuccessRate() >= 90 => 'success',
                         $record->getSuccessRate() >= 70 => 'warning',
                         default => 'danger'
                     }),
-                    
+
                 Tables\Columns\TextColumn::make('duration_formatted')
                     ->label('Duration')
                     ->alignRight()
                     ->formatStateUsing(fn ($record) => $record ? $record->getDurationFormatted() : 'N/A'),
-                    
+
                 Tables\Columns\TextColumn::make('initiator.name')
                     ->label('Initiated By')
                     ->sortable(),
-                    
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Started')
                     ->dateTime()
                     ->sortable(),
-                    
+
                 Tables\Columns\IconColumn::make('requires_review')
                     ->label('Review')
                     ->boolean()
@@ -238,7 +238,7 @@ class ImportBatchResource extends Resource
                         'failed' => 'Failed',
                         'cancelled' => 'Cancelled',
                     ]),
-                    
+
                 Tables\Filters\SelectFilter::make('import_type')
                     ->label('Import Type')
                     ->options([
@@ -249,7 +249,7 @@ class ImportBatchResource extends Resource
                         'manual' => 'Manual',
                         'api' => 'API',
                     ]),
-                    
+
                 Tables\Filters\SelectFilter::make('source_type')
                     ->label('Source')
                     ->options([
@@ -260,23 +260,23 @@ class ImportBatchResource extends Resource
                         'bank' => 'Bank',
                         'other' => 'Other',
                     ]),
-                    
+
                 Tables\Filters\Filter::make('requires_review')
                     ->label('Requires Review')
                     ->query(fn (Builder $query) => $query->where('requires_review', true)),
-                    
+
                 Tables\Filters\Filter::make('has_errors')
                     ->label('Has Errors')
                     ->query(fn (Builder $query) => $query->where(function ($q) {
                         $q->whereNotNull('error_message')
-                          ->orWhereNotNull('errors');
+                            ->orWhereNotNull('errors');
                     })),
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record && $record->status === 'failed'),
-                    
+
                 Tables\Actions\Action::make('reprocess')
                     ->label('Reprocess')
                     ->icon('heroicon-o-arrow-path')
@@ -286,7 +286,7 @@ class ImportBatchResource extends Resource
                     ->action(function ($record) {
                         $orchestrator = app(\App\Services\Import\ImportOrchestrator::class);
                         $result = $orchestrator->reprocessImport($record);
-                        
+
                         if ($result->success) {
                             \Filament\Notifications\Notification::make()
                                 ->title('Import reprocessed successfully')

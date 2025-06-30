@@ -2,13 +2,12 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class Company extends Model
 {
@@ -63,22 +62,22 @@ class Company extends Model
     protected static function boot()
     {
         parent::boot();
-        
+
         static::creating(function ($company) {
-            if (!$company->slug) {
+            if (! $company->slug) {
                 $company->slug = Str::slug($company->name);
-                
+
                 // Ensure unique slug
                 $originalSlug = $company->slug;
                 $count = 1;
                 while (static::where('slug', $company->slug)->exists()) {
-                    $company->slug = $originalSlug . '-' . $count;
+                    $company->slug = $originalSlug.'-'.$count;
                     $count++;
                 }
             }
-            
+
             // Set trial period for new companies
-            if (!$company->trial_ends_at && $company->is_trial) {
+            if (! $company->trial_ends_at && $company->is_trial) {
                 $company->trial_ends_at = now()->addDays(14);
             }
         });
@@ -153,15 +152,15 @@ class Company extends Model
             return true;
         }
 
-        return !$this->is_trial && 
-               $this->plan_expires_at && 
-               $this->plan_expires_at->isFuture() && 
+        return ! $this->is_trial &&
+               $this->plan_expires_at &&
+               $this->plan_expires_at->isFuture() &&
                $this->isActive();
     }
 
     public function getMaxStores(): int
     {
-        return match($this->plan) {
+        return match ($this->plan) {
             'starter' => 3,
             'professional' => 10,
             'enterprise' => 999,
@@ -176,7 +175,7 @@ class Company extends Model
 
     public function getTrialDaysRemaining(): int
     {
-        if (!$this->isOnTrial()) {
+        if (! $this->isOnTrial()) {
             return 0;
         }
 
@@ -193,7 +192,7 @@ class Company extends Model
     public function getSubscriptionPlan(): string
     {
         // Map existing plan enum to subscription plan naming
-        return match($this->plan) {
+        return match ($this->plan) {
             'starter' => 'free',
             'professional' => 'premium',
             'enterprise' => 'enterprise',
@@ -203,22 +202,22 @@ class Company extends Model
 
     public function canUseApiIntegrations(): bool
     {
-        return $this->api_integrations_enabled || 
-               $this->getSubscriptionPlan() !== 'free' || 
+        return $this->api_integrations_enabled ||
+               $this->getSubscriptionPlan() !== 'free' ||
                $this->isOnTrial();
     }
 
     public function canUseWebhooks(): bool
     {
-        return $this->webhooks_enabled || 
-               in_array($this->getSubscriptionPlan(), ['premium', 'enterprise']) || 
+        return $this->webhooks_enabled ||
+               in_array($this->getSubscriptionPlan(), ['premium', 'enterprise']) ||
                $this->isOnTrial();
     }
 
     public function canUseRealTimeSync(): bool
     {
-        return $this->real_time_sync_enabled || 
-               $this->getSubscriptionPlan() === 'enterprise' || 
+        return $this->real_time_sync_enabled ||
+               $this->getSubscriptionPlan() === 'enterprise' ||
                $this->isOnTrial();
     }
 
@@ -228,7 +227,7 @@ class Company extends Model
             return $this->max_api_calls_per_month;
         }
 
-        return match($this->getSubscriptionPlan()) {
+        return match ($this->getSubscriptionPlan()) {
             'free' => 0,
             'premium' => 10000,
             'enterprise' => 100000,
@@ -266,7 +265,7 @@ class Company extends Model
         $array['subscription_plan'] = $this->getSubscriptionPlan();
         $array['can_use_api_integrations'] = $this->canUseApiIntegrations();
         $array['remaining_api_calls'] = $this->getRemainingApiCalls();
-        
+
         return $array;
     }
 }
