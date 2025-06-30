@@ -6,6 +6,7 @@ use App\Filament\Resources\CustomerResource\Pages;
 use App\Filament\Resources\CustomerResource\RelationManagers;
 use App\Models\Customer;
 use App\Models\Store;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -22,6 +23,7 @@ use Illuminate\Support\HtmlString;
 
 class CustomerResource extends Resource
 {
+    use HasSimpleAuthorization;
     protected static ?string $model = Customer::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
@@ -35,6 +37,18 @@ class CustomerResource extends Resource
     protected static ?int $navigationSort = 1;
     
     protected static ?string $navigationGroup = 'Customer Relations';
+
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'viewAny' => ['owner', 'partner', 'staff', 'super_admin'],
+            'view' => ['owner', 'partner', 'staff', 'super_admin'],
+            'create' => ['owner', 'partner', 'staff', 'super_admin'],
+            'update' => ['owner', 'partner', 'staff', 'super_admin'],
+            'delete' => ['owner', 'staff', 'super_admin'],
+            'deleteAny' => ['owner', 'super_admin'],
+        ];
+    }
 
     public static function form(Form $form): Form
     {

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\StoreCreditResource\Pages;
 use App\Filament\Resources\StoreCreditResource\RelationManagers;
 use App\Models\StoreCredit;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -19,6 +20,7 @@ use Filament\Support\Enums\FontWeight;
 
 class StoreCreditResource extends Resource
 {
+    use HasSimpleAuthorization;
     protected static ?string $model = StoreCredit::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-gift';
@@ -32,6 +34,18 @@ class StoreCreditResource extends Resource
     protected static ?int $navigationSort = 3;
     
     protected static ?string $navigationGroup = 'Sales & Orders';
+
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'viewAny' => ['owner', 'partner', 'staff', 'super_admin'],
+            'view' => ['owner', 'partner', 'staff', 'super_admin'],
+            'create' => ['owner', 'partner', 'staff', 'super_admin'],
+            'update' => ['owner', 'partner', 'staff', 'super_admin'],
+            'delete' => ['owner', 'staff', 'super_admin'],
+            'deleteAny' => ['owner', 'super_admin'],
+        ];
+    }
 
     public static function form(Form $form): Form
     {

@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ReturnRequestResource\Pages;
 use App\Filament\Resources\ReturnRequestResource\RelationManagers;
 use App\Models\ReturnRequest;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
@@ -19,6 +20,7 @@ use Filament\Tables\Table;
 
 class ReturnRequestResource extends Resource
 {
+    use HasSimpleAuthorization;
     protected static ?string $model = ReturnRequest::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-uturn-left';
@@ -32,6 +34,18 @@ class ReturnRequestResource extends Resource
     protected static ?string $navigationGroup = 'Sales & Orders';
 
     protected static ?int $navigationSort = 2;
+
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'viewAny' => ['owner', 'partner', 'staff', 'super_admin'],
+            'view' => ['owner', 'partner', 'staff', 'super_admin'],
+            'create' => ['owner', 'partner', 'staff', 'super_admin'],
+            'update' => ['owner', 'partner', 'staff', 'super_admin'],
+            'delete' => ['owner', 'staff', 'super_admin'],
+            'deleteAny' => ['owner', 'super_admin'],
+        ];
+    }
 
     public static function form(Form $form): Form
     {
