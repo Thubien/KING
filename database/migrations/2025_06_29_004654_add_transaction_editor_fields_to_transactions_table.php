@@ -28,7 +28,7 @@ return new class extends Migration
             $table->decimal('split_percentage', 5, 2)->nullable()->after('parent_transaction_id');
 
             // Smart suggestions tracking
-            $table->integer('suggestion_confidence')->default(0)->after('confidence_score');
+            $table->integer('suggestion_confidence')->default(0);
             $table->json('suggested_assignment')->nullable()->after('suggestion_confidence');
 
             // Indexes for performance
