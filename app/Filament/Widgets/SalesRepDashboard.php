@@ -89,7 +89,7 @@ class SalesRepDashboard extends BaseWidget
         $topRep = $salesReps->sortByDesc(fn ($rep) => $rep->getMonthlySales())->first();
 
         return [
-            Stat::make('🏢 Company Sales', Number::currency($totalMonthlySales, 'USD'))
+            Stat::make('Company Sales', Number::currency($totalMonthlySales, 'USD'))
                 ->description('Total manual sales this month')
                 ->descriptionIcon('heroicon-m-building-office')
                 ->color('success'),

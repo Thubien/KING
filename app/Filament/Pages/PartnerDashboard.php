@@ -7,15 +7,17 @@ use Illuminate\Support\Facades\Auth;
 
 class PartnerDashboard extends Page
 {
-    protected static ?string $navigationIcon = 'heroicon-o-home';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-pie';
 
     protected static string $view = 'filament.pages.partner-dashboard';
 
-    protected static ?string $title = 'Partner Dashboard';
+    protected static ?string $title = 'Partner Performance Dashboard';
 
-    protected static ?string $navigationLabel = 'Dashboard';
+    protected static ?string $navigationLabel = 'Partner Dashboard';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationGroup = 'Dashboard & Analytics';
+
+    protected static ?int $navigationSort = 3;
 
     public static function canAccess(): bool
     {

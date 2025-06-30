@@ -24,7 +24,7 @@ class TransactionResource extends Resource
     
     protected static ?string $navigationGroup = 'Financial Management';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 1;
 
     // SIMPLIFIED AUTHORIZATION
     protected static function getResourcePermissions(): array

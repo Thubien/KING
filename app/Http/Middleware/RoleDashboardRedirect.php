@@ -15,7 +15,17 @@ class RoleDashboardRedirect
         $user = auth()->user();
 
         // Only redirect on dashboard access
-        if (!$user || !$request->routeIs('filament.admin.pages.dashboard')) {
+        if (!$user) {
+            return $next($request);
+        }
+
+        // Check if we're on the dashboard route
+        try {
+            if (!$request->routeIs('filament.admin.pages.dashboard')) {
+                return $next($request);
+            }
+        } catch (\Exception $e) {
+            // Route checking failed, just continue
             return $next($request);
         }
 

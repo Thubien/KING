@@ -13,8 +13,9 @@ class GeneralReport extends Page
 {
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?string $navigationLabel = 'General Report';
-    protected static ?string $title = 'General Report';
-    protected static ?int $navigationSort = 5;
+    protected static ?string $title = 'Financial Performance Report';
+    protected static ?string $navigationGroup = 'Dashboard & Analytics';
+    protected static ?int $navigationSort = 4;
     protected static string $view = 'filament.pages.general-report';
 
     // Filtreler

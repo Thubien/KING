@@ -15,17 +15,19 @@ class ImportBatchResource extends Resource
 {
     protected static ?string $model = ImportBatch::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-arrow-up-tray';
+    protected static ?string $navigationIcon = 'heroicon-o-chart-bar';
 
     protected static ?string $navigationLabel = 'Import History';
 
+    protected static ?string $navigationGroup = 'System & Analytics';
+
     protected static ?string $modelLabel = 'Import Batch';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 1;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return false; // Hide from navigation
+        return auth()->user()?->isCompanyOwner() || auth()->user()?->isAdmin();
     }
 
     // Enable create action that redirects to import page

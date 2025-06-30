@@ -21,11 +21,11 @@ class SettlementResource extends Resource
 
     protected static ?string $navigationLabel = 'Debt Settlements';
 
-    protected static ?string $navigationGroup = 'Partnership';
+    protected static ?string $navigationGroup = 'Financial Management';
 
     protected static ?string $modelLabel = 'Settlement';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 4;
 
     public static function getEloquentQuery(): Builder
     {

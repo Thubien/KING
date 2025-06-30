@@ -26,15 +26,16 @@ class ImportTransactions extends Page implements HasForms
 
     protected static ?string $navigationLabel = 'Import Transactions';
 
-    protected static ?string $title = 'Import Transactions';
+    protected static ?string $title = 'Import Transactions from CSV/Excel';
 
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationGroup = 'System & Analytics';
 
-    protected static ?string $navigationGroup = 'Financial';
+    protected static ?int $navigationSort = 2;
 
     public static function shouldRegisterNavigation(): bool
     {
-        return false; // Hide from navigation
+        $user = auth()->user();
+        return $user?->isOwner() || $user?->isSuperAdmin(); // Show for owners and admins
     }
 
     protected static string $view = 'filament.pages.import-transactions';

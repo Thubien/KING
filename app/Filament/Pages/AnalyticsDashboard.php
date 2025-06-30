@@ -15,6 +15,8 @@ class AnalyticsDashboard extends Page
 
     protected static ?string $title = 'Business Analytics & Performance';
 
+    protected static ?string $navigationGroup = 'Dashboard & Analytics';
+
     protected static ?int $navigationSort = 2;
 
     public function getHeaderWidgets(): array

@@ -26,15 +26,15 @@ class CustomerResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     
-    protected static ?string $navigationLabel = 'Müşteriler';
+    protected static ?string $navigationLabel = 'Customers';
     
-    protected static ?string $modelLabel = 'Müşteri';
+    protected static ?string $modelLabel = 'Customer';
     
-    protected static ?string $pluralModelLabel = 'Müşteriler';
+    protected static ?string $pluralModelLabel = 'Customers';
     
-    protected static ?int $navigationSort = 30;
+    protected static ?int $navigationSort = 1;
     
-    protected static ?string $navigationGroup = 'CRM';
+    protected static ?string $navigationGroup = 'Customer Relations';
 
     public static function form(Form $form): Form
     {

@@ -239,7 +239,7 @@ class BankAccountResource extends Resource
                 Forms\Components\Section::make('📝 Additional Information')
                     ->schema([
                         Forms\Components\Textarea::make('bank_address')
-                            ->label('🏢 Bank Address')
+                            ->label('Bank Address')
                             ->placeholder('Bank headquarters or branch address...')
                             ->columnSpanFull(),
 

@@ -29,9 +29,9 @@ class StoreCreditResource extends Resource
     
     protected static ?string $pluralModelLabel = 'Store Credits';
     
-    protected static ?int $navigationSort = 50;
+    protected static ?int $navigationSort = 3;
     
-    protected static ?string $navigationGroup = 'Finansal Yönetim';
+    protected static ?string $navigationGroup = 'Sales & Orders';
 
     public static function form(Form $form): Form
     {

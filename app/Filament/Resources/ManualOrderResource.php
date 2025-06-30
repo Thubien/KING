@@ -24,9 +24,9 @@ class ManualOrderResource extends Resource
 
     protected static ?string $navigationLabel = 'Manual Orders';
 
-    protected static ?string $navigationGroup = 'Sales Management';
+    protected static ?string $navigationGroup = 'Sales & Orders';
 
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     // SIMPLIFIED AUTHORIZATION - Staff can create orders
     protected static function getResourcePermissions(): array

@@ -23,7 +23,7 @@ class PaymentProcessorAccountResource extends Resource
 
     protected static ?string $modelLabel = 'Payment Processor';
 
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

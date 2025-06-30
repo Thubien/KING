@@ -13,6 +13,8 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
 use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -64,10 +66,29 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                RoleDashboardRedirect::class, // ROLE-BASED REDIRECTS
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->navigationGroups([
+                // PREMIUM SAAS NAVIGATION GROUPS
+                NavigationGroup::make('Dashboard & Analytics')
+                    ->collapsed(false), // Always expanded for quick access
+                    
+                NavigationGroup::make('Sales & Orders')
+                    ->collapsed(fn () => !auth()->user()?->isStaff()), // Expanded for staff
+                    
+                NavigationGroup::make('Financial Management')
+                    ->collapsed(fn () => auth()->user()?->isStaff()), // Collapsed for staff
+                    
+                NavigationGroup::make('Business Management')
+                    ->collapsed(fn () => !auth()->user()?->isOwner()), // Expanded for owners
+                    
+                NavigationGroup::make('Customer Relations')
+                    ->collapsed(fn () => !auth()->user()?->canCreateOrders()), // Expanded for order creators
+                    
+                NavigationGroup::make('System & Analytics')
+                    ->collapsed(fn () => !auth()->user()?->isSuperAdmin()), // Expanded for admins
             ])
             ->userMenuItems([
                 MenuItem::make()

@@ -23,15 +23,15 @@ class ReturnRequestResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-arrow-uturn-left';
 
-    protected static ?string $navigationLabel = 'İade Yönetimi';
+    protected static ?string $navigationLabel = 'Return Requests';
 
-    protected static ?string $pluralLabel = 'İade Talepleri';
+    protected static ?string $pluralLabel = 'Return Requests';
 
-    protected static ?string $label = 'İade Talebi';
+    protected static ?string $label = 'Return Request';
     
-    protected static ?string $navigationGroup = 'CRM';
+    protected static ?string $navigationGroup = 'Sales & Orders';
 
-    protected static ?int $navigationSort = 21;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

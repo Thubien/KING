@@ -21,11 +21,11 @@ class InventoryItemResource extends Resource
 
     protected static ?string $navigationLabel = 'Inventory';
 
-    protected static ?string $navigationGroup = 'Financial';
+    protected static ?string $navigationGroup = 'Business Management';
 
     protected static ?string $modelLabel = 'Inventory Item';
 
-    protected static ?int $navigationSort = 6;
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
