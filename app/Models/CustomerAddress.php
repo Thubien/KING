@@ -12,28 +12,30 @@ class CustomerAddress extends Model
 
     protected $fillable = [
         'customer_id',
-        'title',
+        'label',
         'type',
+        'full_name',
+        'phone',
         'address_line_1',
         'address_line_2',
+        'district',
         'city',
-        'state',
+        'state_province',
         'postal_code',
         'country',
-        'phone',
+        'delivery_notes',
+        'metadata',
         'is_default',
-        'sort_order',
     ];
 
     protected $casts = [
         'is_default' => 'boolean',
-        'sort_order' => 'integer',
+        'metadata' => 'array',
     ];
 
     protected $attributes = [
         'type' => 'both',
         'is_default' => false,
-        'sort_order' => 0,
     ];
 
     // Constants
@@ -69,7 +71,8 @@ class CustomerAddress extends Model
         $parts = [
             $this->address_line_1,
             $this->address_line_2,
-            $this->city . ($this->state ? ', ' . $this->state : ''),
+            $this->district,
+            $this->city . ($this->state_province ? ', ' . $this->state_province : ''),
             $this->postal_code,
             $this->getCountryName(),
         ];

@@ -25,7 +25,7 @@ class AddressesRelationManager extends RelationManager
             ->schema([
                 Forms\Components\Grid::make()
                     ->schema([
-                        Forms\Components\TextInput::make('title')
+                        Forms\Components\TextInput::make('label')
                             ->label('Adres Başlığı')
                             ->placeholder('Ev, İş, vb.')
                             ->required()
@@ -40,6 +40,10 @@ class AddressesRelationManager extends RelationManager
                             ->default('both')
                             ->required(),
                     ]),
+                Forms\Components\TextInput::make('full_name')
+                    ->label('Alıcı Adı')
+                    ->required()
+                    ->maxLength(255),
                 Forms\Components\Textarea::make('address_line_1')
                     ->label('Adres')
                     ->required()
@@ -47,12 +51,12 @@ class AddressesRelationManager extends RelationManager
                     ->maxLength(500),
                 Forms\Components\Grid::make(3)
                     ->schema([
+                        Forms\Components\TextInput::make('district')
+                            ->label('İlçe')
+                            ->maxLength(100),
                         Forms\Components\TextInput::make('city')
                             ->label('Şehir')
                             ->required()
-                            ->maxLength(100),
-                        Forms\Components\TextInput::make('state')
-                            ->label('İlçe')
                             ->maxLength(100),
                         Forms\Components\TextInput::make('postal_code')
                             ->label('Posta Kodu')
@@ -87,9 +91,12 @@ class AddressesRelationManager extends RelationManager
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('title')
+                Tables\Columns\TextColumn::make('label')
                     ->label('Başlık')
                     ->weight('bold')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('full_name')
+                    ->label('Alıcı')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('address_line_1')
                     ->label('Adres')
@@ -97,7 +104,9 @@ class AddressesRelationManager extends RelationManager
                     ->tooltip(fn (Model $record): string => 
                         $record->address_line_1 . 
                         ($record->address_line_2 ? "\n" . $record->address_line_2 : '') .
-                        "\n{$record->city}, {$record->state} {$record->postal_code}" .
+                        "\n{$record->district}" .
+                        "\n{$record->city}" . ($record->state_province ? ", {$record->state_province}" : '') .
+                        " {$record->postal_code}" .
                         "\n{$record->country}"
                     ),
                 Tables\Columns\TextColumn::make('city')
@@ -178,7 +187,6 @@ class AddressesRelationManager extends RelationManager
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->reorderable('sort_order')
             ->defaultSort('is_default', 'desc');
     }
 }

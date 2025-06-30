@@ -64,23 +64,23 @@
                 <div class="flex-1 space-y-1">
                     <div class="flex items-center justify-between">
                         <h4 class="text-sm font-medium text-gray-900 dark:text-gray-100">
-                            {{ $event->title }}
+                            {{ $event->event_title }}
                         </h4>
                         <time class="text-xs text-gray-500 dark:text-gray-400">
                             {{ $event->created_at->diffForHumans() }}
                         </time>
                     </div>
                     
-                    @if($event->description)
+                    @if($event->event_description)
                         <p class="text-sm text-gray-600 dark:text-gray-400">
-                            {{ $event->description }}
+                            {{ $event->event_description }}
                         </p>
                     @endif
                     
                     {{-- Event metadata --}}
-                    @if($event->metadata && count($event->metadata) > 0)
+                    @if($event->event_data && count($event->event_data) > 0)
                         <div class="mt-2 flex flex-wrap gap-2">
-                            @foreach($event->metadata as $key => $value)
+                            @foreach($event->event_data as $key => $value)
                                 @if($value && !in_array($key, ['user_id', 'user_name']))
                                     <span class="inline-flex items-center rounded-md bg-gray-100 px-2 py-1 text-xs font-medium text-gray-600 dark:bg-gray-800 dark:text-gray-300">
                                         @switch($key)
@@ -159,16 +159,16 @@
                     @endif
                     
                     {{-- User info --}}
-                    @if($event->user_name || ($event->metadata && isset($event->metadata['user_name'])))
+                    @if($event->creator)
                         <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            {{ $event->user_name ?? $event->metadata['user_name'] }}
+                            {{ $event->creator->name }}
                         </p>
                     @endif
                     
                     {{-- Related record link --}}
-                    @if($event->related_type && $event->related_id)
+                    @if($event->related_model && $event->related_id)
                         <div class="mt-2">
-                            @switch($event->related_type)
+                            @switch($event->related_model)
                                 @case('Transaction')
                                     <a href="{{ route('filament.admin.resources.transactions.edit', $event->related_id) }}" 
                                        class="text-xs text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">

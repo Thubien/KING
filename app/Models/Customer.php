@@ -372,13 +372,12 @@ class Customer extends Model
     ): CustomerTimelineEvent {
         return $this->timelineEvents()->create([
             'event_type' => $eventType,
-            'title' => $title,
-            'description' => $description,
-            'metadata' => $metadata,
-            'related_type' => $relatedType,
+            'event_title' => $title,
+            'event_description' => $description,
+            'event_data' => $metadata,
+            'related_model' => $relatedType,
             'related_id' => $relatedId,
-            'user_id' => auth()->id(),
-            'user_name' => auth()->user()?->name,
+            'created_by' => auth()->id(),
         ]);
     }
 

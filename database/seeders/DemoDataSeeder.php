@@ -7,6 +7,7 @@ use App\Models\Partnership;
 use App\Models\Store;
 use App\Models\Transaction;
 use App\Models\User;
+use App\Models\Customer;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Spatie\Permission\Models\Role;
@@ -78,16 +79,52 @@ class DemoDataSeeder extends Seeder
             'status' => 'active',
         ]);
 
-        // Create partnerships
-        $partnership1 = Partnership::create([
-            'partner_id' => $partner->id,
-            'partner_percentage' => 30.0,
-            'sales_rep_percentage' => 10.0,
-            'company_percentage' => 60.0,
-            'status' => 'active',
+        // Create partnerships for each store
+        Partnership::create([
+            'store_id' => $shopifyStore->id,
+            'user_id' => $owner->id,
+            'ownership_percentage' => 60.0,
+            'role' => 'owner',
+            'status' => 'ACTIVE',
+            'partnership_start_date' => now()->subMonths(6),
         ]);
 
-        $partnership1->stores()->attach([$shopifyStore->id, $instagramStore->id]);
+        Partnership::create([
+            'store_id' => $shopifyStore->id,
+            'user_id' => $partner->id,
+            'ownership_percentage' => 30.0,
+            'role' => 'partner',
+            'status' => 'ACTIVE',
+            'partnership_start_date' => now()->subMonths(6),
+        ]);
+
+        Partnership::create([
+            'store_id' => $shopifyStore->id,
+            'user_id' => $salesRep->id,
+            'ownership_percentage' => 10.0,
+            'role' => 'sales_rep',
+            'status' => 'ACTIVE',
+            'partnership_start_date' => now()->subMonths(6),
+        ]);
+
+        // Instagram store partnerships
+        Partnership::create([
+            'store_id' => $instagramStore->id,
+            'user_id' => $owner->id,
+            'ownership_percentage' => 70.0,
+            'role' => 'owner',
+            'status' => 'ACTIVE',
+            'partnership_start_date' => now()->subMonths(5),
+        ]);
+
+        Partnership::create([
+            'store_id' => $instagramStore->id,
+            'user_id' => $partner->id,
+            'ownership_percentage' => 30.0,
+            'role' => 'partner',
+            'status' => 'ACTIVE',
+            'partnership_start_date' => now()->subMonths(5),
+        ]);
 
         // Create demo transactions
         $this->createDemoTransactions($company, $shopifyStore, $instagramStore, $salesRep);
@@ -107,56 +144,108 @@ class DemoDataSeeder extends Seeder
             // Shopify transactions
             for ($i = 0; $i < rand(5, 15); $i++) {
                 $amount = rand(25, 500);
-                Transaction::create([
-                    'company_id' => $company->id,
+                
+                // Create or find customer for this transaction
+                $customerEmail = 'customer'.$i.'@example.com';
+                $customer = Customer::where('store_id', $shopifyStore->id)
+                    ->where('email', $customerEmail)
+                    ->first();
+                    
+                if (!$customer) {
+                    $customer = Customer::create([
+                        'company_id' => $company->id,
+                        'store_id' => $shopifyStore->id,
+                        'name' => 'Demo Customer ' . $i,
+                        'email' => $customerEmail,
+                        'phone' => '+1555' . str_pad($i, 7, '0', STR_PAD_LEFT),
+                        'source' => 'shopify',
+                        'status' => 'active',
+                        'accepts_marketing' => rand(0, 1) == 1,
+                    ]);
+                }
+                
+                $transaction = Transaction::create([
                     'store_id' => $shopifyStore->id,
-                    'external_id' => 'shopify_'.$date->format('Ym').'_'.$i,
-                    'type' => 'sale',
-                    'amount_original' => $amount,
-                    'currency_original' => 'USD',
+                    'customer_id' => $customer->id,
+                    'transaction_id' => 'SHOP-' . $date->format('Ymd') . '-' . rand(1000, 9999),
+                    'amount' => $amount,
+                    'currency' => 'USD',
                     'amount_usd' => $amount,
+                    'category' => 'SALES',
+                    'type' => 'income',
+                    'status' => 'APPROVED',
                     'transaction_date' => $date->copy()->addDays(rand(1, 28)),
                     'description' => 'Shopify Order #'.rand(1000, 9999),
                     'sales_channel' => 'shopify',
                     'payment_method' => collect(['credit_card', 'bank_transfer', 'cash'])->random(),
                     'data_source' => 'shopify_api',
-                    'status' => 'completed',
                     'sales_rep_id' => $salesRep->id,
                     'customer_info' => [
-                        'email' => 'customer'.$i.'@example.com',
-                        'first_name' => 'Customer',
-                        'last_name' => 'Demo',
+                        'name' => $customer->name,
+                        'email' => $customer->email,
+                        'phone' => $customer->phone,
                     ],
                     'metadata' => [
                         'shopify_order_id' => rand(100000, 999999),
                         'synced_at' => now()->toISOString(),
                     ],
+                    'created_by' => $salesRep->id,
                 ]);
+                
+                // Update customer statistics
+                $customer->updateStatistics();
             }
 
             // Instagram transactions
             for ($i = 0; $i < rand(3, 10); $i++) {
                 $amount = rand(15, 200);
-                Transaction::create([
-                    'company_id' => $company->id,
+                
+                // Create or find customer for Instagram
+                $customerPhone = '+90555' . str_pad(rand(1000000, 9999999), 7, '0', STR_PAD_LEFT);
+                $customer = Customer::where('store_id', $instagramStore->id)
+                    ->where('phone', $customerPhone)
+                    ->first();
+                    
+                if (!$customer) {
+                    $customer = Customer::create([
+                        'company_id' => $company->id,
+                        'store_id' => $instagramStore->id,
+                        'name' => 'Instagram Müşteri ' . $i,
+                        'phone' => $customerPhone,
+                        'whatsapp_number' => str_replace('+', '', $customerPhone),
+                        'source' => 'manual',
+                        'status' => 'active',
+                        'accepts_marketing' => true,
+                        'preferred_contact_method' => 'whatsapp',
+                    ]);
+                }
+                
+                $transaction = Transaction::create([
                     'store_id' => $instagramStore->id,
-                    'type' => 'sale',
-                    'amount_original' => $amount,
-                    'currency_original' => 'USD',
+                    'customer_id' => $customer->id,
+                    'transaction_id' => 'IG-' . $date->format('Ymd') . '-' . rand(1000, 9999),
+                    'amount' => $amount,
+                    'currency' => 'USD',
                     'amount_usd' => $amount,
+                    'category' => 'SALES',
+                    'type' => 'income',
+                    'status' => 'APPROVED',
                     'transaction_date' => $date->copy()->addDays(rand(1, 28)),
                     'description' => 'Instagram Order #IG'.rand(100, 999),
                     'sales_channel' => 'instagram',
                     'payment_method' => collect(['cash', 'cash_on_delivery', 'bank_transfer'])->random(),
                     'data_source' => 'manual_entry',
-                    'status' => 'completed',
                     'sales_rep_id' => $salesRep->id,
                     'customer_info' => [
+                        'name' => $customer->name,
+                        'phone' => $customer->phone,
                         'instagram_handle' => '@customer'.$i,
-                        'phone' => '+1234567890',
                     ],
                     'created_by' => $salesRep->id,
                 ]);
+                
+                // Update customer statistics
+                $customer->updateStatistics();
             }
         }
     }

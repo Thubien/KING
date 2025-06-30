@@ -3,179 +3,174 @@
 namespace Database\Seeders;
 
 use App\Models\Company;
-use App\Models\ReturnRequest;
 use App\Models\Store;
-use App\Services\ReturnChecklistService;
+use App\Models\Customer;
+use App\Models\ReturnRequest;
+use App\Models\StoreCredit;
+use App\Models\Transaction;
+use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Str;
 
 class ReturnRequestDemoSeeder extends Seeder
 {
-    public function run()
+    public function run(): void
     {
-        // İlk company'yi al
-        $company = Company::first();
+        $company = Company::where('name', 'EcomBoard Demo Company')->first();
         if (!$company) {
-            $this->command->error('Hiç company bulunamadı! Önce php artisan db:seed çalıştırın.');
+            $this->command->error('Demo company not found. Please run DemoDataSeeder first.');
             return;
         }
 
-        // Shopify ve boutique/physical mağazaları al
-        $shopifyStore = Store::where('company_id', $company->id)
-            ->where('platform', 'shopify')
-            ->first();
-            
-        $boutiqueStore = Store::where('company_id', $company->id)
-            ->whereIn('platform', ['boutique', 'physical'])
-            ->first();
+        $stores = Store::where('company_id', $company->id)->get();
+        $handler = User::where('email', 'salesrep@demo.com')->first() ?? User::first();
 
-        if (!$shopifyStore && !$boutiqueStore) {
-            $this->command->error('Uygun mağaza bulunamadı!');
-            return;
+        foreach ($stores as $store) {
+            $this->createReturnRequestsForStore($store, $handler);
         }
 
-        // Demo iade talepleri
-        $demoReturns = [
-            // Shopify - Nakit iade (sadece takip)
-            [
-                'store_id' => $shopifyStore?->id,
-                'order_number' => 'SHP-2024-001',
-                'customer_name' => 'Ayşe Yılmaz',
-                'customer_phone' => '05551234567',
-                'customer_email' => 'ayse@example.com',
-                'product_name' => 'Nike Air Max 270',
-                'product_sku' => 'NAM270-BLK-42',
-                'quantity' => 1,
-                'refund_amount' => 150.00,
-                'currency' => 'USD',
-                'return_reason' => 'Numara küçük geldi, bir büyük numara istiyorum.',
-                'status' => 'pending',
-                'refund_method' => 'cash',
-                'notes' => 'Shopify mağaza - sadece takip amaçlı',
-            ],
-            
-            // Shopify - Store Credit
-            [
-                'store_id' => $shopifyStore?->id,
-                'order_number' => 'SHP-2024-002',
-                'customer_name' => 'Mehmet Demir',
-                'customer_phone' => '05559876543',
-                'customer_email' => 'mehmet@example.com',
-                'product_name' => 'Adidas Ultraboost 22',
-                'product_sku' => 'AUB22-WHT-43',
-                'quantity' => 1,
-                'refund_amount' => 200.00,
-                'currency' => 'USD',
-                'return_reason' => 'Ürün beklentimi karşılamadı.',
-                'status' => 'in_transit',
-                'refund_method' => 'store_credit',
-            ],
+        $this->command->info('Return request demo data created successfully!');
+    }
 
-            // Butik - Nakit iade (finansal kayıt oluşacak)
-            [
-                'store_id' => $boutiqueStore?->id,
-                'order_number' => 'BTK-2024-001',
-                'customer_name' => 'Fatma Kaya',
-                'customer_phone' => '05553216549',
-                'customer_email' => 'fatma@example.com',
-                'product_name' => 'Zara Ceket',
-                'product_sku' => 'ZR-JKT-001',
-                'quantity' => 1,
-                'refund_amount' => 120.00,
-                'currency' => 'TRY',
-                'return_reason' => 'Renk fotoğraftakinden farklı.',
-                'status' => 'processing',
-                'refund_method' => 'cash',
-                'notes' => 'Butik mağaza - finansal kayıt oluşacak',
-            ],
+    private function createReturnRequestsForStore(Store $store, User $handler): void
+    {
+        // Get some customers with orders
+        $customers = Customer::where('store_id', $store->id)
+            ->whereHas('transactions', function ($query) {
+                $query->where('category', 'SALES')
+                      ->where('type', 'income')
+                      ->where('status', 'APPROVED');
+            })
+            ->limit(5)
+            ->get();
 
-            // Butik - Değişim
-            [
-                'store_id' => $boutiqueStore?->id,
-                'order_number' => 'BTK-2024-002',
-                'customer_name' => 'Ali Veli',
-                'customer_phone' => '05557894561',
-                'customer_email' => 'ali@example.com',
-                'product_name' => 'Mango Gömlek',
-                'product_sku' => 'MNG-SHR-001',
-                'quantity' => 1,
-                'refund_amount' => 80.00,
-                'currency' => 'TRY',
-                'return_reason' => 'Beden değişimi yapmak istiyorum.',
-                'status' => 'processing',
-                'refund_method' => 'exchange',
-                'exchange_product_name' => 'Mango Gömlek - L Beden',
-                'exchange_product_sku' => 'MNG-SHR-001-L',
-                'exchange_product_price' => 80.00,
-                'exchange_difference' => 0,
-            ],
+        foreach ($customers as $customer) {
+            // Get a recent transaction for this customer
+            $transaction = $customer->transactions()
+                ->where('category', 'SALES')
+                ->where('type', 'income')
+                ->where('status', 'APPROVED')
+                ->orderBy('transaction_date', 'desc')
+                ->first();
 
-            // Shopify - Değişim (fiyat farkı var)
-            [
-                'store_id' => $shopifyStore?->id,
-                'order_number' => 'SHP-2024-003',
-                'customer_name' => 'Zeynep Öz',
-                'customer_phone' => '05552468135',
-                'customer_email' => 'zeynep@example.com',
-                'product_name' => 'Puma Sneaker',
-                'product_sku' => 'PM-SNK-001',
-                'quantity' => 1,
-                'refund_amount' => 100.00,
-                'currency' => 'USD',
-                'return_reason' => 'Başka model istiyorum.',
-                'status' => 'pending',
-                'refund_method' => 'exchange',
-                'exchange_product_name' => 'Puma RS-X',
-                'exchange_product_sku' => 'PM-RSX-001',
-                'exchange_product_price' => 130.00,
-                'exchange_difference' => 30.00, // Müşteri 30 USD ödeyecek
-                'notes' => 'Müşteri fark ödeyecek',
-            ],
-
-            // Tamamlanmış - Butik Store Credit
-            [
-                'store_id' => $boutiqueStore?->id,
-                'order_number' => 'BTK-2024-003',
-                'customer_name' => 'Hasan Çelik',
-                'customer_phone' => '05551472583',
-                'customer_email' => 'hasan@example.com',
-                'product_name' => 'LC Waikiki Pantolon',
-                'product_sku' => 'LCW-PNT-001',
-                'quantity' => 2,
-                'refund_amount' => 160.00,
-                'currency' => 'TRY',
-                'return_reason' => 'Online alışverişte yanlış beden seçmişim.',
-                'status' => 'completed',
-                'refund_method' => 'store_credit',
-                'resolution' => 'store_credit',
-            ],
-        ];
-
-        foreach ($demoReturns as $returnData) {
-            // Store ID kontrolü
-            if (!$returnData['store_id']) {
+            if (!$transaction) {
                 continue;
             }
 
-            $return = ReturnRequest::create(array_merge($returnData, [
-                'company_id' => $company->id,
-            ]));
-
-            // Checklist oluştur
-            ReturnChecklistService::createChecklistsForStage($return, $return->status);
-
-            // Tamamlanmış olanları işle
-            if ($return->status === 'completed') {
-                try {
-                    $return->complete();
-                } catch (\Exception $e) {
-                    // Zaten completed olduğu için hata verecek, ignore et
-                }
+            // 30% chance of return
+            if (rand(1, 10) <= 3) {
+                $this->createReturnRequest($store, $customer, $transaction, $handler);
             }
         }
 
-        $this->command->info('Demo iade talepleri oluşturuldu!');
-        $this->command->info('- Shopify mağazalar için: Sadece takip');
-        $this->command->info('- Butik mağazalar için: Finansal kayıt');
-        $this->command->info('- Farklı iade yöntemleri: Nakit, Değişim, Store Credit');
+        // Create some standalone return requests without linked customers
+        for ($i = 0; $i < 3; $i++) {
+            $this->createStandaloneReturnRequest($store, $handler);
+        }
+    }
+
+    private function createReturnRequest(Store $store, Customer $customer, Transaction $transaction, User $handler): void
+    {
+        $returnDate = $transaction->transaction_date->copy()->addDays(rand(3, 15));
+        $resolution = collect(['refund', 'exchange', 'store_credit'])->random();
+        $status = collect(['pending', 'in_transit', 'processing', 'completed'])->random();
+        
+        $returnRequest = ReturnRequest::create([
+            'company_id' => $store->company_id,
+            'store_id' => $store->id,
+            'customer_id' => $customer->id,
+            'order_number' => $transaction->transaction_id,
+            'customer_name' => $customer->name,
+            'customer_phone' => $customer->phone,
+            'customer_email' => $customer->email,
+            'product_name' => 'Demo Ürün ' . rand(100, 999),
+            'product_sku' => 'SKU-' . rand(1000, 9999),
+            'quantity' => rand(1, 3),
+            'refund_amount' => $transaction->amount * rand(70, 90) / 100,
+            'currency' => $store->currency,
+            'return_reason' => collect([
+                'Beden uymadı',
+                'Renk farklı geldi',
+                'Hasarlı ürün',
+                'Yanlış ürün gönderildi',
+                'Kalite beklentimi karşılamadı',
+                'Fotoğraftan farklı'
+            ])->random(),
+            'status' => $status,
+            'resolution' => $status === 'completed' ? $resolution : null,
+            'notes' => 'Demo iade talebi',
+            'tracking_number' => $status !== 'pending' ? 'KARGO' . rand(100000, 999999) : null,
+            'handled_by' => $handler->id,
+            'refund_method' => $resolution === 'refund' ? 'cash' : ($resolution === 'store_credit' ? 'store_credit' : 'exchange'),
+            'created_at' => $returnDate,
+            'updated_at' => $returnDate,
+        ]);
+
+        // If completed with store credit, create the credit
+        if ($status === 'completed' && $resolution === 'store_credit') {
+            $code = 'SC-' . strtoupper(Str::random(8));
+            
+            StoreCredit::create([
+                'company_id' => $store->company_id,
+                'store_id' => $store->id,
+                'customer_id' => $customer->id,
+                'return_request_id' => $returnRequest->id,
+                'code' => $code,
+                'amount' => $returnRequest->refund_amount,
+                'remaining_amount' => $returnRequest->refund_amount,
+                'currency' => $store->currency,
+                'status' => 'active',
+                'expires_at' => now()->addYear(),
+                'issued_by' => $handler->name,
+                'notes' => "İade talebi #{$returnRequest->id} için oluşturuldu",
+            ]);
+            
+            $returnRequest->update(['store_credit_code' => $code]);
+        }
+
+        // If completed with exchange, set exchange details
+        if ($status === 'completed' && $resolution === 'exchange') {
+            $returnRequest->update([
+                'exchange_product_name' => 'Değişim Ürün ' . rand(100, 999),
+                'exchange_product_sku' => 'SKU-' . rand(1000, 9999),
+                'exchange_product_price' => $returnRequest->refund_amount * rand(90, 110) / 100,
+                'exchange_difference' => rand(-50, 50),
+            ]);
+        }
+    }
+
+    private function createStandaloneReturnRequest(Store $store, User $handler): void
+    {
+        $statuses = ['pending', 'in_transit', 'processing', 'completed'];
+        $status = collect($statuses)->random();
+        
+        $returnRequest = ReturnRequest::create([
+            'company_id' => $store->company_id,
+            'store_id' => $store->id,
+            'order_number' => 'MANUAL-' . rand(1000, 9999),
+            'customer_name' => 'Manuel İade Müşteri ' . rand(1, 100),
+            'customer_phone' => '+90555' . rand(1000000, 9999999),
+            'customer_email' => 'return' . rand(1, 100) . '@example.com',
+            'product_name' => 'İade Ürün ' . rand(100, 999),
+            'product_sku' => 'SKU-' . rand(1000, 9999),
+            'quantity' => rand(1, 2),
+            'refund_amount' => rand(50, 500),
+            'currency' => $store->currency,
+            'return_reason' => collect([
+                'Müşteri memnuniyetsizliği',
+                'Ürün açıklamasına uygun değil',
+                'Teslimat gecikmesi',
+                'Paket hasarlı geldi'
+            ])->random(),
+            'status' => $status,
+            'resolution' => $status === 'completed' ? collect(['refund', 'rejected'])->random() : null,
+            'notes' => 'Manuel oluşturulmuş iade talebi',
+            'tracking_number' => $status !== 'pending' ? 'MNG' . rand(100000, 999999) : null,
+            'handled_by' => $handler->id,
+            'refund_method' => 'cash',
+            'created_at' => now()->subDays(rand(1, 30)),
+        ]);
+
+        // Customer will be auto-created by the model's boot method
     }
 }
