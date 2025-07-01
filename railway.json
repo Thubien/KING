@@ -8,5 +8,12 @@
     "restartPolicyType": "ON_FAILURE",
     "restartPolicyMaxRetries": 10,
     "startCommand": "php artisan migrate --force && php artisan storage:link && php artisan serve --host=0.0.0.0 --port=$PORT"
+  },
+  "environments": {
+    "production": {
+      "variables": {
+        "NIXPACKS_PHP_VERSION": "8.3"
+      }
+    }
   }
 } 
