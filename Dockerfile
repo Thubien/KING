@@ -50,7 +50,7 @@ COPY . .
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --verbose
 
 # Install NPM dependencies and build assets
-RUN npm ci && npm run build
+RUN npm install && npm run build
 
 # Create storage link
 RUN php artisan storage:link
