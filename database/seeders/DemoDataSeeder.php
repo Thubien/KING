@@ -102,7 +102,7 @@ class DemoDataSeeder extends Seeder
             'store_id' => $shopifyStore->id,
             'user_id' => $salesRep->id,
             'ownership_percentage' => 10.0,
-            'role' => 'sales_rep',
+            'role' => 'partner',
             'status' => 'ACTIVE',
             'partnership_start_date' => now()->subMonths(6),
         ]);
