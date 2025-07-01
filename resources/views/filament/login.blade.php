@@ -3,7 +3,7 @@
         <!-- Logo & Branding -->
         <div class="text-center">
             <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
-                {{ config('app.name', 'KING SaaS') }}
+                {{ config('app.name', 'Shopletix') }}
             </h1>
             <p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
                 Multi-Store Financial Management Platform
