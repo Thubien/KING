@@ -39,7 +39,7 @@ class ReturnRequestDemoSeeder extends Seeder
             ->whereHas('transactions', function ($query) {
                 $query->where('category', 'SALES')
                       ->where('type', 'income')
-                      ->where('status', 'APPROVED');
+                      ->where('status', 'completed');
             })
             ->limit(5)
             ->get();
@@ -49,7 +49,7 @@ class ReturnRequestDemoSeeder extends Seeder
             $transaction = $customer->transactions()
                 ->where('category', 'SALES')
                 ->where('type', 'income')
-                ->where('status', 'APPROVED')
+                ->where('status', 'completed')
                 ->orderBy('transaction_date', 'desc')
                 ->first();
 
