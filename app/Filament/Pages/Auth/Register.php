@@ -3,7 +3,6 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Models\Company;
-use App\Models\User;
 use DanHarrin\LivewireRateLimiting\Exceptions\TooManyRequestsException;
 use Filament\Events\Auth\Registered;
 use Filament\Forms\Components\Component;
@@ -126,7 +125,7 @@ class Register extends BaseRegister
         }
     }
 
-    protected function sendEmailVerificationNotification(User $user): void
+    protected function sendEmailVerificationNotification(\Illuminate\Database\Eloquent\Model $user): void
     {
         // Skip email verification for sandbox
         // In production, uncomment this:
