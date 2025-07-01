@@ -25,7 +25,7 @@ RUN apt-get clean && rm -rf /var/lib/apt/lists/*
 # Configure GD extension
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
-# Install PHP extensions
+# Install PHP extensions (excluding built-in ones in PHP 8.3)
 RUN docker-php-ext-install \
     pdo_mysql \
     mbstring \
@@ -35,12 +35,6 @@ RUN docker-php-ext-install \
     gd \
     zip \
     intl \
-    xml \
-    curl \
-    tokenizer \
-    ctype \
-    json \
-    fileinfo \
     opcache
 
 # Install Composer
