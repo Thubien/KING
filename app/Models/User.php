@@ -245,6 +245,11 @@ class User extends Authenticatable
         return $this->hasRole('super_admin');
     }
 
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        return true; // Geçici olarak herkese açık
+    }
+
     // UNIFIED PERMISSION CHECKS
     public function canManageCompany(): bool
     {
