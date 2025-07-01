@@ -25,9 +25,9 @@ return new class extends Migration
                 $table->timestamps();
 
                 // Indexes for performance
-                $table->index(['description_pattern', 'amount_type']);
-                $table->index(['user_id', 'assigned_category']);
-                $table->index('confidence');
+                $table->index(['description_pattern', 'amount_type'], 'idx_pattern_type');
+                $table->index(['user_id', 'assigned_category'], 'idx_user_category');
+                $table->index('confidence', 'idx_confidence');
 
                 // Foreign keys
                 $table->foreign('assigned_store_id')->references('id')->on('stores')->onDelete('set null');
