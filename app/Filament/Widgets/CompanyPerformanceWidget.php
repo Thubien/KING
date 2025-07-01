@@ -34,6 +34,7 @@ class CompanyPerformanceWidget extends ChartWidget
             // Revenue by month
             $revenueData = $months->map(function ($month) use ($company) {
                 return Transaction::where('company_id', $company->id)
+                    ->where('category', 'SALES')
                     ->whereMonth('transaction_date', $month->month)
                     ->whereYear('transaction_date', $month->year)
                     ->sum('amount_usd');
@@ -42,6 +43,7 @@ class CompanyPerformanceWidget extends ChartWidget
             // Revenue by sales channel
             $shopifyData = $months->map(function ($month) use ($company) {
                 return Transaction::where('company_id', $company->id)
+                    ->where('category', 'SALES')
                     ->where('sales_channel', 'shopify')
                     ->whereMonth('transaction_date', $month->month)
                     ->whereYear('transaction_date', $month->year)
@@ -50,6 +52,7 @@ class CompanyPerformanceWidget extends ChartWidget
 
             $instagramData = $months->map(function ($month) use ($company) {
                 return Transaction::where('company_id', $company->id)
+                    ->where('category', 'SALES')
                     ->where('sales_channel', 'instagram')
                     ->whereMonth('transaction_date', $month->month)
                     ->whereYear('transaction_date', $month->year)

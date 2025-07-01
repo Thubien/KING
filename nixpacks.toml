@@ -26,4 +26,4 @@ cmds = [
 cmds = [
     "php artisan migrate --force",
     "php artisan storage:link"
-] 
+]

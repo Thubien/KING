@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\ReturnChecklist;
 use App\Models\ReturnRequest;
+use App\Models\Transaction;
 use App\Services\ReturnChecklistService;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
@@ -31,8 +32,8 @@ class ReturnKanban extends Page
 
     public function loadReturns()
     {
-        $this->returns = ReturnRequest::with(['checklists', 'store'])
-            ->where('company_id', auth()->user()->company_id)
+        $this->returns = ReturnRequest::with(['checklists', 'store', 'handler'])
+            ->forCompany() // Güvenlik scope'u kullan
             ->orderBy('created_at', 'desc')
             ->get()
             ->groupBy('status')
@@ -43,18 +44,78 @@ class ReturnKanban extends Page
 
     public function moveCard($returnId, $newStatus)
     {
-        $return = ReturnRequest::find($returnId);
+        $return = ReturnRequest::forCompany()->find($returnId);
+        
+        if (!$return) {
+            Notification::make()
+                ->title('İade bulunamadı veya erişim yetkiniz yok')
+                ->danger()
+                ->send();
+            return;
+        }
+        
         $oldStatus = $return->status;
+
+        // Geçerli durum değişimi kontrolü
+        $validTransitions = [
+            'pending' => ['in_transit', 'completed'],
+            'in_transit' => ['processing', 'completed', 'pending'],
+            'processing' => ['completed', 'in_transit'],
+            'completed' => [], // Tamamlanmış iadeler hareket ettirilemez
+        ];
+
+        if (!in_array($newStatus, $validTransitions[$oldStatus] ?? [])) {
+            Notification::make()
+                ->title('Geçersiz durum değişimi')
+                ->body("'{$return->status_label}' durumundan '{$newStatus}' durumuna geçiş yapılamaz.")
+                ->danger()
+                ->send();
+            return;
+        }
 
         $return->update(['status' => $newStatus]);
 
         // Yeni aşama için checklist oluştur
         ReturnChecklistService::createChecklistsForStage($return, $newStatus);
 
-        Notification::make()
-            ->title('İade durumu güncellendi')
-            ->success()
-            ->send();
+        // İade tamamlandığında finansal işlemleri başlat
+        if ($newStatus === 'completed' && $oldStatus !== 'completed') {
+            try {
+                $return->complete();
+                
+                // Başarı mesajını iade metoduna göre özelleştir
+                $successMessage = match($return->refund_method) {
+                    'cash' => $return->shouldCreateFinancialRecord() 
+                        ? 'İade tamamlandı ve finansal kayıt oluşturuldu' 
+                        : 'İade tamamlandı (Shopify - sadece takip)',
+                    'exchange' => 'Değişim işlemi tamamlandı',
+                    'store_credit' => 'Store credit oluşturuldu: ' . $return->store_credit_code,
+                    default => 'İade tamamlandı'
+                };
+                
+                Notification::make()
+                    ->title($successMessage)
+                    ->success()
+                    ->send();
+            } catch (\Exception $e) {
+                // Hata durumunda eski statüye geri dön
+                $return->update(['status' => $oldStatus]);
+                
+                Notification::make()
+                    ->title('Finansal işlem hatası')
+                    ->body('İade tamamlanamadı: ' . $e->getMessage())
+                    ->danger()
+                    ->send();
+                
+                $this->loadReturns();
+                return;
+            }
+        } else {
+            Notification::make()
+                ->title('İade durumu güncellendi')
+                ->success()
+                ->send();
+        }
 
         $this->loadReturns();
     }

@@ -15,6 +15,8 @@ class AnalyticsDashboard extends Page
 
     protected static ?string $title = 'Business Analytics & Performance';
 
+    protected static ?string $navigationGroup = 'Dashboard & Analytics';
+
     protected static ?int $navigationSort = 2;
 
     public function getHeaderWidgets(): array
@@ -37,11 +39,10 @@ class AnalyticsDashboard extends Page
     protected function getFooterWidgets(): array
     {
         return [
-            // Temporarily disabled
-            // \App\Filament\Widgets\CompanyPerformanceWidget::class,
-            // \App\Filament\Widgets\SalesChannelBreakdownWidget::class,
-            // \App\Filament\Widgets\TopPerformersWidget::class,
-            // \App\Filament\Widgets\RecentTransactionsWidget::class,
+            \App\Filament\Widgets\CompanyPerformanceWidget::class,
+            \App\Filament\Widgets\SalesChannelBreakdownWidget::class,
+            \App\Filament\Widgets\TopPerformersWidget::class,
+            \App\Filament\Widgets\RecentTransactionsWidget::class,
         ];
     }
 }

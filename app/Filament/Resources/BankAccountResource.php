@@ -239,7 +239,7 @@ class BankAccountResource extends Resource
                 Forms\Components\Section::make('📝 Additional Information')
                     ->schema([
                         Forms\Components\Textarea::make('bank_address')
-                            ->label('🏢 Bank Address')
+                            ->label('Bank Address')
                             ->placeholder('Bank headquarters or branch address...')
                             ->columnSpanFull(),
 
@@ -430,6 +430,7 @@ class BankAccountResource extends Resource
         return [
             'index' => Pages\ListBankAccounts::route('/'),
             'create' => Pages\CreateBankAccount::route('/create'),
+            'view' => Pages\ViewBankAccount::route('/{record}'),
             'edit' => Pages\EditBankAccount::route('/{record}/edit'),
         ];
     }

@@ -156,4 +156,4 @@ echo "- STRIPE_SECRET_KEY"
 echo "- MAIL_* settings"
 echo ""
 
-print_success "Deployment script completed! 🚀" 
+print_success "Deployment script completed! 🚀"

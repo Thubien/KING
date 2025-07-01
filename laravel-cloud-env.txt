@@ -1,0 +1,27 @@
+APP_NAME="KING SaaS Platform"
+APP_ENV=production
+APP_DEBUG=true
+APP_URL=https://shopletix-main-y2yftn.laravel.cloud
+
+LOG_CHANNEL=stack
+LOG_LEVEL=debug
+
+DB_CONNECTION=mysql
+DB_HOST=mysql-server-id.railway.internal
+DB_PORT=3306
+DB_DATABASE=laravel_production
+DB_USERNAME=laravel
+DB_PASSWORD=your-database-password
+
+BROADCAST_CONNECTION=log
+CACHE_STORE=file
+FILESYSTEM_DISK=local
+QUEUE_CONNECTION=sync
+SESSION_DRIVER=file
+SESSION_LIFETIME=120
+
+MAIL_MAILER=log
+MAIL_FROM_ADDRESS="noreply@kingsaas.com"
+MAIL_FROM_NAME="${APP_NAME}"
+
+FILAMENT_ADMIN_PATH=admin

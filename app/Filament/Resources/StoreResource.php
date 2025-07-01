@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\StoreResource\Pages;
 use App\Models\Store;
+use App\Traits\HasSimpleAuthorization;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,6 +14,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 class StoreResource extends Resource
 {
+    use HasSimpleAuthorization;
+
     protected static ?string $model = Store::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
@@ -21,39 +24,55 @@ class StoreResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    // SIMPLIFIED AUTHORIZATION
+    protected static function getResourcePermissions(): array
+    {
+        return [
+            'owner' => true,   // Owners can manage stores
+            'partner' => true, // Partners can view their stores
+            'staff' => false,  // Staff cannot access store management
+        ];
+    }
+
     public static function canViewAny(): bool
     {
-        return auth()->user()?->can('viewAny', Store::class) ?? false;
+        return static::canAccessResource();
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()?->can('create', Store::class) ?? false;
+        $user = auth()->user();
+        return $user?->isSuperAdmin() || $user?->isOwner();
     }
 
     public static function shouldRegisterNavigation(): bool
     {
-        return auth()->user()?->isCompanyOwner() || auth()->user()?->isAdmin() || auth()->user()?->isPartner();
+        return static::canAccessResource();
     }
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
         $user = auth()->user();
+        $query = parent::getEloquentQuery();
 
-        // Company owners and admins see all stores in their company
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $query->where('company_id', $user->company_id);
+        // Super admin sees everything
+        if ($user?->isSuperAdmin()) {
+            return $query;
         }
 
-        // Partners only see stores they have partnerships in
-        if ($user->isPartner()) {
-            $accessibleStoreIds = $user->getAccessibleStoreIds();
+        // Owner sees all company stores (global scope handles company_id)
+        if ($user?->isOwner()) {
+            return $query;
+        }
 
+        // Partner sees only their partnership stores
+        if ($user?->isPartner()) {
+            $accessibleStoreIds = $user->getAccessibleStoreIds();
             return $query->whereIn('id', $accessibleStoreIds);
         }
 
-        return $query->whereNull('id'); // Return empty for other user types
+        // Staff and others see nothing
+        return $query->whereNull('id');
     }
 
     public static function form(Form $form): Form
@@ -294,40 +313,53 @@ We\'re working on PayPal API integration. For now, you can:
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('company.name')
-                    ->numeric()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('name')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('shopify_domain')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('shopify_store_id')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('currency')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('country_code')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('timezone')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('logo_url')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('status'),
-                Tables\Columns\TextColumn::make('last_sync_at')
-                    ->dateTime()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
+                    ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
+                    ->weight('bold'),
+                Tables\Columns\TextColumn::make('shopify_domain')
+                    ->searchable()
+                    ->icon('heroicon-m-globe-alt')
+                    ->copyable(),
+                Tables\Columns\BadgeColumn::make('currency')
+                    ->color('gray'),
+                Tables\Columns\TextColumn::make('partnerships_count')
+                    ->counts('partnerships')
+                    ->label('Partners')
+                    ->badge(),
+                Tables\Columns\BadgeColumn::make('status')
+                    ->colors([
+                        'success' => 'active',
+                        'warning' => 'syncing',
+                        'danger' => 'inactive',
+                    ]),
+                Tables\Columns\TextColumn::make('last_sync_at')
+                    ->label('Last Sync')
+                    ->dateTime('M j, Y g:i A')
+                    ->sortable()
+                    ->placeholder('Never'),
+                Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('status')
+                    ->options([
+                        'active' => 'Active',
+                        'syncing' => 'Syncing',
+                        'inactive' => 'Inactive',
+                    ]),
+                Tables\Filters\SelectFilter::make('currency')
+                    ->options([
+                        'USD' => 'USD',
+                        'EUR' => 'EUR',
+                        'GBP' => 'GBP',
+                        'TRY' => 'TRY',
+                    ]),
             ])
             ->actions([
+                Tables\Actions\ViewAction::make(),
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
@@ -349,6 +381,7 @@ We\'re working on PayPal API integration. For now, you can:
         return [
             'index' => Pages\ListStores::route('/'),
             'create' => Pages\CreateStore::route('/create'),
+            'view' => Pages\ViewStore::route('/{record}'),
             'edit' => Pages\EditStore::route('/{record}/edit'),
         ];
     }

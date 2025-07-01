@@ -20,6 +20,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Middleware aliases
         $middleware->alias([
             'ensure.user.access' => \App\Http\Middleware\EnsureUserAccess::class,
+            'role' => \App\Http\Middleware\SimpleRoleMiddleware::class,
         ]);
         
         // Rate limiting for API routes

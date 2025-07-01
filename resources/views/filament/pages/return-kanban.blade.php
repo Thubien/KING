@@ -746,6 +746,31 @@
         .desktop-column::-webkit-scrollbar-thumb:hover {
             background-color: rgba(0,0,0,0.3);
         }
+        
+        /* Refund Method Badges */
+        .refund-method-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.375rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .refund-cash {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .refund-exchange {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .refund-store_credit {
+            background: #fef3c7;
+            color: #92400e;
+        }
     </style>
     @endpush
 
@@ -839,9 +864,18 @@
                             
                             <div class="mobile-card-footer">
                                 <div class="mobile-date">{{ $return->created_at->format('d.m.Y') }}</div>
-                                @if($return->resolution)
-                                    <span class="badge-{{ $return->resolution }}">
-                                        {{ \App\Models\ReturnRequest::RESOLUTIONS[$return->resolution] }}
+                                @if($return->refund_method)
+                                    <span class="refund-method-badge refund-{{ $return->refund_method }}">
+                                        @if($return->refund_method === 'cash')
+                                            @svg('heroicon-o-banknotes', 'w-3 h-3 inline')
+                                            {{ $return->shouldCreateFinancialRecord() ? '-' . number_format($return->refund_amount, 2) . $return->currency : 'Nakit' }}
+                                        @elseif($return->refund_method === 'exchange')
+                                            @svg('heroicon-o-arrow-path', 'w-3 h-3 inline')
+                                            Değişim
+                                        @elseif($return->refund_method === 'store_credit')
+                                            @svg('heroicon-o-ticket', 'w-3 h-3 inline')
+                                            SC
+                                        @endif
                                     </span>
                                 @endif
                             </div>
@@ -918,9 +952,18 @@
                                     
                                     <div class="mobile-card-footer">
                                         <div class="mobile-date">{{ $return->created_at->format('d.m.Y') }}</div>
-                                        @if($return->resolution)
-                                            <span class="badge-{{ $return->resolution }}">
-                                                {{ \App\Models\ReturnRequest::RESOLUTIONS[$return->resolution] }}
+                                        @if($return->refund_method)
+                                            <span class="refund-method-badge refund-{{ $return->refund_method }}">
+                                                @if($return->refund_method === 'cash')
+                                                    @svg('heroicon-o-banknotes', 'w-3 h-3 inline')
+                                                    {{ $return->shouldCreateFinancialRecord() ? '-' . number_format($return->refund_amount, 2) . $return->currency : 'Nakit' }}
+                                                @elseif($return->refund_method === 'exchange')
+                                                    @svg('heroicon-o-arrow-path', 'w-3 h-3 inline')
+                                                    Değişim
+                                                @elseif($return->refund_method === 'store_credit')
+                                                    @svg('heroicon-o-ticket', 'w-3 h-3 inline')
+                                                    SC
+                                                @endif
                                             </span>
                                         @endif
                                     </div>
@@ -994,6 +1037,49 @@
                                                     <span class="info-label">İade Tutarı:</span>
                                                     <span class="info-value">{{ $selectedReturn->currency }} {{ number_format($selectedReturn->refund_amount, 2) }}</span>
                                                 </div>
+                                            @endif
+                                            @if($selectedReturn->refund_method)
+                                                <div class="info-row">
+                                                    <span class="info-label">İade Yöntemi:</span>
+                                                    <span class="info-value">
+                                                        @if($selectedReturn->refund_method === 'cash')
+                                                            <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-red-100 text-red-800">
+                                                                @svg('heroicon-o-banknotes', 'w-4 h-4 mr-1 inline')
+                                                                Nakit İade
+                                                            </span>
+                                                        @elseif($selectedReturn->refund_method === 'exchange')
+                                                            <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-blue-100 text-blue-800">
+                                                                @svg('heroicon-o-arrow-path', 'w-4 h-4 mr-1 inline')
+                                                                Değişim
+                                                            </span>
+                                                        @elseif($selectedReturn->refund_method === 'store_credit')
+                                                            <span class="inline-flex items-center px-2 py-1 rounded-lg text-xs font-medium bg-yellow-100 text-yellow-800">
+                                                                @svg('heroicon-o-ticket', 'w-4 h-4 mr-1 inline')
+                                                                Store Credit
+                                                            </span>
+                                                        @endif
+                                                    </span>
+                                                </div>
+                                            @endif
+                                            @if($selectedReturn->store_credit_code)
+                                                <div class="info-row">
+                                                    <span class="info-label">SC Kodu:</span>
+                                                    <span class="info-value font-mono">{{ $selectedReturn->store_credit_code }}</span>
+                                                </div>
+                                            @endif
+                                            @if($selectedReturn->exchange_product_name)
+                                                <div class="info-row">
+                                                    <span class="info-label">Değişim Ürünü:</span>
+                                                    <span class="info-value">{{ $selectedReturn->exchange_product_name }}</span>
+                                                </div>
+                                                @if($selectedReturn->exchange_difference)
+                                                    <div class="info-row">
+                                                        <span class="info-label">Fark:</span>
+                                                        <span class="info-value">
+                                                            {{ $selectedReturn->exchange_difference > 0 ? '+' : '' }}{{ number_format($selectedReturn->exchange_difference, 2) }} {{ $selectedReturn->currency }}
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             @endif
                                             <div class="info-row">
                                                 <span class="info-label">İade Nedeni:</span>

@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\RoleDashboardRedirect;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -11,6 +12,9 @@ use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Widgets;
+use Filament\Navigation\MenuItem;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -28,10 +32,11 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->registration()
+            ->emailVerification()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Indigo,
             ])
-            ->darkMode(false)
+            ->brandName('Shopletix')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
@@ -39,6 +44,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
+                \App\Filament\Widgets\WelcomeWidget::class,
                 \App\Filament\Widgets\BalanceOverviewWidget::class,
                 \App\Filament\Widgets\StoreOverviewWidget::class,
                 \App\Filament\Widgets\RecentTransactionsWidget::class,
@@ -46,6 +52,11 @@ class AdminPanelProvider extends PanelProvider
                 \App\Filament\Widgets\FinancialOverviewWidget::class,
                 \App\Filament\Widgets\PartnerOverviewWidget::class,
                 \App\Filament\Widgets\RecentActivityWidget::class,
+                // Partner-specific widgets
+                \App\Filament\Widgets\PartnerStatsWidget::class,
+                \App\Filament\Widgets\PartnerDebtWidget::class,
+                \App\Filament\Widgets\PartnerProfitShareWidget::class,
+                \App\Filament\Widgets\PartnerStoresWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -60,6 +71,32 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
+            ])
+            ->navigationGroups([
+                // PREMIUM SAAS NAVIGATION GROUPS
+                NavigationGroup::make('Dashboard & Analytics')
+                    ->collapsed(false), // Always expanded for quick access
+                    
+                NavigationGroup::make('Sales & Orders')
+                    ->collapsed(fn () => !auth()->user()?->isStaff()), // Expanded for staff
+                    
+                NavigationGroup::make('Financial Management')
+                    ->collapsed(fn () => auth()->user()?->isStaff()), // Collapsed for staff
+                    
+                NavigationGroup::make('Business Management')
+                    ->collapsed(fn () => !auth()->user()?->isOwner()), // Expanded for owners
+                    
+                NavigationGroup::make('Customer Relations')
+                    ->collapsed(fn () => !auth()->user()?->canCreateOrders()), // Expanded for order creators
+                    
+                NavigationGroup::make('System & Analytics')
+                    ->collapsed(fn () => !auth()->user()?->isSuperAdmin()), // Expanded for admins
+            ])
+            ->userMenuItems([
+                MenuItem::make()
+                    ->label('Ayarlarım')
+                    ->url(fn (): string => route('filament.admin.pages.user-settings'))
+                    ->icon('heroicon-o-cog-6-tooth'),
             ]);
     }
 }

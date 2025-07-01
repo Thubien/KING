@@ -16,82 +16,77 @@ class PermissionsAndRolesSeeder extends Seeder
         // Reset cached roles and permissions
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
-        // Create permissions
+        // SIMPLIFIED: 3 Main Roles with Clear Permissions
         $permissions = [
-            // Company owner permissions
+            // Core permissions for all users
+            'view_dashboard',
+            'manage_profile',
+            
+            // Owner permissions (full company access)
             'manage_company',
-            'invite_partners',
-            'view_all_stores',
-            'view_all_profit_shares',
-
-            // Partner permissions
-            'view_own_stores',
-            'view_own_profit_shares',
+            'manage_all_stores',
+            'view_all_financial_data',
+            'invite_users',
+            'manage_partnerships',
+            
+            // Partner permissions (store-based access)
+            'view_assigned_stores',
+            'view_partnership_profits',
             'manage_personal_expenses',
-
-            // Store management
-            'create_stores',
-            'edit_stores',
-            'delete_stores',
-            'view_store_analytics',
-
-            // Financial management
-            'manage_transactions',
-            'view_financial_reports',
-            'manage_bank_accounts',
-            'manage_payment_processors',
-
-            // Partnership management
-            'create_partnerships',
-            'edit_partnerships',
-            'delete_partnerships',
-            'view_partnership_details',
+            
+            // Staff permissions (operational tasks)
+            'create_orders',
+            'manage_customers',
+            'view_basic_reports',
         ];
 
         foreach ($permissions as $permission) {
-            Permission::create(['name' => $permission]);
+            Permission::firstOrCreate(['name' => $permission]);
         }
 
-        // Create roles and assign permissions
-
-        // Company Owner Role
-        $companyOwnerRole = Role::create(['name' => 'company_owner']);
-        $companyOwnerRole->givePermissionTo([
+        // 1. OWNER - Company owner with full access
+        $ownerRole = Role::firstOrCreate(['name' => 'owner']);
+        $ownerRole->syncPermissions([
+            'view_dashboard',
+            'manage_profile',
             'manage_company',
-            'invite_partners',
-            'view_all_stores',
-            'view_all_profit_shares',
-            'create_stores',
-            'edit_stores',
-            'delete_stores',
-            'view_store_analytics',
-            'manage_transactions',
-            'view_financial_reports',
-            'manage_bank_accounts',
-            'manage_payment_processors',
-            'create_partnerships',
-            'edit_partnerships',
-            'delete_partnerships',
-            'view_partnership_details',
-        ]);
-
-        // Partner Role
-        $partnerRole = Role::create(['name' => 'partner']);
-        $partnerRole->givePermissionTo([
-            'view_own_stores',
-            'view_own_profit_shares',
+            'manage_all_stores',
+            'view_all_financial_data',
+            'invite_users',
+            'manage_partnerships',
+            'view_assigned_stores',
+            'view_partnership_profits',
             'manage_personal_expenses',
-            'view_store_analytics',
-            'view_partnership_details',
+            'create_orders',
+            'manage_customers',
+            'view_basic_reports',
         ]);
 
-        // Staff Role (for future use)
-        $staffRole = Role::create(['name' => 'staff']);
-        $staffRole->givePermissionTo([
-            'view_store_analytics',
-            'manage_transactions',
+        // 2. PARTNER - Store partner with limited access
+        $partnerRole = Role::firstOrCreate(['name' => 'partner']);
+        $partnerRole->syncPermissions([
+            'view_dashboard',
+            'manage_profile',
+            'view_assigned_stores',
+            'view_partnership_profits',
+            'manage_personal_expenses',
+            'view_basic_reports',
         ]);
 
-        $this->command->info('Permissions and roles created successfully!');
+        // 3. STAFF - Operational staff (sales rep, etc.)
+        $staffRole = Role::firstOrCreate(['name' => 'staff']);
+        $staffRole->syncPermissions([
+            'view_dashboard',
+            'manage_profile',
+            'create_orders',
+            'manage_customers',
+            'view_basic_reports',
+        ]);
+
+        // 4. SUPER_ADMIN - System administrator (bypasses all restrictions)
+        Role::firstOrCreate(['name' => 'super_admin']);
+
+        $this->command->info('✅ Simplified 3-role system created successfully!');
+        $this->command->info('Roles: OWNER, PARTNER, STAFF, SUPER_ADMIN');
     }
 }

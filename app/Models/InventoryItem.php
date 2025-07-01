@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -112,5 +113,30 @@ class InventoryItem extends Model
     public function scopeByStore($query, $storeId)
     {
         return $query->where('store_id', $storeId);
+    }
+
+    // Boot method
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Multi-tenant scoping through store relationship
+        static::addGlobalScope('company', function (Builder $builder) {
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all inventory items
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's inventory items
+                if ($user->company_id) {
+                    $builder->whereHas('store', function ($query) use ($user) {
+                        $query->where('company_id', $user->company_id);
+                    });
+                }
+            }
+        });
     }
 }

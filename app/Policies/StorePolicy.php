@@ -4,9 +4,11 @@ namespace App\Policies;
 
 use App\Models\Store;
 use App\Models\User;
+use App\Policies\Traits\HandlesAuthorization;
 
 class StorePolicy
 {
+    use HandlesAuthorization;
     /**
      * Determine whether the user can view any models.
      */
@@ -21,8 +23,8 @@ class StorePolicy
     public function view(User $user, Store $store): bool
     {
         // Company owners and admins can view all stores in their company
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $this->belongsToSameCompany($user, $store);
         }
 
         // Partners can only view stores they have partnerships in
@@ -38,7 +40,7 @@ class StorePolicy
      */
     public function create(User $user): bool
     {
-        return $user->isCompanyOwner() || $user->isAdmin();
+        return $this->isCompanyManager($user);
     }
 
     /**
@@ -47,8 +49,8 @@ class StorePolicy
     public function update(User $user, Store $store): bool
     {
         // Only company owners and admins can update stores
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $this->belongsToSameCompany($user, $store);
         }
 
         return false;
@@ -60,8 +62,8 @@ class StorePolicy
     public function delete(User $user, Store $store): bool
     {
         // Only company owners and admins can delete stores
-        if ($user->isCompanyOwner() || $user->isAdmin()) {
-            return $store->company_id === $user->company_id;
+        if ($this->isCompanyManager($user)) {
+            return $this->belongsToSameCompany($user, $store);
         }
 
         return false;

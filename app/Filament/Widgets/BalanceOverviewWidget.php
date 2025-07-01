@@ -105,4 +105,10 @@ class BalanceOverviewWidget extends BaseWidget
             return '$'.Number::format($amount, 2);
         }
     }
+
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->isCompanyOwner() || $user->isAdmin());
+    }
 }

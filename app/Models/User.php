@@ -31,6 +31,11 @@ class User extends Authenticatable
         'last_login_at',
         'avatar_url',
         'is_active',
+        'avatar',
+        'title',
+        'phone',
+        'bio',
+        'language',
     ];
 
     /**
@@ -75,6 +80,16 @@ class User extends Authenticatable
         return $this->hasMany(Transaction::class, 'created_by');
     }
 
+    public function settings()
+    {
+        return $this->hasOne(UserSetting::class);
+    }
+
+    public function loginLogs(): HasMany
+    {
+        return $this->hasMany(UserLoginLog::class);
+    }
+
     // Scopes
     public function scopeActive($query)
     {
@@ -86,30 +101,40 @@ class User extends Authenticatable
         return $query->where('company_id', $companyId);
     }
 
-    // Business Logic Methods
+    // Business Logic Methods - UPDATED FOR SIMPLIFIED ROLE SYSTEM
     public function isCompanyOwner(): bool
     {
-        return $this->user_type === 'company_owner';
+        return $this->hasRole('owner'); // Updated to new role system
+    }
+
+    public function isOwner(): bool  
+    {
+        return $this->hasRole('owner');
     }
 
     public function isPartner(): bool
     {
-        return $this->user_type === 'partner';
+        return $this->hasRole('partner'); // Updated to use role instead of user_type
     }
 
     public function isAdmin(): bool
     {
-        return $this->user_type === 'admin';
+        return $this->hasRole('owner'); // Admin = Owner in simplified system
+    }
+
+    public function isStaff(): bool
+    {
+        return $this->hasRole('staff');
     }
 
     public function isSalesRep(): bool
     {
-        return $this->hasRole('sales_rep');
+        return $this->hasRole('staff'); // Sales rep = Staff in simplified system
     }
 
     public function canCreateOrders(): bool
     {
-        return $this->can('create_manual_orders');
+        return $this->isSuperAdmin() || $this->isOwner() || $this->isStaff();
     }
 
     public function getActivePartnerships()
@@ -143,6 +168,16 @@ class User extends Authenticatable
             ->where('store_id', $storeId)
             ->where('status', 'ACTIVE')
             ->exists();
+    }
+
+    public function getPersonalExpensesForStore(int $storeId): float
+    {
+        return Transaction::where('store_id', $storeId)
+            ->where('partner_id', $this->id)
+            ->where('is_personal_expense', true)
+            ->where('type', 'expense')
+            ->where('status', 'APPROVED')
+            ->sum('amount');
     }
 
     public function getAccessibleStoreIds(): array
@@ -192,15 +227,45 @@ class User extends Authenticatable
 
         switch ($this->user_type) {
             case 'company_owner':
-                $this->assignRole('company_owner');
+                $this->assignRole('owner');
                 break;
             case 'partner':
                 $this->assignRole('partner');
                 break;
             case 'staff':
+            case 'sales_rep':
                 $this->assignRole('staff');
                 break;
         }
+    }
+
+    // SIMPLIFIED ROLE HELPERS (updated existing methods)
+    public function isSuperAdmin(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
+    public function canAccessPanel(\Filament\Panel $panel): bool
+    {
+        // All authenticated users can access the panel
+        // Email verification disabled for sandbox
+        return $this->exists;
+    }
+
+    // UNIFIED PERMISSION CHECKS
+    public function canManageCompany(): bool
+    {
+        return $this->isSuperAdmin() || $this->isOwner();
+    }
+
+    public function canViewAllStores(): bool
+    {
+        return $this->isSuperAdmin() || $this->isOwner();
+    }
+
+    public function canViewFinancialData(): bool
+    {
+        return $this->isSuperAdmin() || $this->isOwner() || $this->isPartner();
     }
 
     /**
@@ -360,5 +425,64 @@ class User extends Authenticatable
     public function canAccessSalesRepDashboard(): bool
     {
         return $this->isSalesRep() || $this->isAdmin() || $this->isCompanyOwner();
+    }
+
+    /**
+     * Get or create user settings
+     */
+    public function getSettings(): UserSetting
+    {
+        return $this->settings()->firstOrCreate(
+            ['user_id' => $this->id],
+            UserSetting::make(['user_id' => $this->id])->attributesToArray()
+        );
+    }
+
+    /**
+     * Get formatted date according to user preference
+     */
+    public function formatDate($date): string
+    {
+        if (!$date) return '';
+        
+        $format = $this->getSettings()->date_format ?? 'd/m/Y';
+        return $date instanceof \DateTime ? $date->format($format) : \Carbon\Carbon::parse($date)->format($format);
+    }
+
+    /**
+     * Get formatted time according to user preference
+     */
+    public function formatTime($time): string
+    {
+        if (!$time) return '';
+        
+        $format = $this->getSettings()->time_format ?? 'H:i';
+        return $time instanceof \DateTime ? $time->format($format) : \Carbon\Carbon::parse($time)->format($format);
+    }
+
+    /**
+     * Get formatted datetime according to user preference
+     */
+    public function formatDateTime($datetime): string
+    {
+        if (!$datetime) return '';
+        
+        $settings = $this->getSettings();
+        $format = $settings->date_format . ' ' . $settings->time_format;
+        return $datetime instanceof \DateTime ? $datetime->format($format) : \Carbon\Carbon::parse($datetime)->format($format);
+    }
+
+    /**
+     * Get avatar URL
+     */
+    public function getAvatarUrlAttribute(): string
+    {
+        if ($this->avatar) {
+            return \Storage::url($this->avatar);
+        }
+
+        // Generate Gravatar URL as fallback
+        $hash = md5(strtolower(trim($this->email)));
+        return "https://www.gravatar.com/avatar/{$hash}?d=mp&s=200";
     }
 }

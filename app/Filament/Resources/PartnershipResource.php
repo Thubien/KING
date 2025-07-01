@@ -22,11 +22,11 @@ class PartnershipResource extends Resource
 
     protected static ?string $navigationLabel = 'Partner Management';
 
-    protected static ?string $navigationGroup = 'Partnership';
+    protected static ?string $navigationGroup = 'Business Management';
 
     protected static ?string $modelLabel = 'Partnership';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
 
     public static function canViewAny(): bool
     {
@@ -321,6 +321,7 @@ class PartnershipResource extends Resource
         return [
             'index' => Pages\ListPartnerships::route('/'),
             'create' => Pages\CreatePartnership::route('/create'),
+            'view' => Pages\ViewPartnership::route('/{record}'),
             'edit' => Pages\EditPartnership::route('/{record}/edit'),
         ];
     }

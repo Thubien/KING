@@ -63,8 +63,18 @@ class ImportBatch extends Model
 
         // Multi-tenant scoping
         static::addGlobalScope('company', function (Builder $builder) {
-            if (auth()->check() && auth()->user()->company_id) {
-                $builder->where('company_id', auth()->user()->company_id);
+            if (auth()->check()) {
+                $user = auth()->user();
+                
+                // Super admin can see all import batches
+                if ($user->hasRole('super_admin')) {
+                    return;
+                }
+                
+                // Other users only see their company's import batches
+                if ($user->company_id) {
+                    $builder->where('company_id', $user->company_id);
+                }
             }
         });
 

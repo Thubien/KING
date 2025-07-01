@@ -51,4 +51,10 @@ class PartnerOverviewWidget extends BaseWidget
     {
         return 3;
     }
+
+    public static function canView(): bool
+    {
+        $user = auth()->user();
+        return $user && ($user->isCompanyOwner() || $user->isAdmin());
+    }
 }

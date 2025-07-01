@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\SimpleAuditLogger;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -41,6 +42,45 @@ class Partnership extends Model
         'invited_at' => 'datetime',
         'activated_at' => 'datetime',
     ];
+
+    // AUDIT LOGGING
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($partnership) {
+            SimpleAuditLogger::logPartnerAction('ADDED', $partnership);
+        });
+
+        static::updated(function ($partnership) {
+            if ($partnership->wasChanged('ownership_percentage')) {
+                SimpleAuditLogger::logPartnerAction('OWNERSHIP_CHANGED', $partnership, [
+                    'old_percentage' => $partnership->getOriginal('ownership_percentage'),
+                    'new_percentage' => $partnership->ownership_percentage,
+                ]);
+            }
+
+            if ($partnership->wasChanged('status')) {
+                SimpleAuditLogger::logPartnerAction('STATUS_CHANGED', $partnership, [
+                    'old_status' => $partnership->getOriginal('status'),
+                    'new_status' => $partnership->status,
+                ]);
+            }
+        });
+
+        static::deleted(function ($partnership) {
+            SimpleAuditLogger::logPartnerAction('REMOVED', $partnership);
+        });
+
+        // Cache invalidation
+        static::saved(function ($partnership) {
+            $partnership->clearRelatedCache();
+        });
+
+        static::deleted(function ($partnership) {
+            $partnership->clearRelatedCache();
+        });
+    }
 
     // Relationships
     public function store(): BelongsTo
@@ -235,21 +275,6 @@ class Partnership extends Model
             ->sum('ownership_percentage');
     }
 
-    /**
-     * Boot method to handle cache invalidation
-     */
-    protected static function boot()
-    {
-        parent::boot();
-
-        static::saved(function ($partnership) {
-            $partnership->clearRelatedCache();
-        });
-
-        static::deleted(function ($partnership) {
-            $partnership->clearRelatedCache();
-        });
-    }
 
     /**
      * Clear cache when partnership changes

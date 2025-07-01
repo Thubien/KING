@@ -90,7 +90,7 @@ class BalanceValidationService
     /**
      * Tek store'un balance hesaplama
      */
-    private function calculateStoreBalance($store): float
+    public function calculateStoreBalance($store): float
     {
         $income = Transaction::where('store_id', $store->id)
             ->where('status', 'APPROVED')
