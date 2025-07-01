@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Services\Import\ImportOrchestrator;
 use Illuminate\Support\ServiceProvider;
+use App\Models\User;
+use App\Observers\UserObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,6 +25,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        // Register User Observer
+        User::observe(UserObserver::class);
+        
         // Login event listener
         \Illuminate\Support\Facades\Event::listen(
             \Illuminate\Auth\Events\Login::class,
