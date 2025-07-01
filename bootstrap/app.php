@@ -11,10 +11,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // Production security middleware
+        $middleware->append([
+            \App\Http\Middleware\ForceHttps::class,
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+        
+        // Middleware aliases
         $middleware->alias([
             'ensure.user.access' => \App\Http\Middleware\EnsureUserAccess::class,
             'role' => \App\Http\Middleware\SimpleRoleMiddleware::class,
         ]);
+        
+        // Rate limiting for API routes
+        $middleware->throttleApi();
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //

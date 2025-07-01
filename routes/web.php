@@ -40,3 +40,10 @@ Route::post('/webhooks/shopify/orders/updated', [\App\Http\Controllers\ShopifyWe
 
 Route::post('/webhooks/shopify/orders/paid', [\App\Http\Controllers\ShopifyWebhookController::class, 'handleOrderPaid'])
         ->name('shopify.webhooks.orders.paid');
+
+// Health check endpoints for production monitoring
+Route::get('/health', [\App\Http\Controllers\HealthCheckController::class, 'check'])
+    ->name('health.check');
+
+Route::get('/ping', [\App\Http\Controllers\HealthCheckController::class, 'ping'])
+    ->name('health.ping');
