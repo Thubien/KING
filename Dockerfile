@@ -58,5 +58,5 @@ RUN php artisan storage:link
 # Expose port
 EXPOSE 8080
 
-# Start command
-CMD php artisan serve --host=0.0.0.0 --port=8080 
+# Railway will handle the start command via railway.json
+# CMD removed to avoid conflict with railway.json startCommand 

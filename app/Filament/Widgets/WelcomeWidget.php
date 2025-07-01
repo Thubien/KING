@@ -16,7 +16,7 @@ class WelcomeWidget extends Widget
     {
         $user = auth()->user();
         
-        // Only show for new users with no stores
-        return $user && $user->company && $user->company->stores()->count() === 0;
+        // Show to all authenticated users with a company
+        return $user && $user->company;
     }
 }

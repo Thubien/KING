@@ -31,18 +31,36 @@ Think "QuickBooks for Multi-Store E-commerce Partnerships" with Shopify-first ap
 - `./vendor/bin/pint` - Run Laravel Pint for code formatting
 - `./vendor/bin/phpunit` - Run PHPUnit tests directly
 
+### Testing Commands
+- `php artisan test` - Run all tests
+- `php artisan test --filter=BalanceValidation` - Run specific test
+- `php artisan test tests/Unit` - Run only unit tests
+- `php artisan test tests/Feature` - Run only feature tests
+
 ### Filament Commands
 - `php artisan filament:upgrade` - Upgrade Filament components
 - `php artisan make:filament-resource ModelName` - Create new Filament resource
+- `php artisan make:filament-widget WidgetName` - Create new dashboard widget
+
+### Docker/Sail Commands (if using Docker)
+- `./vendor/bin/sail up` - Start Docker containers
+- `./vendor/bin/sail artisan migrate` - Run migrations in Docker
+- `./vendor/bin/sail test` - Run tests in Docker
 
 ## Architecture Overview
 
 ### Core Technology Stack
-- **Framework**: Laravel 12 with PHP 8.2+
+- **Framework**: Laravel 12 with PHP 8.3+
 - **Admin Panel**: Filament v3 for complete backend management
 - **Frontend**: Vite + TailwindCSS v4 + Alpine.js
 - **Database**: SQLite (development), supports PostgreSQL/MySQL
 - **Authentication**: Laravel's built-in auth with Spatie Laravel Permission
+- **Payment Processing**: Stripe PHP SDK
+- **Analytics**: Laravel Trend for charts and metrics
+
+### Default Credentials (Development)
+- **Admin**: admin@admin.com / password
+- **Demo Partner**: partner@demo.com / password
 
 ### Business Domain Architecture
 
@@ -72,6 +90,7 @@ ImportOrchestrator → Strategy Selection → Format Detection → Processing �
 - **Payoneer EUR/USD** (7 columns, 100% detection accuracy)  
 - **Stripe Balance History** (15 columns, 100% detection accuracy)
 - **Stripe Payments Report** (28 columns, 83%+ detection accuracy)
+- **Manual Entry** - Form-based transaction creation
 
 **Core Components:**
 - `ImportOrchestrator` - Main coordinator for all imports with batch tracking
@@ -143,6 +162,10 @@ All admin functionality via Filament resources in `app/Filament/Resources/`:
 - `TransactionResource` - Financial transaction management with smart categorization
 - `ImportBatchResource` - Import history and monitoring with real-time progress
 - `PartnershipResource` - Store partnership management with percentage validation
+- `BankAccountResource` - Bank account management
+- `PaymentProcessorAccountResource` - Payment processor tracking
+- `CustomerResource` - Customer management
+- `ReturnRequestResource` - Return processing workflow
 
 ### Shopify Integration (Planned)
 
@@ -175,6 +198,8 @@ Company → hasMany Stores → hasMany Transactions
 Company → hasManyThrough Transactions (via Stores)
 Store → hasMany Partnerships → belongsTo Users (Partners)
 Transaction → belongsTo Store, Partner (if personal expense)
+Store → hasMany BankAccounts
+Store → hasMany PaymentProcessorAccounts
 ```
 
 **Performance Optimizations:**
@@ -184,6 +209,7 @@ INDEX(company_id, store_id, transaction_date)
 INDEX(category, status, transaction_date) 
 INDEX(partner_id, is_personal_expense)
 INDEX(store_id, partnership_percentage)
+INDEX(import_batch_id, status)
 ```
 
 ## Development Workflow
@@ -220,18 +246,33 @@ assert($totalPercentage === 100.0);
 - **Performance Tests**: Large file imports (1000+ transactions)
 - **Security Tests**: Multi-tenant data isolation
 
+**Key Test Files:**
+- `tests/Unit/BalanceValidationServiceTest.php`
+- `tests/Unit/FinancialCalculationsTest.php` 
+- `tests/Feature/PartnerDataIsolationTest.php`
+- `tests/Feature/ManualOrderTest.php`
+- `tests/Feature/ImportFlowTest.php`
+
 ### Asset Development
 - TailwindCSS v4 with Vite integration
 - Filament auto-generates admin panel assets
 - Real-time updates via Livewire components
+- Custom styles in `resources/css/premium-dashboard.css`
 
 ### Import Development Guidelines
 When adding new import strategies:
-1. Implement `ImportStrategyInterface`
+1. Implement `ImportStrategyInterface` in `app/Services/Import/Strategies/`
 2. Add format detection logic to `BankFormatDetector`
 3. Register in `ImportOrchestrator::registerStrategies()`
 4. Create comprehensive test cases for edge cases
 5. Add corresponding Filament resource for monitoring
+6. Update documentation with sample CSV format
+
+### Common Model Traits
+- `BelongsToCompany` - Multi-tenant isolation
+- `HasUuid` - UUID primary keys
+- `LogsActivity` - Audit trail tracking
+- `HasFactory` - Factory support for testing
 
 ### Security Considerations
 - **Multi-tenant isolation**: Global scopes enforce company boundaries
@@ -239,6 +280,8 @@ When adding new import strategies:
 - **Audit trails**: Complete transaction history with user attribution
 - **Role-based access**: Partners only see their store data
 - **Personal expense privacy**: Individual partner expenses remain private
+- **CSRF protection**: Enabled on all forms
+- **XSS prevention**: Blade templating auto-escapes output
 
 ## Key Business Insights for Development
 
@@ -258,8 +301,8 @@ E-commerce entrepreneurs with multiple stores and business partners struggle wit
 
 ### Integration Roadmap
 - **Phase 1**: Foundation with CSV imports - COMPLETE
-- **Phase 2**: Advanced transaction processing (current)
-- **Phase 3**: Shopify OAuth integration
+- **Phase 2**: Advanced transaction processing - COMPLETE
+- **Phase 3**: Shopify OAuth integration (current)
 - **Phase 4**: Smart categorization with ML
 - **Phase 5**: Advanced reporting and analytics
 - **Phase 6**: API integrations (Stripe, PayPal, other banks)
@@ -273,7 +316,7 @@ E-commerce entrepreneurs with multiple stores and business partners struggle wit
 - `BalanceValidationService` - Critical service for real-world balance validation
 - Updated `Transaction` model with payment processor fields
 
-**Manuel CSV Workflow:**
+**Manual CSV Workflow:**
 1. **Sales Transaction Import** → Automatically adds to Payment Processor pending balance
 2. **Manual Payout Processing** → Move pending to current balance
 3. **Bank Transfer** → Move from processor current to bank account
@@ -325,4 +368,14 @@ When expenses need to be split across stores:
 - Payout processing tools for moving pending to current
 - Real-time sync status tracking
 
-This platform now accurately reflects real-world payment processor holding periods, making it production-ready for e-commerce financial tracking. The balance validation system is the foundation that ensures 100% accuracy.
+### Common File Locations
+- **Models**: `app/Models/`
+- **Filament Resources**: `app/Filament/Resources/`
+- **Services**: `app/Services/`
+- **Import System**: `app/Services/Import/`
+- **Migrations**: `database/migrations/`
+- **Tests**: `tests/Unit/` and `tests/Feature/`
+- **Views**: `resources/views/filament/`
+- **Assets**: `resources/css/` and `resources/js/`
+
+This platform accurately reflects real-world payment processor holding periods, making it production-ready for e-commerce financial tracking. The balance validation system is the foundation that ensures 100% accuracy.
