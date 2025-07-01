@@ -10,6 +10,10 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libzip-dev \
     libicu-dev \
+    libfreetype6-dev \
+    libjpeg62-turbo-dev \
+    libmcrypt-dev \
+    libssl-dev \
     zip \
     unzip \
     nodejs \
@@ -17,6 +21,9 @@ RUN apt-get update && apt-get install -y \
 
 # Clear cache
 RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# Configure GD extension
+RUN docker-php-ext-configure gd --with-freetype --with-jpeg
 
 # Install PHP extensions
 RUN docker-php-ext-install \
@@ -27,7 +34,14 @@ RUN docker-php-ext-install \
     bcmath \
     gd \
     zip \
-    intl
+    intl \
+    xml \
+    curl \
+    tokenizer \
+    ctype \
+    json \
+    fileinfo \
+    opcache
 
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -38,8 +52,8 @@ WORKDIR /app
 # Copy composer files
 COPY composer.json composer.lock ./
 
-# Install PHP dependencies
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# Install PHP dependencies with increased memory and verbose output
+RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --verbose
 
 # Copy package files
 COPY package*.json ./
