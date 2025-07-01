@@ -1,0 +1,14 @@
+# Simplified nixpacks configuration for Railway
+# If the main nixpacks.toml fails, rename this file to nixpacks.toml
+
+[phases.setup]
+nixPkgs = ["php82", "php82Extensions.pdo_mysql", "nodejs-18_x"]
+
+[phases.install]
+cmds = ["composer install --no-dev --optimize-autoloader", "npm ci"]
+
+[phases.build]
+cmds = ["npm run build"]
+
+[start]
+cmd = "php artisan serve --host=0.0.0.0 --port=$PORT" 
