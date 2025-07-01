@@ -43,23 +43,14 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /app
 
-# Copy composer files
-COPY composer.json composer.lock ./
+# Copy application code first
+COPY . .
 
 # Install PHP dependencies with increased memory and verbose output
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --verbose
 
-# Copy package files
-COPY package*.json ./
-
-# Install NPM dependencies
-RUN npm ci
-
-# Copy application code
-COPY . .
-
-# Build assets
-RUN npm run build
+# Install NPM dependencies and build assets
+RUN npm ci && npm run build
 
 # Create storage link
 RUN php artisan storage:link
