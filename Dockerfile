@@ -49,7 +49,7 @@ COPY . .
 # Install PHP dependencies with increased memory and verbose output
 RUN COMPOSER_MEMORY_LIMIT=-1 composer install --no-dev --optimize-autoloader --no-interaction --verbose
 
-# Install NPM dependencies and build assets
+# Install NPM dependencies and build assets (forced cache invalidation)
 RUN npm install && npm run build
 
 # Create storage link
