@@ -43,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->widgets([
                 Widgets\AccountWidget::class,
+                \App\Filament\Widgets\WelcomeWidget::class,
                 \App\Filament\Widgets\BalanceOverviewWidget::class,
                 \App\Filament\Widgets\StoreOverviewWidget::class,
                 \App\Filament\Widgets\RecentTransactionsWidget::class,

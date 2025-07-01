@@ -13,23 +13,10 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Always run permissions seeder
+        // Only run permissions seeder for production
         $this->call([
             PermissionsAndRolesSeeder::class,
         ]);
-
-        // Check if this is initial setup (no users exist)
-        if (\App\Models\User::count() === 0) {
-            $this->command->info('Initial setup detected. Running all seeders...');
-            $this->call([
-                AdminUserSeeder::class,
-                DemoDataSeeder::class,
-                CustomerDemoSeeder::class,
-                ReturnRequestDemoSeeder::class,
-            ]);
-        } else {
-            $this->command->info('Existing data found. Skipping demo data seeders.');
-        }
         
         $this->command->info('Database seeding completed successfully!');
     }
