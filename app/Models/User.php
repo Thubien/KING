@@ -247,7 +247,9 @@ class User extends Authenticatable
 
     public function canAccessPanel(\Filament\Panel $panel): bool
     {
-        return true; // Geçici olarak herkese açık
+        // All authenticated users can access the panel
+        // Email verification disabled for sandbox
+        return $this->exists;
     }
 
     // UNIFIED PERMISSION CHECKS
