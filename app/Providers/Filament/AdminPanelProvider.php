@@ -44,28 +44,30 @@ class AdminPanelProvider extends PanelProvider
             ->darkMode(false)
             ->font('Inter')
             ->brandName('Shopletix')
-            ->brandLogo(asset('images/logo.svg'))
-            ->brandLogoHeight('2rem')
-            ->favicon(asset('images/favicon.ico'))
             ->navigationGroups([
-                'Dashboard' => [
-                    'icon' => 'heroicon-o-chart-bar-square',
-                ],
-                'Sales & Orders' => [
-                    'icon' => 'heroicon-o-shopping-cart',
-                ],
-                'Financial Management' => [
-                    'icon' => 'heroicon-o-banknotes',
-                ],
-                'Business Management' => [
-                    'icon' => 'heroicon-o-building-office',
-                ],
-                'Customer Relations' => [
-                    'icon' => 'heroicon-o-user-group',
-                ],
-                'System & Analytics' => [
-                    'icon' => 'heroicon-o-cog-6-tooth',
-                ],
+                NavigationGroup::make('Dashboard & Analytics')
+                    ->icon('heroicon-o-chart-bar-square')
+                    ->collapsed(false),
+                    
+                NavigationGroup::make('Sales & Orders')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->collapsed(fn () => !auth()->user()?->isStaff()),
+                    
+                NavigationGroup::make('Financial Management')
+                    ->icon('heroicon-o-banknotes')
+                    ->collapsed(fn () => auth()->user()?->isStaff()),
+                    
+                NavigationGroup::make('Business Management')
+                    ->icon('heroicon-o-building-office')
+                    ->collapsed(fn () => !auth()->user()?->isOwner()),
+                    
+                NavigationGroup::make('Customer Relations')
+                    ->icon('heroicon-o-user-group')
+                    ->collapsed(fn () => !auth()->user()?->canCreateOrders()),
+                    
+                NavigationGroup::make('System & Analytics')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->collapsed(fn () => !auth()->user()?->isSuperAdmin()),
             ])
             ->sidebarCollapsibleOnDesktop()
             ->sidebarFullyCollapsibleOnDesktop()
