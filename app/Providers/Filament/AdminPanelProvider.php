@@ -34,9 +34,46 @@ class AdminPanelProvider extends PanelProvider
             ->registration()
             ->emailVerification()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Indigo,
+                'danger' => Color::Rose,
+                'gray' => Color::Slate,
+                'info' => Color::Blue,
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
             ])
             ->darkMode(false)
+            ->font('Inter')
+            ->brandName('Shopletix')
+            ->brandLogo(asset('images/logo.svg'))
+            ->brandLogoHeight('2rem')
+            ->favicon(asset('images/favicon.ico'))
+            ->navigationGroups([
+                'Dashboard' => [
+                    'icon' => 'heroicon-o-chart-bar-square',
+                ],
+                'Sales & Orders' => [
+                    'icon' => 'heroicon-o-shopping-cart',
+                ],
+                'Financial Management' => [
+                    'icon' => 'heroicon-o-banknotes',
+                ],
+                'Business Management' => [
+                    'icon' => 'heroicon-o-building-office',
+                ],
+                'Customer Relations' => [
+                    'icon' => 'heroicon-o-user-group',
+                ],
+                'System & Analytics' => [
+                    'icon' => 'heroicon-o-cog-6-tooth',
+                ],
+            ])
+            ->sidebarCollapsibleOnDesktop()
+            ->sidebarFullyCollapsibleOnDesktop()
+            ->topNavigation(false)
+            ->maxContentWidth('full')
+            ->databaseNotifications()
+            ->databaseNotificationsPolling('30s')
+            ->viteTheme('resources/css/filament/admin/theme.css')
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
             ->pages([
